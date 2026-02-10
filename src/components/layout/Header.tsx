@@ -1,0 +1,116 @@
+'use client';
+
+import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/components/ui/ThemeProvider';
+import { useRouter } from 'next/navigation';
+import { LogOut, User, Sun, Moon, Monitor } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+
+type ThemeOption = 'light' | 'dark' | 'system';
+
+const THEME_OPTIONS: { value: ThemeOption; label: string; icon: typeof Sun }[] = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+];
+
+export function Header() {
+    const { user, logOut } = useAuth();
+    const { theme, setTheme, resolvedTheme } = useTheme();
+    const router = useRouter();
+    const [showThemeMenu, setShowThemeMenu] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setShowThemeMenu(false);
+            }
+        }
+        if (showThemeMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showThemeMenu]);
+
+    async function handleLogOut() {
+        try {
+            await logOut();
+            router.push('/login');
+        } catch (err) {
+            console.error('Logout failed:', err);
+        }
+    }
+
+    const ActiveIcon = resolvedTheme === 'dark' ? Moon : Sun;
+
+    return (
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-end border-b border-border glass-panel px-6">
+            <div className="flex items-center gap-2">
+                {/* Theme toggle */}
+                <div className="relative" ref={menuRef}>
+                    <button
+                        onClick={() => setShowThemeMenu(!showThemeMenu)}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"
+                        aria-label="Toggle theme"
+                    >
+                        <ActiveIcon className="h-4 w-4" />
+                    </button>
+
+                    {showThemeMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-36 rounded-xl border border-border glass-panel p-1.5 shadow-xl animate-slide-up">
+                            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                                <button
+                                    key={value}
+                                    onClick={() => { setTheme(value); setShowThemeMenu(false); }}
+                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${theme === value
+                                        ? 'bg-primary/10 text-primary font-medium'
+                                        : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
+                                        }`}
+                                >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="h-5 w-px bg-border" />
+
+                {/* User info */}
+                {user && (
+                    <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5">
+                        {user.photoURL ? (
+                            <img
+                                src={user.photoURL}
+                                alt={user.displayName || 'User'}
+                                className="h-7 w-7 rounded-full ring-2 ring-primary/20"
+                                referrerPolicy="no-referrer"
+                            />
+                        ) : (
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 ring-2 ring-primary/20">
+                                <User className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                        )}
+                        <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+                            {user.displayName || user.email}
+                        </span>
+                    </div>
+                )}
+
+                <div className="h-5 w-px bg-border" />
+
+                {/* Logout */}
+                <button
+                    onClick={handleLogOut}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Sign out"
+                >
+                    <LogOut className="h-4 w-4" />
+                </button>
+            </div>
+        </header>
+    );
+}

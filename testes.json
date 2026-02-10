@@ -1,0 +1,1455 @@
+[
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "A company is deciding whether to encrypt data stored on employee laptops. Which approach BEST aligns with the principle of reducing overall risk?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Encrypt only laptops used by executives"
+            },
+            {
+                "label": "B",
+                "text": "Encrypt all laptops regardless of user role"
+            },
+            {
+                "label": "C",
+                "text": "Rely on strong login passwords instead of encryption"
+            },
+            {
+                "label": "D",
+                "text": "Encrypt laptops only after a data loss incident occurs"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Encrypting all laptops consistently reduces risk across the organization. Limiting encryption or delaying it leaves gaps, and passwords alone do not protect data at rest.",
+        "difficulty": "easy",
+        "tags": [
+            "risk",
+            "encryption",
+            "data protection"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "A security manager wants to ensure controls are balanced against business needs. Which concept is MOST relevant when selecting safeguards?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Defense in depth"
+            },
+            {
+                "label": "B",
+                "text": "Risk appetite"
+            },
+            {
+                "label": "C",
+                "text": "Least privilege"
+            },
+            {
+                "label": "D",
+                "text": "Separation of duties"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Risk appetite defines how much risk an organization is willing to accept. The other options describe control techniques, not decision drivers.",
+        "difficulty": "medium",
+        "tags": [
+            "risk appetite",
+            "governance"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "An organization accepts the possibility of system downtime to avoid the cost of redundancy. This is an example of which risk response?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Risk mitigation"
+            },
+            {
+                "label": "B",
+                "text": "Risk transfer"
+            },
+            {
+                "label": "C",
+                "text": "Risk acceptance"
+            },
+            {
+                "label": "D",
+                "text": "Risk avoidance"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Choosing to live with the risk without additional controls is risk acceptance. The other responses involve reducing, shifting, or eliminating risk.",
+        "difficulty": "easy",
+        "tags": [
+            "risk management",
+            "acceptance"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "A policy requires two employees to approve financial transactions. Which principle does this BEST support?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Least privilege"
+            },
+            {
+                "label": "B",
+                "text": "Defense in depth"
+            },
+            {
+                "label": "C",
+                "text": "Separation of duties"
+            },
+            {
+                "label": "D",
+                "text": "Risk transfer"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Separation of duties prevents fraud and errors by requiring multiple people. The other options address different security concepts.",
+        "difficulty": "easy",
+        "tags": [
+            "separation of duties",
+            "controls"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "A security team prioritizes controls that protect customer data to meet regulatory requirements. Which security objective is MOST directly addressed?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Availability"
+            },
+            {
+                "label": "B",
+                "text": "Integrity"
+            },
+            {
+                "label": "C",
+                "text": "Confidentiality"
+            },
+            {
+                "label": "D",
+                "text": "Non-repudiation"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Protecting customer data from unauthorized access primarily supports confidentiality. The other objectives address different protection goals.",
+        "difficulty": "easy",
+        "tags": [
+            "CIA triad",
+            "confidentiality"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "When selecting controls, a company chooses multiple overlapping safeguards for the same asset. What is the PRIMARY benefit of this approach?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Lower operational cost"
+            },
+            {
+                "label": "B",
+                "text": "Elimination of all risk"
+            },
+            {
+                "label": "C",
+                "text": "Improved resilience if one control fails"
+            },
+            {
+                "label": "D",
+                "text": "Reduced need for policies"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Overlapping safeguards increase resilience through defense in depth. They do not eliminate all risk or necessarily reduce cost.",
+        "difficulty": "medium",
+        "tags": [
+            "defense in depth",
+            "resilience"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "A business outsources payroll processing to reduce exposure to internal fraud. Which risk treatment is being applied?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Risk avoidance"
+            },
+            {
+                "label": "B",
+                "text": "Risk transfer"
+            },
+            {
+                "label": "C",
+                "text": "Risk acceptance"
+            },
+            {
+                "label": "D",
+                "text": "Risk mitigation"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Outsourcing shifts responsibility and some risk to a third party, which is risk transfer. The other options do not fit this scenario.",
+        "difficulty": "medium",
+        "tags": [
+            "risk transfer",
+            "outsourcing"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "A control is implemented primarily to meet compliance requirements rather than reduce actual risk. What type of control is this?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Preventive"
+            },
+            {
+                "label": "B",
+                "text": "Compensating"
+            },
+            {
+                "label": "C",
+                "text": "Detective"
+            },
+            {
+                "label": "D",
+                "text": "Administrative"
+            }
+        ],
+        "correctOptionIndex": 3,
+        "explanation": "Administrative controls often focus on policy and compliance. Preventive and detective controls directly reduce or identify risk.",
+        "difficulty": "hard",
+        "tags": [
+            "controls",
+            "compliance"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "Senior management approves a security policy but does not actively support enforcement. What is the MOST likely outcome?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Improved security culture"
+            },
+            {
+                "label": "B",
+                "text": "Inconsistent policy compliance"
+            },
+            {
+                "label": "C",
+                "text": "Automatic technical enforcement"
+            },
+            {
+                "label": "D",
+                "text": "Reduced regulatory scrutiny"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Without leadership support, policies are often inconsistently followed. Approval alone does not ensure enforcement or culture change.",
+        "difficulty": "medium",
+        "tags": [
+            "governance",
+            "policy"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Principles",
+        "domainNumber": 1,
+        "text": "An organization evaluates threats, vulnerabilities, and impacts together. What process is this describing?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Risk assessment"
+            },
+            {
+                "label": "B",
+                "text": "Business impact analysis"
+            },
+            {
+                "label": "C",
+                "text": "Incident response"
+            },
+            {
+                "label": "D",
+                "text": "Penetration testing"
+            }
+        ],
+        "correctOptionIndex": 0,
+        "explanation": "Risk assessment considers threats, vulnerabilities, and impact. The other processes focus on narrower objectives.",
+        "difficulty": "easy",
+        "tags": [
+            "risk assessment"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "After detecting a malware infection, what should be the FIRST action taken according to incident response best practices?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Notify law enforcement"
+            },
+            {
+                "label": "B",
+                "text": "Eradicate the malware immediately"
+            },
+            {
+                "label": "C",
+                "text": "Contain the affected systems"
+            },
+            {
+                "label": "D",
+                "text": "Restore from backups"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Containment limits further damage and spread. Eradication and recovery occur later, and notification is not always first.",
+        "difficulty": "medium",
+        "tags": [
+            "incident response",
+            "containment"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "Which document defines roles and responsibilities during a security incident?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Acceptable use policy"
+            },
+            {
+                "label": "B",
+                "text": "Incident response plan"
+            },
+            {
+                "label": "C",
+                "text": "Disaster recovery plan"
+            },
+            {
+                "label": "D",
+                "text": "Risk register"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "The incident response plan outlines procedures and responsibilities. The other documents serve different purposes.",
+        "difficulty": "easy",
+        "tags": [
+            "IR plan",
+            "roles"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "A company identifies critical systems and acceptable downtime limits. This activity BEST supports which process?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Risk assessment"
+            },
+            {
+                "label": "B",
+                "text": "Incident containment"
+            },
+            {
+                "label": "C",
+                "text": "Business impact analysis"
+            },
+            {
+                "label": "D",
+                "text": "Penetration testing"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Business impact analysis identifies critical systems and recovery priorities. The other processes do not focus on downtime thresholds.",
+        "difficulty": "medium",
+        "tags": [
+            "BIA",
+            "BCP"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "Which metric defines the maximum acceptable amount of data loss?",
+        "options": [
+            {
+                "label": "A",
+                "text": "RTO"
+            },
+            {
+                "label": "B",
+                "text": "MTBF"
+            },
+            {
+                "label": "C",
+                "text": "RPO"
+            },
+            {
+                "label": "D",
+                "text": "SLA"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "RPO measures acceptable data loss. RTO focuses on time, while the others are unrelated metrics.",
+        "difficulty": "medium",
+        "tags": [
+            "RPO",
+            "disaster recovery"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "A backup site that requires manual setup before becoming operational is BEST described as which type?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Hot site"
+            },
+            {
+                "label": "B",
+                "text": "Warm site"
+            },
+            {
+                "label": "C",
+                "text": "Cold site"
+            },
+            {
+                "label": "D",
+                "text": "Cloud site"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Cold sites require significant setup before use. Hot and warm sites are more readily available.",
+        "difficulty": "easy",
+        "tags": [
+            "backup sites",
+            "DR"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "After an incident is resolved, which activity MOST improves future response effectiveness?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Deleting incident logs"
+            },
+            {
+                "label": "B",
+                "text": "Conducting a lessons learned review"
+            },
+            {
+                "label": "C",
+                "text": "Reassigning the response team"
+            },
+            {
+                "label": "D",
+                "text": "Updating antivirus signatures only"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Lessons learned help improve processes and controls. The other actions do not systematically enhance response capability.",
+        "difficulty": "medium",
+        "tags": [
+            "lessons learned",
+            "IR"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "Which plan focuses on restoring IT systems after a major outage?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Incident response plan"
+            },
+            {
+                "label": "B",
+                "text": "Business continuity plan"
+            },
+            {
+                "label": "C",
+                "text": "Disaster recovery plan"
+            },
+            {
+                "label": "D",
+                "text": "Risk management plan"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Disaster recovery plans address IT system restoration. Business continuity is broader and incident response is event-focused.",
+        "difficulty": "easy",
+        "tags": [
+            "DRP"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "Failover testing is MOST useful for validating which objective?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Confidentiality"
+            },
+            {
+                "label": "B",
+                "text": "Integrity"
+            },
+            {
+                "label": "C",
+                "text": "Availability"
+            },
+            {
+                "label": "D",
+                "text": "Non-repudiation"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Failover testing ensures systems remain available during failures. It does not primarily address the other objectives.",
+        "difficulty": "medium",
+        "tags": [
+            "availability",
+            "failover"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Incident Response, Business Continuity & Disaster Recovery",
+        "domainNumber": 2,
+        "text": "A response team skips containment and goes straight to recovery. What is the MOST significant risk?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Increased recovery costs"
+            },
+            {
+                "label": "B",
+                "text": "Continued spread of the incident"
+            },
+            {
+                "label": "C",
+                "text": "Regulatory fines"
+            },
+            {
+                "label": "D",
+                "text": "Loss of backups"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Without containment, the incident may continue spreading. The other risks are secondary or indirect.",
+        "difficulty": "hard",
+        "tags": [
+            "incident response",
+            "risk"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "A user is granted access only to the resources needed to perform their job. Which principle is being applied?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Defense in depth"
+            },
+            {
+                "label": "B",
+                "text": "Least privilege"
+            },
+            {
+                "label": "C",
+                "text": "Separation of duties"
+            },
+            {
+                "label": "D",
+                "text": "Single sign-on"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Least privilege limits access to what is necessary. The other options address different access strategies.",
+        "difficulty": "easy",
+        "tags": [
+            "least privilege",
+            "access control"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "Which factor BEST represents 'something you are'?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Password"
+            },
+            {
+                "label": "B",
+                "text": "Smart card"
+            },
+            {
+                "label": "C",
+                "text": "Fingerprint"
+            },
+            {
+                "label": "D",
+                "text": "PIN"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Biometrics like fingerprints are something you are. Passwords and PINs are something you know.",
+        "difficulty": "easy",
+        "tags": [
+            "authentication",
+            "biometrics"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "Which access control model assigns permissions based on job role?",
+        "options": [
+            {
+                "label": "A",
+                "text": "DAC"
+            },
+            {
+                "label": "B",
+                "text": "MAC"
+            },
+            {
+                "label": "C",
+                "text": "RBAC"
+            },
+            {
+                "label": "D",
+                "text": "ABAC"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "RBAC maps access to roles. DAC and MAC use different assignment methods, while ABAC uses attributes.",
+        "difficulty": "medium",
+        "tags": [
+            "RBAC",
+            "authorization"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "A system verifies a user's identity before granting access. What process is this?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Authorization"
+            },
+            {
+                "label": "B",
+                "text": "Accounting"
+            },
+            {
+                "label": "C",
+                "text": "Authentication"
+            },
+            {
+                "label": "D",
+                "text": "Auditing"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Authentication confirms identity. Authorization determines permissions after identity is verified.",
+        "difficulty": "easy",
+        "tags": [
+            "authentication"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "Which mechanism BEST helps prevent credential reuse attacks?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Single-factor authentication"
+            },
+            {
+                "label": "B",
+                "text": "Multi-factor authentication"
+            },
+            {
+                "label": "C",
+                "text": "Role-based access control"
+            },
+            {
+                "label": "D",
+                "text": "Discretionary access control"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "MFA adds additional factors beyond passwords, reducing the impact of reused credentials.",
+        "difficulty": "medium",
+        "tags": [
+            "MFA",
+            "authentication"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "Which model uses labels and classifications to control access?",
+        "options": [
+            {
+                "label": "A",
+                "text": "DAC"
+            },
+            {
+                "label": "B",
+                "text": "RBAC"
+            },
+            {
+                "label": "C",
+                "text": "MAC"
+            },
+            {
+                "label": "D",
+                "text": "ABAC"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "MAC relies on security labels and classifications. The other models use different criteria.",
+        "difficulty": "medium",
+        "tags": [
+            "MAC",
+            "access models"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "Account reviews are MOST effective at addressing which issue?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Excessive user privileges"
+            },
+            {
+                "label": "B",
+                "text": "Network latency"
+            },
+            {
+                "label": "C",
+                "text": "Malware infections"
+            },
+            {
+                "label": "D",
+                "text": "Encryption strength"
+            }
+        ],
+        "correctOptionIndex": 0,
+        "explanation": "Account reviews identify and remove unnecessary privileges. They do not address performance or malware directly.",
+        "difficulty": "medium",
+        "tags": [
+            "account management"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "A user logs in once and gains access to multiple systems without re-authenticating. What is this called?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Federated identity"
+            },
+            {
+                "label": "B",
+                "text": "Single sign-on"
+            },
+            {
+                "label": "C",
+                "text": "Multi-factor authentication"
+            },
+            {
+                "label": "D",
+                "text": "Privilege escalation"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Single sign-on allows access to multiple systems after one authentication event.",
+        "difficulty": "easy",
+        "tags": [
+            "SSO"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Access Control Concepts",
+        "domainNumber": 3,
+        "text": "Which risk is MOST associated with improper access provisioning?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Data corruption"
+            },
+            {
+                "label": "B",
+                "text": "Unauthorized data access"
+            },
+            {
+                "label": "C",
+                "text": "System downtime"
+            },
+            {
+                "label": "D",
+                "text": "Network congestion"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Improper provisioning can grant access to unauthorized users. The other risks are less directly related.",
+        "difficulty": "hard",
+        "tags": [
+            "authorization",
+            "risk"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which device filters traffic based on predefined security rules?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Switch"
+            },
+            {
+                "label": "B",
+                "text": "Router"
+            },
+            {
+                "label": "C",
+                "text": "Firewall"
+            },
+            {
+                "label": "D",
+                "text": "Hub"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "Firewalls enforce security rules on network traffic. Other devices primarily manage connectivity.",
+        "difficulty": "easy",
+        "tags": [
+            "firewall",
+            "network security"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which protocol provides encrypted communication over the internet?",
+        "options": [
+            {
+                "label": "A",
+                "text": "HTTP"
+            },
+            {
+                "label": "B",
+                "text": "FTP"
+            },
+            {
+                "label": "C",
+                "text": "HTTPS"
+            },
+            {
+                "label": "D",
+                "text": "SMTP"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "HTTPS uses TLS encryption. The others transmit data in plaintext by default.",
+        "difficulty": "easy",
+        "tags": [
+            "encryption",
+            "protocols"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which control BEST detects suspicious network activity?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Firewall"
+            },
+            {
+                "label": "B",
+                "text": "IDS"
+            },
+            {
+                "label": "C",
+                "text": "Router"
+            },
+            {
+                "label": "D",
+                "text": "Proxy"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Intrusion Detection Systems monitor and alert on suspicious activity. Firewalls primarily block traffic.",
+        "difficulty": "medium",
+        "tags": [
+            "IDS",
+            "monitoring"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Network segmentation MOST effectively reduces which risk?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Data loss"
+            },
+            {
+                "label": "B",
+                "text": "Lateral movement by attackers"
+            },
+            {
+                "label": "C",
+                "text": "Phishing attacks"
+            },
+            {
+                "label": "D",
+                "text": "Credential reuse"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Segmentation limits attacker movement within the network. It does not directly prevent phishing or credential reuse.",
+        "difficulty": "medium",
+        "tags": [
+            "segmentation",
+            "network defense"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which technology securely connects remote users to an internal network?",
+        "options": [
+            {
+                "label": "A",
+                "text": "NAT"
+            },
+            {
+                "label": "B",
+                "text": "VPN"
+            },
+            {
+                "label": "C",
+                "text": "VLAN"
+            },
+            {
+                "label": "D",
+                "text": "IDS"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "VPNs provide encrypted remote access. The other technologies serve different network functions.",
+        "difficulty": "easy",
+        "tags": [
+            "VPN",
+            "remote access"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which attack floods a network resource to make it unavailable?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Man-in-the-middle"
+            },
+            {
+                "label": "B",
+                "text": "Phishing"
+            },
+            {
+                "label": "C",
+                "text": "DDoS"
+            },
+            {
+                "label": "D",
+                "text": "SQL injection"
+            }
+        ],
+        "correctOptionIndex": 2,
+        "explanation": "DDoS attacks overwhelm resources to disrupt availability. The other attacks have different objectives.",
+        "difficulty": "easy",
+        "tags": [
+            "DDoS",
+            "availability"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which control BOTH inspects traffic and actively blocks malicious activity?",
+        "options": [
+            {
+                "label": "A",
+                "text": "IDS"
+            },
+            {
+                "label": "B",
+                "text": "IPS"
+            },
+            {
+                "label": "C",
+                "text": "Hub"
+            },
+            {
+                "label": "D",
+                "text": "Switch"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "IPS can detect and block malicious traffic. IDS typically only alerts.",
+        "difficulty": "medium",
+        "tags": [
+            "IPS",
+            "network protection"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Which protocol is MOST appropriate for secure email transmission?",
+        "options": [
+            {
+                "label": "A",
+                "text": "SMTP"
+            },
+            {
+                "label": "B",
+                "text": "POP3"
+            },
+            {
+                "label": "C",
+                "text": "IMAP"
+            },
+            {
+                "label": "D",
+                "text": "SMTPS"
+            }
+        ],
+        "correctOptionIndex": 3,
+        "explanation": "SMTPS encrypts email transmission. The others are not secure by default.",
+        "difficulty": "hard",
+        "tags": [
+            "email security",
+            "protocols"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Network Security",
+        "domainNumber": 4,
+        "text": "Why is TLS preferred over older encryption protocols?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Lower latency"
+            },
+            {
+                "label": "B",
+                "text": "Stronger, updated cryptography"
+            },
+            {
+                "label": "C",
+                "text": "Simpler configuration"
+            },
+            {
+                "label": "D",
+                "text": "Hardware independence"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "TLS provides stronger and more secure cryptographic methods. The other benefits are secondary or incorrect.",
+        "difficulty": "hard",
+        "tags": [
+            "TLS",
+            "encryption"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Regular log reviews MOST directly support which objective?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Preventive security"
+            },
+            {
+                "label": "B",
+                "text": "Detective security"
+            },
+            {
+                "label": "C",
+                "text": "Corrective security"
+            },
+            {
+                "label": "D",
+                "text": "Deterrent security"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Log reviews help detect suspicious activity. They do not prevent or correct issues directly.",
+        "difficulty": "easy",
+        "tags": [
+            "logging",
+            "monitoring"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which activity BEST ensures systems are protected against known vulnerabilities?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Patch management"
+            },
+            {
+                "label": "B",
+                "text": "Log retention"
+            },
+            {
+                "label": "C",
+                "text": "User training"
+            },
+            {
+                "label": "D",
+                "text": "Incident reporting"
+            }
+        ],
+        "correctOptionIndex": 0,
+        "explanation": "Patch management addresses known vulnerabilities. The other activities serve different purposes.",
+        "difficulty": "easy",
+        "tags": [
+            "patching",
+            "vulnerability management"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which control MOST helps ensure accountability for user actions?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Encryption"
+            },
+            {
+                "label": "B",
+                "text": "Logging"
+            },
+            {
+                "label": "C",
+                "text": "Firewalls"
+            },
+            {
+                "label": "D",
+                "text": "Backups"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Logging links actions to users, supporting accountability. The other controls do not track actions.",
+        "difficulty": "medium",
+        "tags": [
+            "accountability",
+            "logging"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "A SOC analyst investigates alerts generated overnight. What is the PRIMARY goal of this activity?",
+        "options": [
+            {
+                "label": "A",
+                "text": "System optimization"
+            },
+            {
+                "label": "B",
+                "text": "Threat detection and response"
+            },
+            {
+                "label": "C",
+                "text": "User training"
+            },
+            {
+                "label": "D",
+                "text": "Policy development"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "SOC analysts focus on detecting and responding to threats. The other activities are not their primary goal.",
+        "difficulty": "medium",
+        "tags": [
+            "SOC",
+            "operations"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which practice reduces the impact of a compromised account?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Least privilege"
+            },
+            {
+                "label": "B",
+                "text": "Single sign-on"
+            },
+            {
+                "label": "C",
+                "text": "Open permissions"
+            },
+            {
+                "label": "D",
+                "text": "Shared accounts"
+            }
+        ],
+        "correctOptionIndex": 0,
+        "explanation": "Least privilege limits what a compromised account can access. Shared or open access increases risk.",
+        "difficulty": "medium",
+        "tags": [
+            "least privilege",
+            "operations"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which activity MOST helps validate that security controls are functioning as intended?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Risk acceptance"
+            },
+            {
+                "label": "B",
+                "text": "Security monitoring"
+            },
+            {
+                "label": "C",
+                "text": "Policy approval"
+            },
+            {
+                "label": "D",
+                "text": "Asset acquisition"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Monitoring confirms controls are working. Policy approval and asset acquisition do not validate effectiveness.",
+        "difficulty": "medium",
+        "tags": [
+            "monitoring",
+            "controls"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Why should backups be tested regularly?",
+        "options": [
+            {
+                "label": "A",
+                "text": "To reduce storage costs"
+            },
+            {
+                "label": "B",
+                "text": "To ensure data integrity and recoverability"
+            },
+            {
+                "label": "C",
+                "text": "To improve network performance"
+            },
+            {
+                "label": "D",
+                "text": "To meet user convenience needs"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Testing backups ensures they can be restored successfully. It does not primarily address cost or performance.",
+        "difficulty": "medium",
+        "tags": [
+            "backups",
+            "recovery"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which issue is MOST likely if change management is not followed?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Unauthorized system changes"
+            },
+            {
+                "label": "B",
+                "text": "Improved system stability"
+            },
+            {
+                "label": "C",
+                "text": "Reduced documentation"
+            },
+            {
+                "label": "D",
+                "text": "Increased encryption strength"
+            }
+        ],
+        "correctOptionIndex": 0,
+        "explanation": "Without change management, unauthorized or unstable changes may occur. The other outcomes are unlikely.",
+        "difficulty": "hard",
+        "tags": [
+            "change management",
+            "operations"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which metric BEST indicates how quickly incidents are resolved?",
+        "options": [
+            {
+                "label": "A",
+                "text": "MTTR"
+            },
+            {
+                "label": "B",
+                "text": "RPO"
+            },
+            {
+                "label": "C",
+                "text": "MTBF"
+            },
+            {
+                "label": "D",
+                "text": "SLA"
+            }
+        ],
+        "correctOptionIndex": 0,
+        "explanation": "Mean Time to Repair measures how quickly issues are resolved. The other metrics measure different attributes.",
+        "difficulty": "hard",
+        "tags": [
+            "metrics",
+            "incident response"
+        ]
+    },
+    {
+        "certification": "CC",
+        "domain": "Security Operations",
+        "domainNumber": 5,
+        "text": "Which operational practice MOST supports continuous improvement?",
+        "options": [
+            {
+                "label": "A",
+                "text": "Static policies"
+            },
+            {
+                "label": "B",
+                "text": "Regular audits and reviews"
+            },
+            {
+                "label": "C",
+                "text": "One-time risk assessments"
+            },
+            {
+                "label": "D",
+                "text": "Minimal documentation"
+            }
+        ],
+        "correctOptionIndex": 1,
+        "explanation": "Audits and reviews identify gaps and improvement areas. Static or one-time activities do not support continuous improvement.",
+        "difficulty": "hard",
+        "tags": [
+            "continuous improvement",
+            "audits"
+        ]
+    }
+]
