@@ -17,7 +17,7 @@ function decodeJwtPayload(token: string): { exp?: number } | null {
     }
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Allow public paths and static assets
@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // P1 #7: Validate session cookie structure + expiry (not just existence)
+    // Validate session cookie structure + expiry (not just existence)
     const session = request.cookies.get('__session');
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
@@ -51,4 +51,3 @@ export function middleware(request: NextRequest) {
 export const config = {
     matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
-

@@ -38,13 +38,6 @@ service cloud.firestore {
       }
     }
 
-    // Legacy top-level exams (kept during migration, read-only)
-    match /exams/{examId} {
-      allow read: if request.auth != null
-                  && resource.data.userId == request.auth.uid;
-      allow write: if false;
-    }
-
     // Metadata: read-only for authenticated users
     match /metadata/{doc} {
       allow read: if request.auth != null;

@@ -5,24 +5,10 @@ import {
     submitAnswerSchema,
     bulkImportSchema,
     updateQuestionSchema,
-    certificationSchema,
     difficultySchema,
     examModeSchema,
     createStudySchema,
 } from '@/lib/validators';
-
-describe('certificationSchema (deprecated, kept for migration)', () => {
-    it.each(['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC'])(
-        'accepts valid certification: %s',
-        (cert: string) => {
-            expect(certificationSchema.parse(cert)).toBe(cert);
-        }
-    );
-
-    it('rejects invalid certification', () => {
-        expect(() => certificationSchema.parse('INVALID')).toThrow();
-    });
-});
 
 describe('difficultySchema', () => {
     it.each(['easy', 'medium', 'hard'])('accepts: %s', (d: string) => {

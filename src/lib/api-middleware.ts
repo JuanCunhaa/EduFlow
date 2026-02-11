@@ -67,7 +67,7 @@ export function withAuth(
             if (MUTATING_METHODS.has(request.method) && maxBodySize > 0) {
                 const contentLength = request.headers.get('content-length');
                 if (contentLength && parseInt(contentLength, 10) > maxBodySize) {
-                    log.warn('Request body too large', { contentLength });
+                    log.warn('Request body too large', { meta: { contentLength } });
                     return NextResponse.json(
                         { error: 'Request body too large' },
                         { status: 413 }

@@ -2,9 +2,6 @@ import type { Timestamp } from 'firebase/firestore';
 
 // === Enums & Literals ===
 
-/** @deprecated Use studyId instead. Kept for migration backward compat. */
-export type Certification = 'CISSP' | 'CC' | 'SSCP' | 'CCSP' | 'CGRC';
-
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export type ExamStatus = 'in_progress' | 'completed' | 'abandoned';
@@ -59,14 +56,6 @@ export interface Question {
     tags: string[];
     createdAt: Timestamp;
     updatedAt: Timestamp;
-
-    // --- Migration compat (deprecated) ---
-    /** @deprecated Use studyId instead */
-    certification?: Certification;
-    /** @deprecated Use domainIds instead */
-    domain?: string;
-    /** @deprecated Use domainIds instead */
-    domainNumber?: number;
 }
 
 /** Question as sent to the client during an active exam (no correct answer) */
@@ -103,10 +92,6 @@ export interface Exam {
     startedAt: Timestamp;
     completedAt: Timestamp | null;
     timeSpentSeconds: number;
-
-    // --- Migration compat (deprecated) ---
-    /** @deprecated Use studyId instead */
-    certification?: Certification;
 }
 
 // === User ===
@@ -121,10 +106,6 @@ export interface UserProfile {
     averageScore: number;
     createdAt: Timestamp;
     lastActiveAt: Timestamp;
-
-    // --- Migration compat (deprecated) ---
-    /** @deprecated Use activeStudyId instead */
-    targetCertification?: Certification;
 }
 
 export interface ExamAttemptSummary {
@@ -134,9 +115,6 @@ export interface ExamAttemptSummary {
     questionCount: number;
     timeSpentSeconds: number;
     completedAt: Timestamp;
-
-    /** @deprecated Use studyId instead */
-    certification?: Certification;
 }
 
 // === Retention / Stats ===
