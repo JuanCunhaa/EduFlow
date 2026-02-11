@@ -403,7 +403,7 @@ export default function StudyDetailPage() {
                                             {exam.completedAt ? formatTimeAgo(exam.completedAt, locale) : '—'}
                                         </td>
                                         <td className="px-6 py-3 text-sm text-muted-foreground">
-                                            {exam.questionIds.length}
+                                            {exam.questionIds?.length ?? 0}
                                         </td>
                                         <td className="px-6 py-3 text-right">
                                             <span className={`font-mono text-sm font-semibold ${(exam.score || 0) >= 70 ? 'text-emerald-400' : 'text-red-400'}`}>

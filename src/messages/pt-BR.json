@@ -426,7 +426,16 @@
     "tags": "Tags (separadas por vírgula)",
     "tagsPlaceholder": "Tríade CIA, controle de acesso, criptografia",
     "domainError": "Selecione pelo menos um domínio",
-    "saveFailed": "Falha ao salvar"
+    "saveFailed": "Falha ao salvar",
+    "fieldError_text": "O enunciado deve ter pelo menos 10 caracteres",
+    "fieldError_explanation": "A explicação deve ter pelo menos 10 caracteres",
+    "fieldError_options": "Todas as opções devem ter texto",
+    "fieldError_domainIds": "Selecione pelo menos um domínio",
+    "fieldError_correctOptionIndex": "Selecione uma resposta correta válida",
+    "fieldError_difficulty": "Selecione um nível de dificuldade",
+    "fieldError_studyId": "Estudo é obrigatório",
+    "fieldError_tags": "Tags inválidas",
+    "fieldError_unknown": "{field}: {message}"
   },
   "questionTable": {
     "allDifficulties": "Todas as Dificuldades",

@@ -1,6 +1,7 @@
 import useSWR, { mutate } from 'swr';
 import type { Question, Difficulty } from '@/types';
 import type { CreateQuestionInput, UpdateQuestionInput } from '@/lib/validators';
+import { FieldValidationError } from '@/lib/errors';
 
 interface UseQuestionsOptions {
     studyId?: string;
@@ -77,6 +78,10 @@ export async function createQuestion(data: CreateQuestionInput): Promise<string>
     });
     if (!res.ok) {
         const err = await res.json();
+        const fieldErrors = err.details?.fieldErrors;
+        if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+            throw new FieldValidationError(fieldErrors);
+        }
         throw new Error(err.error || 'Failed to create question');
     }
     const json = await res.json();
@@ -92,6 +97,10 @@ export async function updateQuestion(id: string, data: UpdateQuestionInput): Pro
     });
     if (!res.ok) {
         const err = await res.json();
+        const fieldErrors = err.details?.fieldErrors;
+        if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+            throw new FieldValidationError(fieldErrors);
+        }
         throw new Error(err.error || 'Failed to update question');
     }
     invalidateQuestions();

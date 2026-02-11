@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Question, Difficulty, StudyDomain } from '@/types';
 import type { CreateQuestionInput } from '@/lib/validators';
+import { FieldValidationError } from '@/lib/errors';
 import { X, Plus, Minus } from 'lucide-react';
 import { useModalA11y } from '@/hooks/useModalA11y';
 
@@ -39,6 +40,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
     const [form, setForm] = useState<CreateQuestionInput>(() => makeEmptyForm(studyId));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     const isEditing = !!question;
 
@@ -105,13 +107,26 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setError('');
+        setFieldErrors({});
         setSaving(true);
 
         try {
             await onSubmit(form);
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : t('saveFailed'));
+            if (err instanceof FieldValidationError) {
+                const mapped: Record<string, string> = {};
+                for (const [field, messages] of Object.entries(err.fieldErrors)) {
+                    const key = `fieldError_${field}` as Parameters<typeof t>[0];
+                    // Use i18n key if available, otherwise show raw field+message
+                    mapped[field] = t.has(key)
+                        ? t(key)
+                        : t('fieldError_unknown', { field, message: messages[0] });
+                }
+                setFieldErrors(mapped);
+            } else {
+                setError(err instanceof Error ? err.message : t('saveFailed'));
+            }
         } finally {
             setSaving(false);
         }
@@ -181,8 +196,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                             onChange={(e) => updateField('text', e.target.value)}
                             rows={3}
                             placeholder={t('questionPlaceholder')}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
+                            className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none ${fieldErrors.text ? 'border-destructive' : 'border-border'}`}
                         />
+                        {fieldErrors.text && <p className="mt-1 text-xs text-destructive">{fieldErrors.text}</p>}
                     </div>
 
                     {/* Options (4-5) */}
@@ -245,8 +261,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                             onChange={(e) => updateField('explanation', { ...form.explanation, short: e.target.value })}
                             rows={3}
                             placeholder={t('explanationPlaceholder')}
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
+                            className={`w-full rounded-lg border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none ${fieldErrors.explanation ? 'border-destructive' : 'border-border'}`}
                         />
+                        {fieldErrors.explanation && <p className="mt-1 text-xs text-destructive">{fieldErrors.explanation}</p>}
                     </div>
 
                     {/* Why Others Wrong — per-option */}

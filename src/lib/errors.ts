@@ -30,6 +30,17 @@ export class ValidationError extends AppError {
     }
 }
 
+/** Client-side error carrying per-field validation messages from the API */
+export class FieldValidationError extends Error {
+    public readonly fieldErrors: Record<string, string[]>;
+
+    constructor(fieldErrors: Record<string, string[]>) {
+        super('Validation failed');
+        this.name = 'FieldValidationError';
+        this.fieldErrors = fieldErrors;
+    }
+}
+
 export class BadRequestError extends AppError {
     constructor(message = 'Bad request', details?: unknown) {
         super(message, 400, 'BAD_REQUEST', details);

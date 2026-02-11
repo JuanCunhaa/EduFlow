@@ -75,9 +75,9 @@ export default function ExamReviewPage({ params }: { params: Promise<{ examId: s
         setSavingNoteId(questionId);
         try {
             const res = await fetch('/api/notes', {
-                method: 'POST',
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ questionId, text: notes[questionId] || '' }),
+                body: JSON.stringify({ questionId, note: notes[questionId] || '' }),
             });
             if (!res.ok) throw new Error();
             addToast(t('noteSaved'), 'success');

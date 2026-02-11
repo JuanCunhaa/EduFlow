@@ -426,7 +426,16 @@
     "tags": "Tags (comma-separated)",
     "tagsPlaceholder": "CIA triad, access control, encryption",
     "domainError": "Select at least one domain",
-    "saveFailed": "Failed to save"
+    "saveFailed": "Failed to save",
+    "fieldError_text": "Question text must be at least 10 characters",
+    "fieldError_explanation": "Explanation must be at least 10 characters",
+    "fieldError_options": "All options must have text",
+    "fieldError_domainIds": "Select at least one domain",
+    "fieldError_correctOptionIndex": "Select a valid correct answer",
+    "fieldError_difficulty": "Select a difficulty level",
+    "fieldError_studyId": "Study is required",
+    "fieldError_tags": "Invalid tags",
+    "fieldError_unknown": "{field}: {message}"
   },
   "questionTable": {
     "allDifficulties": "All Difficulties",
