@@ -1,7 +1,6 @@
 import {
     GoogleAuthProvider,
     onAuthStateChanged,
-    signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
     signOut as firebaseSignOut,
@@ -11,41 +10,22 @@ import { getClientAuth } from './config';
 
 const googleProvider = new GoogleAuthProvider();
 
-/** Prevents concurrent popup requests */
-let popupInProgress = false;
-
-export async function signInWithGoogle(): Promise<User> {
-    if (popupInProgress) {
-        throw new Error('Sign-in already in progress');
-    }
-    popupInProgress = true;
-
-    try {
-        const result = await signInWithPopup(getClientAuth(), googleProvider);
-        // Set auth cookie via our API
-        const idToken = await result.user.getIdToken();
-        await fetch('/api/auth/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-        });
-        return result.user;
-    } catch (err: unknown) {
-        // If popup was blocked, fall back to redirect-based sign-in
-        const code = (err as { code?: string })?.code;
-        if (code === 'auth/popup-blocked') {
-            await signInWithRedirect(getClientAuth(), googleProvider);
-            // signInWithRedirect navigates away, so this won't be reached
-            throw err;
-        }
-        throw err;
-    } finally {
-        popupInProgress = false;
-    }
+/**
+ * Sign in with Google using redirect flow.
+ * This avoids the Cross-Origin-Opener-Policy issue that occurs with
+ * signInWithPopup — Google's accounts.google.com returns a strict COOP
+ * header that prevents the SDK from polling window.closed on the popup.
+ * The redirect flow navigates the current page instead, so COOP is irrelevant.
+ */
+export async function signInWithGoogle(): Promise<void> {
+    await signInWithRedirect(getClientAuth(), googleProvider);
+    // signInWithRedirect navigates away; execution won't continue past here.
 }
 
 /**
- * Check for redirect result on page load (for popup-blocked fallback).
+ * Check for redirect result on page load.
+ * After signInWithRedirect the user is navigated away to Google and then
+ * back; this function picks up the result and sets the auth cookie.
  * Call this once when the app initialises.
  */
 export async function handleRedirectResult(): Promise<User | null> {

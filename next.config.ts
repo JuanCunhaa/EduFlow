@@ -25,11 +25,10 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  // COOP intentionally omitted — Firebase Auth signInWithPopup requires
-  // cross-origin access to poll window.closed on the Google sign-in popup.
-  // Setting any COOP value (even 'same-origin-allow-popups') blocks this call
-  // in some browsers due to the popup origin (accounts.google.com) returning
-  // its own stricter COOP header.
+  // COOP: safe to use same-origin now that we use signInWithRedirect
+  // instead of signInWithPopup (redirect flow doesn't need cross-origin
+  // window access).
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
 ];
 
 const nextConfig: NextConfig = {

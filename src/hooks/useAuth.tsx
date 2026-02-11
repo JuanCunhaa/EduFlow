@@ -30,16 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleSignIn = useCallback(async () => {
         try {
             await signInWithGoogle();
-        } catch (err: unknown) {
-            const code = (err as { code?: string })?.code;
-            // Silently ignore cancelled-popup — user closed it or a duplicate was suppressed
-            if (code === 'auth/cancelled-popup-request' || code === 'auth/popup-closed-by-user') {
-                return;
-            }
-            // popup-blocked is handled internally via redirect fallback
-            if (code === 'auth/popup-blocked') {
-                return;
-            }
+        } catch (err) {
             console.error('Sign-in failed:', err);
             throw err;
         }
