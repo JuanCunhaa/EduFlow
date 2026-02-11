@@ -23,7 +23,7 @@ interface BadgeGalleryProps {
     earned: string[];
 }
 
-export function BadgeGallery({ earned }: BadgeGalleryProps) {
+export function BadgeGallery({ earned = [] }: BadgeGalleryProps) {
     const earnedSet = new Set(earned);
 
     return (

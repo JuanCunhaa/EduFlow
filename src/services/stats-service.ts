@@ -32,7 +32,8 @@ export async function getStats(uid: string): Promise<UserStats> {
     const db = getAdminDb();
     const snap = await db.doc(`${statsPath(uid)}/${STATS_DOC}`).get();
     if (!snap.exists) return { ...DEFAULT_STATS };
-    return snap.data() as UserStats;
+    // Merge with defaults to handle partial docs (e.g. badges field missing on old accounts)
+    return { ...DEFAULT_STATS, ...snap.data() } as UserStats;
 }
 
 // ── Write ────────────────────────────────────────

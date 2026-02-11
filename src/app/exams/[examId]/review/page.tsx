@@ -97,7 +97,7 @@ export default function ExamReviewPage() {
             await fetch('/api/notes', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ questionId, examId, content }),
+                body: JSON.stringify({ questionId, note: content }),
             });
         } catch { /* silent */ }
         setSavingNote(null);
