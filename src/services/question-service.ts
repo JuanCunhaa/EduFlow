@@ -1,5 +1,6 @@
 /**
  * QuestionService — encapsulates all question-related business logic and data access.
+ * v2: uses studyId + domainIds instead of certification + domain/domainNumber.
  */
 
 import { getAdminDb } from '@/lib/firebase/admin';
@@ -25,8 +26,8 @@ function questionsPath(uid: string): string {
 
 export interface ListQuestionsOptions {
     uid: string;
-    certification?: string;
-    domainNumber?: number;
+    studyId?: string;
+    domainIds?: string[];
     difficulty?: string;
     search?: string;
     cursor?: string;
@@ -41,8 +42,8 @@ export interface ListQuestionsResult {
 export async function listQuestions(options: ListQuestionsOptions): Promise<ListQuestionsResult> {
     const {
         uid,
-        certification,
-        domainNumber,
+        studyId,
+        domainIds,
         difficulty,
         search,
         cursor,
@@ -54,26 +55,30 @@ export async function listQuestions(options: ListQuestionsOptions): Promise<List
     const path = questionsPath(uid);
     let q: FirebaseFirestore.Query = db.collection(path);
 
-    if (certification) q = q.where('certification', '==', certification);
-    if (domainNumber) q = q.where('domainNumber', '==', domainNumber);
+    if (studyId) q = q.where('studyId', '==', studyId);
+    if (domainIds && domainIds.length > 0) {
+        // Firestore array-contains-any supports up to 10 values
+        q = q.where('domainIds', 'array-contains-any', domainIds.slice(0, 10));
+    }
     if (difficulty && difficulty !== 'all') q = q.where('difficulty', '==', difficulty);
 
-    q = q.orderBy('domainNumber', 'asc');
+    q = q.orderBy('createdAt', 'desc');
 
     if (cursor) {
-        q = q.startAfter(db.doc(`${path}/${cursor}`));
+        const cursorDoc = await db.doc(`${path}/${cursor}`).get();
+        if (cursorDoc.exists) {
+            q = q.startAfter(cursorDoc);
+        }
     }
 
     const snap = await q.limit(limitCount + 1).get();
     let questions = snap.docs.map(d => ({ id: d.id, ...d.data() }) as Question);
 
     // Client-side text search (Firestore doesn't support full-text search)
-    // For production, consider Algolia/Typesense integration
     if (search) {
         const lower = search.toLowerCase();
         questions = questions.filter(q =>
             q.text.toLowerCase().includes(lower) ||
-            q.domain.toLowerCase().includes(lower) ||
             q.explanation.toLowerCase().includes(lower) ||
             q.tags.some(t => t.toLowerCase().includes(lower))
         );
@@ -96,11 +101,20 @@ export async function getQuestion(uid: string, questionId: string): Promise<Ques
 
 export async function createQuestion(uid: string, data: CreateQuestionInput): Promise<string> {
     const now = serverTimestamp();
-    return adminCreateDoc(questionsPath(uid), {
+    const id = await adminCreateDoc(questionsPath(uid), {
         ...data,
+        whyOthersWrong: data.whyOthersWrong ?? null,
         createdAt: now,
         updatedAt: now,
     });
+
+    // Increment question count on the study
+    const db = getAdminDb();
+    const studyRef = db.doc(`users/${uid}/studies/${data.studyId}`);
+    const { FieldValue } = await import('firebase-admin/firestore');
+    await studyRef.update({ questionCount: FieldValue.increment(1) });
+
+    return id;
 }
 
 export async function updateQuestion(
@@ -123,6 +137,12 @@ export async function deleteQuestion(uid: string, questionId: string): Promise<v
     const existing = await adminGetDoc<Question>(path, questionId);
     if (!existing) throw new QuestionNotFoundError();
     await adminDeleteDoc(path, questionId);
+
+    // Decrement question count on the study
+    const db = getAdminDb();
+    const studyRef = db.doc(`users/${uid}/studies/${existing.studyId}`);
+    const { FieldValue } = await import('firebase-admin/firestore');
+    await studyRef.update({ questionCount: FieldValue.increment(-1) });
 }
 
 export async function importQuestions(
@@ -134,15 +154,27 @@ export async function importQuestions(
     const batch = db.batch();
     const ids: string[] = [];
     const questionsCol = db.collection(questionsPath(uid));
+    const studyCounts = new Map<string, number>();
 
     for (const question of questions) {
         const ref = questionsCol.doc();
         batch.set(ref, {
             ...question,
+            whyOthersWrong: question.whyOthersWrong ?? null,
             createdAt: now,
             updatedAt: now,
         });
         ids.push(ref.id);
+
+        // Track count per study for denormalized counter
+        studyCounts.set(question.studyId, (studyCounts.get(question.studyId) || 0) + 1);
+    }
+
+    // Update study counters in the same batch
+    const { FieldValue } = await import('firebase-admin/firestore');
+    for (const [studyId, count] of studyCounts) {
+        const studyRef = db.doc(`users/${uid}/studies/${studyId}`);
+        batch.update(studyRef, { questionCount: FieldValue.increment(count) });
     }
 
     await batch.commit();
@@ -153,26 +185,26 @@ export async function importQuestions(
 
 export interface FetchQuestionPoolOptions {
     uid: string;
-    certification: string;
+    studyId: string;
     difficulty?: string;
-    domains?: number[];
+    domainIds?: string[];
     limit?: number;
 }
 
 export async function fetchQuestionPool(options: FetchQuestionPoolOptions): Promise<Question[]> {
-    const { uid, certification, difficulty, domains, limit: fetchLimit = 500 } = options;
+    const { uid, studyId, difficulty, domainIds, limit: fetchLimit = 500 } = options;
     const db = getAdminDb();
     const path = questionsPath(uid);
 
     let q: FirebaseFirestore.Query = db.collection(path)
-        .where('certification', '==', certification);
+        .where('studyId', '==', studyId);
 
     if (difficulty && difficulty !== 'all') {
         q = q.where('difficulty', '==', difficulty);
     }
 
-    if (domains && domains.length > 0) {
-        q = q.where('domainNumber', 'in', domains);
+    if (domainIds && domainIds.length > 0) {
+        q = q.where('domainIds', 'array-contains-any', domainIds.slice(0, 10));
     }
 
     const snap = await q.limit(fetchLimit).get();
@@ -186,8 +218,7 @@ export async function fetchQuestionPool(options: FetchQuestionPoolOptions): Prom
 export async function isQuestionInActiveExam(uid: string, questionId: string): Promise<boolean> {
     const db = getAdminDb();
     const snap = await db
-        .collection('exams')
-        .where('userId', '==', uid)
+        .collection(`users/${uid}/exams`)
         .where('status', '==', 'in_progress')
         .where('questionIds', 'array-contains', questionId)
         .limit(1)

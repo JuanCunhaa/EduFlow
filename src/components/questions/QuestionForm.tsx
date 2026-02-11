@@ -1,34 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Question, Certification, Difficulty } from '@/types';
+import type { Question, Difficulty, StudyDomain } from '@/types';
 import type { CreateQuestionInput } from '@/lib/validators';
-import { X } from 'lucide-react';
+import { X, Plus, Minus } from 'lucide-react';
 
 interface QuestionFormProps {
     question?: Question | null;
+    studyId: string;
+    /** Available domains from the current study — used to populate the domain picker */
+    domains: StudyDomain[];
     onSubmit: (data: CreateQuestionInput) => Promise<void>;
     onClose: () => void;
 }
 
-const CERTIFICATIONS: Certification[] = ['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC'];
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
-const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const;
+const DEFAULT_LABELS = ['A', 'B', 'C', 'D', 'E'] as const;
 
-const EMPTY_FORM: CreateQuestionInput = {
-    certification: 'CISSP',
-    domain: '',
-    domainNumber: 1,
-    text: '',
-    options: OPTION_LABELS.map((label) => ({ label, text: '' })),
-    correctOptionIndex: 0,
-    explanation: '',
-    difficulty: 'medium',
-    tags: [],
-};
+function makeEmptyForm(studyId: string): CreateQuestionInput {
+    return {
+        studyId,
+        domainIds: [],
+        text: '',
+        options: DEFAULT_LABELS.slice(0, 4).map((label) => ({ label, text: '' })),
+        correctOptionIndex: 0,
+        explanation: '',
+        whyOthersWrong: null,
+        difficulty: 'medium',
+        tags: [],
+    };
+}
 
-export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps) {
-    const [form, setForm] = useState<CreateQuestionInput>(EMPTY_FORM);
+export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: QuestionFormProps) {
+    const [form, setForm] = useState<CreateQuestionInput>(() => makeEmptyForm(studyId));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -37,18 +41,20 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
     useEffect(() => {
         if (question) {
             setForm({
-                certification: question.certification,
-                domain: question.domain,
-                domainNumber: question.domainNumber,
+                studyId: question.studyId,
+                domainIds: question.domainIds,
                 text: question.text,
                 options: question.options,
                 correctOptionIndex: question.correctOptionIndex,
                 explanation: question.explanation,
+                whyOthersWrong: question.whyOthersWrong ?? null,
                 difficulty: question.difficulty,
                 tags: question.tags,
             });
+        } else {
+            setForm(makeEmptyForm(studyId));
         }
-    }, [question]);
+    }, [question, studyId]);
 
     function updateField<K extends keyof CreateQuestionInput>(key: K, value: CreateQuestionInput[K]) {
         setForm((prev) => ({ ...prev, [key]: value }));
@@ -59,6 +65,36 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
             ...prev,
             options: prev.options.map((opt, i) => (i === index ? { ...opt, text } : opt)),
         }));
+    }
+
+    function addOption() {
+        if (form.options.length >= 5) return;
+        const nextLabel = DEFAULT_LABELS[form.options.length];
+        setForm((prev) => ({
+            ...prev,
+            options: [...prev.options, { label: nextLabel, text: '' }],
+        }));
+    }
+
+    function removeOption() {
+        if (form.options.length <= 4) return;
+        setForm((prev) => ({
+            ...prev,
+            options: prev.options.slice(0, -1),
+            correctOptionIndex: Math.min(prev.correctOptionIndex, prev.options.length - 2),
+        }));
+    }
+
+    function toggleDomain(domainId: string) {
+        setForm((prev) => {
+            const has = prev.domainIds.includes(domainId);
+            return {
+                ...prev,
+                domainIds: has
+                    ? prev.domainIds.filter((id) => id !== domainId)
+                    : [...prev.domainIds, domainId],
+            };
+        });
     }
 
     async function handleSubmit(e: React.FormEvent) {
@@ -93,29 +129,31 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    {/* Row: Certification + Domain + Difficulty */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Row: Domain(s) + Difficulty */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* Domains multi-select */}
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Certification</label>
-                            <select
-                                value={form.certification}
-                                onChange={(e) => updateField('certification', e.target.value as Certification)}
-                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
-                            >
-                                {CERTIFICATIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Domains</label>
+                            <div className="flex flex-wrap gap-1.5">
+                                {domains.map((d) => (
+                                    <button
+                                        key={d.id}
+                                        type="button"
+                                        onClick={() => toggleDomain(d.id)}
+                                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${form.domainIds.includes(d.id)
+                                                ? 'bg-primary/20 text-primary ring-1 ring-primary/30'
+                                                : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                                            }`}
+                                    >
+                                        {d.abbreviation}
+                                    </button>
+                                ))}
+                            </div>
+                            {form.domainIds.length === 0 && (
+                                <p className="mt-1 text-xs text-amber-500">Select at least one domain</p>
+                            )}
                         </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Domain #</label>
-                            <input
-                                type="number"
-                                min={1}
-                                max={8}
-                                value={form.domainNumber}
-                                onChange={(e) => updateField('domainNumber', parseInt(e.target.value, 10))}
-                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
-                            />
-                        </div>
+
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Difficulty</label>
                             <select
@@ -126,18 +164,6 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
                                 {DIFFICULTIES.map((d) => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
                             </select>
                         </div>
-                    </div>
-
-                    {/* Domain Name */}
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Domain Name</label>
-                        <input
-                            type="text"
-                            value={form.domain}
-                            onChange={(e) => updateField('domain', e.target.value)}
-                            placeholder="e.g. Security and Risk Management"
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
-                        />
                     </div>
 
                     {/* Question Text */}
@@ -152,26 +178,50 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
                         />
                     </div>
 
-                    {/* Options */}
+                    {/* Options (4-5) */}
                     <div className="space-y-2">
-                        <label className="block text-xs font-medium text-muted-foreground">Answer Options</label>
-                        {OPTION_LABELS.map((label, i) => (
-                            <div key={label} className="flex items-center gap-2">
+                        <div className="flex items-center justify-between">
+                            <label className="block text-xs font-medium text-muted-foreground">
+                                Answer Options ({form.options.length})
+                            </label>
+                            <div className="flex gap-1">
+                                <button
+                                    type="button"
+                                    onClick={removeOption}
+                                    disabled={form.options.length <= 4}
+                                    className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                    title="Remove option"
+                                >
+                                    <Minus className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={addOption}
+                                    disabled={form.options.length >= 5}
+                                    className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                    title="Add option"
+                                >
+                                    <Plus className="h-3.5 w-3.5" />
+                                </button>
+                            </div>
+                        </div>
+                        {form.options.map((opt, i) => (
+                            <div key={opt.label} className="flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => updateField('correctOptionIndex', i)}
                                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-medium transition-colors ${form.correctOptionIndex === i
-                                            ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/30'
-                                            : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                                        ? 'bg-green-500/20 text-green-400 ring-1 ring-green-500/30'
+                                        : 'bg-muted text-muted-foreground hover:bg-muted/70'
                                         }`}
                                 >
-                                    {label}
+                                    {opt.label}
                                 </button>
                                 <input
                                     type="text"
-                                    value={form.options[i].text}
+                                    value={opt.text}
                                     onChange={(e) => updateOption(i, e.target.value)}
-                                    placeholder={`Option ${label}`}
+                                    placeholder={`Option ${opt.label}`}
                                     className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
                                 />
                             </div>
@@ -187,6 +237,20 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
                             onChange={(e) => updateField('explanation', e.target.value)}
                             rows={3}
                             placeholder="Why is this the correct answer?"
+                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
+                        />
+                    </div>
+
+                    {/* Why Others Wrong */}
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                            Why Others Wrong <span className="text-muted-foreground/50">(optional)</span>
+                        </label>
+                        <textarea
+                            value={form.whyOthersWrong || ''}
+                            onChange={(e) => updateField('whyOthersWrong', e.target.value || null)}
+                            rows={2}
+                            placeholder="Briefly explain why the other options are incorrect..."
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
                         />
                     </div>
@@ -221,7 +285,7 @@ export function QuestionForm({ question, onSubmit, onClose }: QuestionFormProps)
                         </button>
                         <button
                             type="submit"
-                            disabled={saving}
+                            disabled={saving || form.domainIds.length === 0}
                             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                         >
                             {saving ? 'Saving...' : isEditing ? 'Update' : 'Create'}

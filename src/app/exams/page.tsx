@@ -7,9 +7,10 @@ import { ExamSession } from '@/components/exams/ExamSession';
 import { ExamResults } from '@/components/exams/ExamResults';
 import { ExamErrorBoundary } from '@/components/exams/ExamErrorBoundary';
 import { createExam, saveAnswer, submitExam } from '@/hooks/useExams';
+import { useStudies } from '@/hooks/useStudies';
 import { useToast } from '@/components/ui/Toast';
 import { Spinner } from '@/components/ui/Spinner';
-import type { Certification, Difficulty } from '@/types';
+import type { Difficulty, ExamMode } from '@/types';
 
 // ── Types ────────────────────────────────────────
 
@@ -17,14 +18,14 @@ interface SessionQuestion {
     id: string;
     text: string;
     options: Array<{ label: string; text: string }>;
-    domain: string;
-    domainNumber: number;
+    domainIds: string[];
     difficulty: string;
 }
 
 interface ActiveExam {
     id: string;
-    certification: Certification;
+    studyId: string;
+    studyName: string;
     timeLimitMinutes: number;
     questions: SessionQuestion[];
     answers: Record<string, number | null>;
@@ -35,7 +36,7 @@ interface ExamResultData {
     correctAnswers: number;
     totalQuestions: number;
     domainScores: Record<string, { correct: number; total: number; percentage: number }>;
-    certification: Certification;
+    studyName: string;
 }
 
 // ── State machine ────────────────────────────────
@@ -185,6 +186,7 @@ export default function ExamsPage() {
         error: null,
     });
     const { addToast } = useToast();
+    const { studies } = useStudies();
     const enqueueSave = useAnswerRetryQueue();
 
     // Recover exam session on mount (F5 recovery + server resume)
@@ -201,9 +203,11 @@ export default function ExamsPage() {
             .then((r) => r.json())
             .then((json) => {
                 if (json.data) {
+                    const studyName = studies.find(s => s.id === json.data.studyId)?.name || json.data.studyId;
                     const exam: ActiveExam = {
                         id: json.data.id,
-                        certification: json.data.certification,
+                        studyId: json.data.studyId || json.data.certification || '',
+                        studyName,
                         timeLimitMinutes: json.data.config?.timeLimitMinutes || 0,
                         questions: json.data.questions || [],
                         answers: json.data.answers || {},
@@ -217,7 +221,7 @@ export default function ExamsPage() {
             .catch(() => {
                 dispatch({ type: 'NO_RESUME_FOUND' });
             });
-    }, []);
+    }, [studies]);
 
     // Persist exam on answer changes
     useEffect(() => {
@@ -227,11 +231,12 @@ export default function ExamsPage() {
     }, [state.activeExam]);
 
     async function handleStartExam(config: {
-        certification: Certification;
+        studyId: string;
         questionCount: number;
         timeLimitMinutes: number;
         difficulty: Difficulty | 'all';
-        domains: number[];
+        domainIds: string[];
+        mode: ExamMode;
     }) {
         dispatch({ type: 'START_CREATING' });
         try {
@@ -241,9 +246,12 @@ export default function ExamsPage() {
                 answers[q.id] = null;
             }
 
+            const studyName = studies.find(s => s.id === config.studyId)?.name || config.studyId;
+
             const exam: ActiveExam = {
                 id: result.id,
-                certification: config.certification,
+                studyId: config.studyId,
+                studyName,
                 timeLimitMinutes: config.timeLimitMinutes,
                 questions: result.questions,
                 answers,
@@ -280,7 +288,7 @@ export default function ExamsPage() {
                     correctAnswers: result.correctAnswers,
                     totalQuestions: result.totalQuestions,
                     domainScores: result.domainScores,
-                    certification: state.activeExam.certification,
+                    studyName: state.activeExam.studyName,
                 },
             });
         } catch (error) {
@@ -325,7 +333,11 @@ export default function ExamsPage() {
                             Configure and start a practice exam
                         </p>
                     </div>
-                    <ExamConfigForm onStart={handleStartExam} isLoading={state.phase === 'creating'} />
+                    <ExamConfigForm
+                        studies={studies}
+                        onStart={handleStartExam}
+                        isLoading={state.phase === 'creating'}
+                    />
                 </div>
             )}
 
@@ -335,7 +347,7 @@ export default function ExamsPage() {
                     correctAnswers={state.results.correctAnswers}
                     totalQuestions={state.results.totalQuestions}
                     domainScores={state.results.domainScores}
-                    certification={state.results.certification}
+                    studyName={state.results.studyName}
                     onBackToExams={() => dispatch({ type: 'RESET' })}
                     onRetry={() => dispatch({ type: 'RESET' })}
                 />

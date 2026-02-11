@@ -1,11 +1,10 @@
 import useSWR, { mutate } from 'swr';
-import type { Question, Certification, Difficulty } from '@/types';
+import type { Question, Difficulty } from '@/types';
 import type { CreateQuestionInput, UpdateQuestionInput } from '@/lib/validators';
-import { fetcher } from '@/lib/fetcher';
 
 interface UseQuestionsOptions {
-    certification?: Certification;
-    domainNumber?: number;
+    studyId?: string;
+    domainIds?: string[];
     difficulty?: Difficulty | 'all';
     search?: string;
     cursor?: string;
@@ -20,17 +19,20 @@ interface UseQuestionsResult {
     refresh: () => void;
 }
 
-function buildUrl(options: UseQuestionsOptions): string {
+function buildUrl(options: UseQuestionsOptions): string | null {
+    if (!options.studyId) return null;
+
     const params = new URLSearchParams();
-    if (options.certification) params.set('certification', options.certification);
-    if (options.domainNumber) params.set('domainNumber', String(options.domainNumber));
+    params.set('studyId', options.studyId);
+    if (options.domainIds && options.domainIds.length > 0) {
+        params.set('domainIds', options.domainIds.join(','));
+    }
     if (options.difficulty && options.difficulty !== 'all') params.set('difficulty', options.difficulty);
     if (options.search) params.set('search', options.search);
     if (options.cursor) params.set('cursor', options.cursor);
     if (options.limit) params.set('limit', String(options.limit));
 
-    const queryString = params.toString();
-    return `/api/questions${queryString ? `?${queryString}` : ''}`;
+    return '/api/questions?' + params.toString();
 }
 
 /** Custom fetcher that returns { data, nextCursor } shape */

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Question, Certification, Difficulty } from '@/types';
+import type { Question, Difficulty } from '@/types';
 import { Pencil, Trash2, ChevronDown } from 'lucide-react';
 
 interface QuestionTableProps {
@@ -9,13 +9,10 @@ interface QuestionTableProps {
     isLoading: boolean;
     onEdit: (question: Question) => void;
     onDelete: (questionId: string) => void;
-    certification: Certification | '';
-    onCertificationChange: (cert: Certification | '') => void;
     difficulty: Difficulty | 'all';
     onDifficultyChange: (diff: Difficulty | 'all') => void;
 }
 
-const CERTIFICATIONS: Certification[] = ['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC'];
 const DIFFICULTIES: (Difficulty | 'all')[] = ['all', 'easy', 'medium', 'hard'];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -29,8 +26,6 @@ export function QuestionTable({
     isLoading,
     onEdit,
     onDelete,
-    certification,
-    onCertificationChange,
     difficulty,
     onDifficultyChange,
 }: QuestionTableProps) {
@@ -40,17 +35,6 @@ export function QuestionTable({
         <div className="space-y-4">
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
-                <select
-                    value={certification}
-                    onChange={(e) => onCertificationChange(e.target.value as Certification | '')}
-                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
-                >
-                    <option value="">All Certifications</option>
-                    {CERTIFICATIONS.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                    ))}
-                </select>
-
                 <select
                     value={difficulty}
                     onChange={(e) => onDifficultyChange(e.target.value as Difficulty | 'all')}
@@ -81,8 +65,7 @@ export function QuestionTable({
                         <thead>
                             <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                                 <th className="px-4 py-3">Question</th>
-                                <th className="px-4 py-3 w-24">Cert</th>
-                                <th className="px-4 py-3 w-16">Domain</th>
+                                <th className="px-4 py-3 w-32">Domains</th>
                                 <th className="px-4 py-3 w-24">Difficulty</th>
                                 <th className="px-4 py-3 w-20 text-right">Actions</th>
                             </tr>
@@ -107,8 +90,8 @@ export function QuestionTable({
                                                     <div
                                                         key={opt.label}
                                                         className={`text-sm ${i === q.correctOptionIndex
-                                                                ? 'font-medium text-green-400'
-                                                                : 'text-muted-foreground'
+                                                            ? 'font-medium text-green-400'
+                                                            : 'text-muted-foreground'
                                                             }`}
                                                     >
                                                         {opt.label}. {opt.text}
@@ -122,11 +105,14 @@ export function QuestionTable({
                                         )}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                                            {q.certification}
-                                        </span>
+                                        <div className="flex flex-wrap gap-1">
+                                            {q.domainIds.map((did) => (
+                                                <span key={did} className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                                                    {did}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-muted-foreground">{q.domainNumber}</td>
                                     <td className="px-4 py-3">
                                         <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${DIFFICULTY_COLORS[q.difficulty]}`}>
                                             {q.difficulty}

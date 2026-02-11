@@ -13,13 +13,15 @@ import {
     deleteQuestion,
     importQuestions,
 } from '@/hooks/useQuestions';
+import { useStudies } from '@/hooks/useStudies';
 import { useToast } from '@/components/ui/Toast';
-import type { Question, Certification, Difficulty } from '@/types';
+import type { Question, Difficulty, Study } from '@/types';
 import type { CreateQuestionInput } from '@/lib/validators';
 import { Plus, Upload, Search } from 'lucide-react';
 
 export default function QuestionsPage() {
-    const [certification, setCertification] = useState<Certification | ''>('');
+    const { studies } = useStudies();
+    const [activeStudy, setActiveStudy] = useState<Study | null>(null);
     const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
     const [search, setSearch] = useState('');
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
@@ -29,8 +31,11 @@ export default function QuestionsPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const { addToast } = useToast();
 
+    // Auto-select first study if none selected
+    const currentStudy = activeStudy || studies[0] || null;
+
     const { questions, isLoading, refresh } = useQuestions({
-        certification: certification || undefined,
+        studyId: currentStudy?.id,
         difficulty: difficulty === 'all' ? undefined : difficulty,
         search: search || undefined,
     });
@@ -81,7 +86,7 @@ export default function QuestionsPage() {
                     <div>
                         <h1 className="text-2xl font-semibold tracking-tight text-foreground">Question Bank</h1>
                         <p className="mt-1 text-sm text-muted-foreground">
-                            Manage your question library across all certifications
+                            Manage your question library across all studies
                         </p>
                     </div>
                     <div className="flex gap-2">
@@ -94,12 +99,29 @@ export default function QuestionsPage() {
                         </button>
                         <button
                             onClick={() => { setEditingQuestion(null); setShowForm(true); }}
-                            className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                            disabled={!currentStudy}
+                            className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                         >
                             <Plus className="h-4 w-4" />
                             New Question
                         </button>
                     </div>
+                </div>
+
+                {/* Study selector */}
+                <div className="flex flex-wrap items-center gap-2">
+                    {studies.map((study) => (
+                        <button
+                            key={study.id}
+                            onClick={() => setActiveStudy(study)}
+                            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${currentStudy?.id === study.id
+                                    ? 'bg-primary/20 text-primary ring-1 ring-primary/30'
+                                    : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                                }`}
+                        >
+                            {study.abbreviation}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Search bar */}
@@ -120,17 +142,17 @@ export default function QuestionsPage() {
                     isLoading={isLoading}
                     onEdit={(q) => { setEditingQuestion(q); setShowForm(true); }}
                     onDelete={(id) => setDeleteTarget(id)}
-                    certification={certification}
-                    onCertificationChange={setCertification}
                     difficulty={difficulty}
                     onDifficultyChange={setDifficulty}
                 />
             </div>
 
             {/* Modals */}
-            {showForm && (
+            {showForm && currentStudy && (
                 <QuestionForm
                     question={editingQuestion}
+                    studyId={currentStudy.id}
+                    domains={currentStudy.domains}
                     onSubmit={editingQuestion ? handleUpdate : handleCreate}
                     onClose={() => { setShowForm(false); setEditingQuestion(null); }}
                 />

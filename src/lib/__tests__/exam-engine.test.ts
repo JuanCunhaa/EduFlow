@@ -3,12 +3,11 @@ import { selectQuestions, scoreExam, sanitizeQuestionsForExam } from '@/lib/exam
 import type { Question } from '@/types';
 import type { Timestamp } from 'firebase/firestore';
 
-// Helper to create mock questions
+// Helper to create mock questions (v2 schema)
 function makeQuestion(overrides: Partial<Question> & { id: string }): Question {
     return {
-        certification: 'CISSP',
-        domain: `Domain ${overrides.domainNumber || 1}`,
-        domainNumber: 1,
+        studyId: 'study-cissp',
+        domainIds: [`d${overrides.domainIds?.[0]?.replace('d', '') || '1'}`],
         text: `Question ${overrides.id}`,
         options: [
             { label: 'A', text: 'Option A' },
@@ -18,6 +17,7 @@ function makeQuestion(overrides: Partial<Question> & { id: string }): Question {
         ],
         correctOptionIndex: 0,
         explanation: 'Test explanation',
+        whyOthersWrong: null,
         difficulty: 'medium',
         tags: [],
         createdAt: {} as Timestamp,
@@ -28,32 +28,34 @@ function makeQuestion(overrides: Partial<Question> & { id: string }): Question {
 
 describe('selectQuestions', () => {
     const pool: Question[] = [
-        makeQuestion({ id: 'q1', domainNumber: 1, domain: 'Domain 1' }),
-        makeQuestion({ id: 'q2', domainNumber: 1, domain: 'Domain 1' }),
-        makeQuestion({ id: 'q3', domainNumber: 2, domain: 'Domain 2' }),
-        makeQuestion({ id: 'q4', domainNumber: 2, domain: 'Domain 2' }),
-        makeQuestion({ id: 'q5', domainNumber: 3, domain: 'Domain 3' }),
-        makeQuestion({ id: 'q6', domainNumber: 3, domain: 'Domain 3' }),
+        makeQuestion({ id: 'q1', domainIds: ['d1'] }),
+        makeQuestion({ id: 'q2', domainIds: ['d1'] }),
+        makeQuestion({ id: 'q3', domainIds: ['d2'] }),
+        makeQuestion({ id: 'q4', domainIds: ['d2'] }),
+        makeQuestion({ id: 'q5', domainIds: ['d3'] }),
+        makeQuestion({ id: 'q6', domainIds: ['d3'] }),
     ];
 
     it('selects the requested number of questions', () => {
         const selected = selectQuestions(pool, {
-            certification: 'CISSP',
+            studyId: 'study-cissp',
             questionCount: 3,
             timeLimitMinutes: 60,
-            domains: [],
+            domainIds: [],
             difficulty: 'all',
+            mode: 'practice',
         });
         expect(selected).toHaveLength(3);
     });
 
-    it('returns empty array when no questions match certification', () => {
+    it('returns empty array when no questions match studyId', () => {
         const selected = selectQuestions(pool, {
-            certification: 'CC',
+            studyId: 'study-nonexistent',
             questionCount: 3,
             timeLimitMinutes: 60,
-            domains: [],
+            domainIds: [],
             difficulty: 'all',
+            mode: 'practice',
         });
         expect(selected).toHaveLength(0);
     });
@@ -61,54 +63,59 @@ describe('selectQuestions', () => {
     it('filters by difficulty', () => {
         const mixedPool = [
             ...pool,
-            makeQuestion({ id: 'q7', domainNumber: 1, domain: 'Domain 1', difficulty: 'hard' }),
+            makeQuestion({ id: 'q7', domainIds: ['d1'], difficulty: 'hard' }),
         ];
         const selected = selectQuestions(mixedPool, {
-            certification: 'CISSP',
+            studyId: 'study-cissp',
             questionCount: 10,
             timeLimitMinutes: 60,
-            domains: [],
+            domainIds: [],
             difficulty: 'hard',
+            mode: 'practice',
         });
         expect(selected).toHaveLength(1);
         expect(selected[0].difficulty).toBe('hard');
     });
 
-    it('filters by domain numbers', () => {
+    it('filters by domainIds', () => {
         const selected = selectQuestions(pool, {
-            certification: 'CISSP',
+            studyId: 'study-cissp',
             questionCount: 10,
             timeLimitMinutes: 60,
-            domains: [1],
+            domainIds: ['d1'],
             difficulty: 'all',
+            mode: 'practice',
         });
         expect(selected).toHaveLength(2);
-        expect(selected.every((q) => q.domainNumber === 1)).toBe(true);
+        expect(selected.every((q) => q.domainIds.includes('d1'))).toBe(true);
     });
 
     it('caps at pool size when requesting more than available', () => {
         const selected = selectQuestions(pool, {
-            certification: 'CISSP',
+            studyId: 'study-cissp',
             questionCount: 100,
             timeLimitMinutes: 60,
-            domains: [],
+            domainIds: [],
             difficulty: 'all',
+            mode: 'practice',
         });
         expect(selected).toHaveLength(pool.length);
     });
 
     it('distributes across domains with round-robin', () => {
         const selected = selectQuestions(pool, {
-            certification: 'CISSP',
+            studyId: 'study-cissp',
             questionCount: 3,
             timeLimitMinutes: 60,
-            domains: [],
+            domainIds: [],
             difficulty: 'all',
+            mode: 'practice',
         });
         // Should pick 1 from each domain (round-robin)
-        const domainCounts = new Map<number, number>();
+        const domainCounts = new Map<string, number>();
         for (const q of selected) {
-            domainCounts.set(q.domainNumber, (domainCounts.get(q.domainNumber) || 0) + 1);
+            const domainId = q.domainIds[0];
+            domainCounts.set(domainId, (domainCounts.get(domainId) || 0) + 1);
         }
         expect(domainCounts.size).toBe(3);
     });
@@ -116,10 +123,10 @@ describe('selectQuestions', () => {
 
 describe('scoreExam', () => {
     const questions: Question[] = [
-        makeQuestion({ id: 'q1', domain: 'Security Operations', correctOptionIndex: 0 }),
-        makeQuestion({ id: 'q2', domain: 'Security Operations', correctOptionIndex: 1 }),
-        makeQuestion({ id: 'q3', domain: 'Asset Security', correctOptionIndex: 2 }),
-        makeQuestion({ id: 'q4', domain: 'Asset Security', correctOptionIndex: 3 }),
+        makeQuestion({ id: 'q1', domainIds: ['d1'], correctOptionIndex: 0 }),
+        makeQuestion({ id: 'q2', domainIds: ['d1'], correctOptionIndex: 1 }),
+        makeQuestion({ id: 'q3', domainIds: ['d2'], correctOptionIndex: 2 }),
+        makeQuestion({ id: 'q4', domainIds: ['d2'], correctOptionIndex: 3 }),
     ];
 
     it('scores all correct answers at 100%', () => {
@@ -130,8 +137,8 @@ describe('scoreExam', () => {
             q4: 3,
         });
         expect(score).toBe(100);
-        expect(domainScores['Security Operations'].percentage).toBe(100);
-        expect(domainScores['Asset Security'].percentage).toBe(100);
+        expect(domainScores['d1'].percentage).toBe(100);
+        expect(domainScores['d2'].percentage).toBe(100);
     });
 
     it('scores all wrong answers at 0%', () => {
@@ -152,9 +159,9 @@ describe('scoreExam', () => {
             q4: 0, // wrong
         });
         expect(score).toBe(50);
-        expect(domainScores['Security Operations'].correct).toBe(1);
-        expect(domainScores['Security Operations'].total).toBe(2);
-        expect(domainScores['Security Operations'].percentage).toBe(50);
+        expect(domainScores['d1'].correct).toBe(1);
+        expect(domainScores['d1'].total).toBe(2);
+        expect(domainScores['d1'].percentage).toBe(50);
     });
 
     it('treats null answers as incorrect', () => {
@@ -180,14 +187,16 @@ describe('scoreExam', () => {
             q4: 3,
         });
         expect(Object.keys(domainScores)).toHaveLength(2);
-        expect(domainScores['Security Operations']).toEqual({
-            domain: 'Security Operations',
+        expect(domainScores['d1']).toEqual({
+            domainId: 'd1',
+            domain: 'd1',
             correct: 2,
             total: 2,
             percentage: 100,
         });
-        expect(domainScores['Asset Security']).toEqual({
-            domain: 'Asset Security',
+        expect(domainScores['d2']).toEqual({
+            domainId: 'd2',
+            domain: 'd2',
             correct: 1,
             total: 2,
             percentage: 50,
@@ -196,14 +205,15 @@ describe('scoreExam', () => {
 });
 
 describe('sanitizeQuestionsForExam', () => {
-    it('strips correctOptionIndex and explanation', () => {
+    it('strips correctOptionIndex, explanation, and whyOthersWrong', () => {
         const questions = [
-            makeQuestion({ id: 'q1', correctOptionIndex: 2, explanation: 'Secret' }),
+            makeQuestion({ id: 'q1', correctOptionIndex: 2, explanation: 'Secret', whyOthersWrong: 'Also secret' }),
         ];
         const sanitized = sanitizeQuestionsForExam(questions);
 
         expect(sanitized[0]).not.toHaveProperty('correctOptionIndex');
         expect(sanitized[0]).not.toHaveProperty('explanation');
+        expect(sanitized[0]).not.toHaveProperty('whyOthersWrong');
         expect(sanitized[0]).toHaveProperty('id', 'q1');
         expect(sanitized[0]).toHaveProperty('text');
         expect(sanitized[0]).toHaveProperty('options');

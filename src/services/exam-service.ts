@@ -1,6 +1,6 @@
 /**
  * ExamService — encapsulates all exam-related business logic and data access.
- * Includes: creation, answer saving, submission, scoring, listing, resume.
+ * v2: exams stored under users/{uid}/exams, uses studyId + domainIds + modes.
  */
 
 import { getAdminDb } from '@/lib/firebase/admin';
@@ -9,7 +9,7 @@ import {
     adminCreateDoc,
     serverTimestamp,
 } from '@/lib/firebase/admin-firestore';
-import { selectQuestions, sanitizeQuestionsForExam, scoreExam } from '@/lib/exam-engine';
+import { selectQuestions, sanitizeQuestionsForExam, scoreExam, getMissedQuestionIds } from '@/lib/exam-engine';
 import { rateLimit } from '@/lib/rate-limit';
 import {
     ExamNotFoundError,
@@ -21,29 +21,31 @@ import {
 } from '@/lib/errors';
 import { fetchQuestionPool } from '@/services/question-service';
 import { FieldValue } from 'firebase-admin/firestore';
-import type { Exam, Question, ExamConfig, DomainScore } from '@/types';
+import type { Exam, Question, ExamConfig, DomainScore, ExamMode } from '@/types';
 
 const GRACE_PERIOD_SECONDS = 30;
 
 // ── Types ────────────────────────────────────────
 
 export interface CreateExamInput {
-    certification: string;
+    studyId: string;
     questionCount: number;
     timeLimitMinutes: number;
-    domains: number[];
+    domainIds: string[];
     difficulty: string;
+    mode: ExamMode;
 }
 
 export interface CreateExamResult {
     id: string;
-    certification: string;
+    studyId: string;
     status: string;
     config: {
         questionCount: number;
         timeLimitMinutes: number;
-        domains: number[];
+        domainIds: string[];
         difficulty: string;
+        mode: ExamMode;
     };
     questions: ReturnType<typeof sanitizeQuestionsForExam>;
 }
@@ -56,26 +58,30 @@ export interface SubmitExamResult {
     correctAnswers: number;
 }
 
+// ── Paths ────────────────────────────────────────
+
+function examsPath(uid: string): string {
+    return `users/${uid}/exams`;
+}
+
 // ── List exams ───────────────────────────────────
 
 export interface ListExamsOptions {
     uid: string;
+    studyId?: string;
     limit?: number;
     status?: string;
 }
 
 export async function listExams(options: ListExamsOptions): Promise<Exam[]> {
-    const { uid, limit: limitParam = 20, status } = options;
+    const { uid, studyId, limit: limitParam = 20, status } = options;
     const limitCount = Math.min(Math.max(1, limitParam), 50);
     const db = getAdminDb();
 
-    let q: FirebaseFirestore.Query = db
-        .collection('exams')
-        .where('userId', '==', uid);
+    let q: FirebaseFirestore.Query = db.collection(examsPath(uid));
 
-    if (status) {
-        q = q.where('status', '==', status);
-    }
+    if (studyId) q = q.where('studyId', '==', studyId);
+    if (status) q = q.where('status', '==', status);
 
     q = q.orderBy('startedAt', 'desc').limit(limitCount);
 
@@ -86,31 +92,34 @@ export async function listExams(options: ListExamsOptions): Promise<Exam[]> {
 // ── Get single exam ──────────────────────────────
 
 export async function getExam(uid: string, examId: string): Promise<Exam> {
-    const exam = await adminGetDoc<Exam>('exams', examId);
-    if (!exam || exam.userId !== uid) throw new ExamNotFoundError();
+    const exam = await adminGetDoc<Exam>(examsPath(uid), examId);
+    if (!exam) throw new ExamNotFoundError();
     return exam;
 }
 
 /**
  * Get exam for client display.
- * In-progress exams strip questionIds to prevent answer lookup cheating.
+ * ALWAYS strips internal scoring fields (questionCorrectAnswers, questionDomains, questionIds).
+ * These fields are server-only — used for zero-read scoring.
  */
 export async function getExamForClient(uid: string, examId: string): Promise<Partial<Exam>> {
     const exam = await getExam(uid, examId);
 
-    if (exam.status === 'in_progress') {
-        const { questionIds: _, ...safeExam } = exam;
-        return safeExam;
-    }
+    // Always strip internal scoring fields — these must never reach the client.
+    // These fields are stored in Firestore by createExam() but intentionally
+    // not declared on the Exam type (they're internal implementation detail).
+    const raw = exam as unknown as Record<string, unknown>;
+    delete raw.questionIds;
+    delete raw.questionCorrectAnswers;
+    delete raw.questionDomains;
 
-    return exam;
+    return raw as Partial<Exam>;
 }
 
 // ── Create exam ──────────────────────────────────
 
 export async function createExam(uid: string, config: CreateExamInput): Promise<CreateExamResult> {
     // Rate limit: max 5 exam creations per minute per user
-    // failOpen=false: deny on error (sensitive operation)
     const allowed = await rateLimit(`exam-create:${uid}`, 5, 60_000, false);
     if (!allowed) throw new RateLimitError();
 
@@ -118,21 +127,61 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
 
     const allQuestions = await fetchQuestionPool({
         uid,
-        certification: config.certification,
+        studyId: config.studyId,
         difficulty: config.difficulty,
-        domains: config.domains.length > 0 ? config.domains : undefined,
+        domainIds: config.domainIds.length > 0 ? config.domainIds : undefined,
         limit: fetchLimit,
     });
 
     if (allQuestions.length === 0) {
-        throw new NoQuestionsAvailableError('No questions available for this certification');
+        throw new NoQuestionsAvailableError('No questions available for this study');
     }
 
-    const selected = selectQuestions(allQuestions, {
-        ...config,
-        domains: config.domains,
-        difficulty: config.difficulty as ExamConfig['difficulty'],
-    });
+    // Build performance data for smart modes
+    let performanceData: { domainScores?: Record<string, DomainScore>; missedQuestionIds?: string[] } | undefined;
+
+    if (config.mode === 'weak_domains' || config.mode === 'missed_topics') {
+        const recentExams = await listExams({ uid, studyId: config.studyId, limit: 20, status: 'completed' });
+
+        if (config.mode === 'weak_domains') {
+            // Aggregate domain scores from recent exams
+            const aggDomainScores: Record<string, DomainScore> = {};
+            for (const exam of recentExams) {
+                if (exam.domainScores) {
+                    for (const [domainId, ds] of Object.entries(exam.domainScores)) {
+                        if (!aggDomainScores[domainId]) {
+                            aggDomainScores[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0, percentage: 0 };
+                        }
+                        aggDomainScores[domainId].correct += ds.correct;
+                        aggDomainScores[domainId].total += ds.total;
+                    }
+                }
+            }
+            // Recalculate percentages
+            for (const ds of Object.values(aggDomainScores)) {
+                ds.percentage = ds.total > 0 ? Math.round((ds.correct / ds.total) * 100) : 0;
+            }
+            performanceData = { domainScores: aggDomainScores };
+        }
+
+        if (config.mode === 'missed_topics') {
+            performanceData = {
+                missedQuestionIds: getMissedQuestionIds(recentExams, allQuestions),
+            };
+        }
+    }
+
+    const selected = selectQuestions(
+        allQuestions,
+        {
+            ...config,
+            domainIds: config.domainIds,
+            difficulty: config.difficulty as ExamConfig['difficulty'],
+            mode: config.mode,
+            studyId: config.studyId,
+        },
+        performanceData
+    );
 
     if (selected.length === 0) {
         throw new NoQuestionsAvailableError('No questions match your filters');
@@ -144,30 +193,29 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
         answers[q.id] = null;
     }
 
-    // Store correctOptionIndex per question in the exam doc
-    // This eliminates the need to re-fetch all questions during scoring
+    // Store correctOptionIndex + domainIds per question for zero-read scoring
     const questionCorrectAnswers: Record<string, number> = {};
+    const questionDomains: Record<string, string> = {};
     for (const q of selected) {
         questionCorrectAnswers[q.id] = q.correctOptionIndex;
+        questionDomains[q.id] = q.domainIds[0] || '_none';
     }
 
     const now = serverTimestamp();
     const examData = {
         userId: uid,
-        certification: config.certification,
+        studyId: config.studyId,
         status: 'in_progress',
         config: {
             questionCount: selected.length,
             timeLimitMinutes: config.timeLimitMinutes,
-            domains: config.domains,
+            domainIds: config.domainIds,
             difficulty: config.difficulty,
+            mode: config.mode,
         },
         questionIds: selected.map(q => q.id),
-        questionCorrectAnswers, // New: stored at creation time for scoring
-        questionDomains: selected.reduce((acc, q) => {
-            acc[q.id] = q.domain;
-            return acc;
-        }, {} as Record<string, string>),
+        questionCorrectAnswers,
+        questionDomains,
         answers,
         score: null,
         domainScores: {},
@@ -176,17 +224,18 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
         timeSpentSeconds: 0,
     };
 
-    const examId = await adminCreateDoc('exams', examData);
+    const examId = await adminCreateDoc(examsPath(uid), examData);
 
     return {
         id: examId,
-        certification: config.certification,
+        studyId: config.studyId,
         status: 'in_progress',
         config: {
             questionCount: selected.length,
             timeLimitMinutes: config.timeLimitMinutes,
-            domains: config.domains,
+            domainIds: config.domainIds,
             difficulty: config.difficulty,
+            mode: config.mode,
         },
         questions: sanitizeQuestionsForExam(selected),
     };
@@ -201,13 +250,12 @@ export async function saveAnswer(
     selectedOptionIndex: number | null
 ): Promise<void> {
     const db = getAdminDb();
-    const docRef = db.collection('exams').doc(examId);
+    const docRef = db.doc(`${examsPath(uid)}/${examId}`);
     const snap = await docRef.get();
 
     if (!snap.exists) throw new ExamNotFoundError();
 
     const data = snap.data()!;
-    if (data.userId !== uid) throw new ExamNotFoundError();
     if (data.status !== 'in_progress') throw new ExamAlreadyCompletedError();
 
     const questionIds = data.questionIds as string[];
@@ -250,8 +298,9 @@ export async function submitExam(
         }
     }
 
-    // Use stored correct answers instead of batch-reading all question documents
-    const examDoc = await getAdminDb().collection('exams').doc(examId).get();
+    // Use stored correct answers for zero-read scoring
+    const db = getAdminDb();
+    const examDoc = await db.doc(`${examsPath(uid)}/${examId}`).get();
     const examData = examDoc.data()!;
     const storedCorrectAnswers = examData.questionCorrectAnswers as Record<string, number> | undefined;
     const storedDomains = examData.questionDomains as Record<string, string> | undefined;
@@ -261,14 +310,12 @@ export async function submitExam(
     let totalQuestions: number;
 
     if (storedCorrectAnswers && storedDomains) {
-        // New path: score from stored data — zero additional reads
         const result = scoreFromStored(finalAnswers, storedCorrectAnswers, storedDomains);
         score = result.score;
         domainScores = result.domainScores;
         totalQuestions = Object.keys(storedCorrectAnswers).length;
     } else {
-        // Legacy fallback: fetch questions (for exams created before migration)
-        const db = getAdminDb();
+        // Legacy fallback: fetch questions
         const questionsCol = db.collection(`users/${uid}/questions`);
         const questionRefs = exam.questionIds.map(id => questionsCol.doc(id));
         const questionSnaps = await db.getAll(...questionRefs);
@@ -289,11 +336,10 @@ export async function submitExam(
     const timeSpentSeconds = Math.floor(Date.now() / 1000) - startSeconds;
     const now = serverTimestamp();
 
-    // Atomic batch write: exam update + user profile + exam history
-    const db = getAdminDb();
+    // Atomic batch write: exam update + user profile + exam history + study counter
     const batch = db.batch();
 
-    batch.update(db.collection('exams').doc(examId), {
+    batch.update(db.doc(`${examsPath(uid)}/${examId}`), {
         status: 'completed',
         score,
         domainScores,
@@ -307,22 +353,24 @@ export async function submitExam(
         uid,
         lastActiveAt: now,
         examsTaken: FieldValue.increment(1),
-        totalScoreAccumulator: FieldValue.increment(score),
     }, { merge: true });
 
     batch.set(userRef.collection('examHistory').doc(examId), {
         examId,
-        certification: exam.certification,
+        studyId: exam.studyId,
         score,
         questionCount: totalQuestions,
         timeSpentSeconds,
         completedAt: now,
     });
 
+    // Increment exam count on study
+    const studyRef = db.doc(`users/${uid}/studies/${exam.studyId}`);
+    batch.update(studyRef, { examCount: FieldValue.increment(1) });
+
     await batch.commit();
 
-    // Post-commit: recalculate averageScore for consistency
-    // (prevents drift from concurrent writes)
+    // Post-commit: recalculate averageScore
     await recalculateAverageScore(uid);
 
     return {
@@ -340,7 +388,7 @@ export async function abandonExam(uid: string, examId: string): Promise<void> {
     const exam = await getExam(uid, examId);
     if (exam.status !== 'in_progress') throw new ExamAlreadyCompletedError();
 
-    await getAdminDb().collection('exams').doc(examId).update({
+    await getAdminDb().doc(`${examsPath(uid)}/${examId}`).update({
         status: 'abandoned',
         completedAt: serverTimestamp(),
     });
@@ -348,16 +396,17 @@ export async function abandonExam(uid: string, examId: string): Promise<void> {
 
 // ── Get in-progress exam for resume ──────────────
 
-export async function getInProgressExam(uid: string): Promise<Exam | null> {
+export async function getInProgressExam(uid: string, studyId?: string): Promise<Exam | null> {
     const db = getAdminDb();
-    const snap = await db
-        .collection('exams')
-        .where('userId', '==', uid)
-        .where('status', '==', 'in_progress')
-        .orderBy('startedAt', 'desc')
-        .limit(1)
-        .get();
+    let q: FirebaseFirestore.Query = db
+        .collection(examsPath(uid))
+        .where('status', '==', 'in_progress');
 
+    if (studyId) q = q.where('studyId', '==', studyId);
+
+    q = q.orderBy('startedAt', 'desc').limit(1);
+
+    const snap = await q.get();
     if (snap.empty) return null;
     return { id: snap.docs[0].id, ...snap.docs[0].data() } as Exam;
 }
@@ -380,7 +429,7 @@ export async function resumeExam(uid: string, examId: string): Promise<CreateExa
 
     return {
         id: examId,
-        certification: exam.certification,
+        studyId: exam.studyId,
         status: exam.status,
         config: exam.config,
         questions: sanitizeQuestionsForExam(questions),
@@ -393,11 +442,11 @@ export interface ExamReviewQuestion {
     id: string;
     text: string;
     options: Array<{ label: string; text: string }>;
-    domain: string;
-    domainNumber: number;
+    domainIds: string[];
     difficulty: string;
     correctOptionIndex: number;
     explanation: string;
+    whyOthersWrong: string | null;
     userAnswer: number | null;
     isCorrect: boolean;
 }
@@ -426,11 +475,11 @@ export async function getExamReview(uid: string, examId: string): Promise<{
                 id: qId,
                 text: data.text,
                 options: data.options,
-                domain: data.domain,
-                domainNumber: data.domainNumber,
+                domainIds: data.domainIds || [],
                 difficulty: data.difficulty,
                 correctOptionIndex: data.correctOptionIndex,
                 explanation: data.explanation,
+                whyOthersWrong: data.whyOthersWrong || null,
                 userAnswer,
                 isCorrect: userAnswer === data.correctOptionIndex,
             };
@@ -445,14 +494,14 @@ export interface AnalyticsData {
     totalExams: number;
     avgScore: number;
     passRate: number;
-    scoreTrend: Array<{ score: number; certification: string; date: string }>;
-    certBreakdown: Record<string, { exams: number; avgScore: number }>;
-    domainStats: Array<{ domain: string; percentage: number; correct: number; total: number }>;
+    scoreTrend: Array<{ score: number; studyId: string; date: string }>;
+    studyBreakdown: Record<string, { exams: number; avgScore: number }>;
+    domainStats: Array<{ domainId: string; domain: string; percentage: number; correct: number; total: number }>;
     readiness: number;
 }
 
-export async function getAnalytics(uid: string): Promise<AnalyticsData> {
-    const exams = await listExams({ uid, limit: 50, status: 'completed' });
+export async function getAnalytics(uid: string, studyId?: string): Promise<AnalyticsData> {
+    const exams = await listExams({ uid, studyId, limit: 50, status: 'completed' });
 
     const total = exams.length;
     const avg = total > 0
@@ -464,40 +513,42 @@ export async function getAnalytics(uid: string): Promise<AnalyticsData> {
     // Score trend (chronological)
     const trend = [...exams].reverse().map(e => ({
         score: e.score || 0,
-        certification: e.certification,
+        studyId: e.studyId,
         date: formatTimestamp(e.completedAt),
     }));
 
-    // Cert breakdown
-    const certs: Record<string, { exams: number; avgScore: number; scores: number[] }> = {};
+    // Study breakdown
+    const studies: Record<string, { exams: number; scores: number[] }> = {};
     for (const exam of exams) {
-        if (!certs[exam.certification]) {
-            certs[exam.certification] = { exams: 0, avgScore: 0, scores: [] };
-        }
-        certs[exam.certification].exams++;
-        certs[exam.certification].scores.push(exam.score || 0);
+        const sid = exam.studyId;
+        if (!studies[sid]) studies[sid] = { exams: 0, scores: [] };
+        studies[sid].exams++;
+        studies[sid].scores.push(exam.score || 0);
     }
-    const certBreakdown: Record<string, { exams: number; avgScore: number }> = {};
-    for (const [cert, data] of Object.entries(certs)) {
-        certBreakdown[cert] = {
+    const studyBreakdown: Record<string, { exams: number; avgScore: number }> = {};
+    for (const [sid, data] of Object.entries(studies)) {
+        studyBreakdown[sid] = {
             exams: data.exams,
             avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length),
         };
     }
 
     // Domain aggregates
-    const domainAgg: Record<string, { correct: number; total: number }> = {};
+    const domainAgg: Record<string, { domainId: string; domain: string; correct: number; total: number }> = {};
     for (const exam of exams) {
         if (exam.domainScores) {
-            for (const [domain, ds] of Object.entries(exam.domainScores)) {
-                if (!domainAgg[domain]) domainAgg[domain] = { correct: 0, total: 0 };
-                domainAgg[domain].correct += ds.correct;
-                domainAgg[domain].total += ds.total;
+            for (const [domainId, ds] of Object.entries(exam.domainScores)) {
+                if (!domainAgg[domainId]) {
+                    domainAgg[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0 };
+                }
+                domainAgg[domainId].correct += ds.correct;
+                domainAgg[domainId].total += ds.total;
             }
         }
     }
     const domainStats = Object.entries(domainAgg)
-        .map(([domain, { correct, total }]) => ({
+        .map(([, { domainId, domain, correct, total }]) => ({
+            domainId,
             domain,
             percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
             correct,
@@ -509,7 +560,7 @@ export async function getAnalytics(uid: string): Promise<AnalyticsData> {
         ? Math.round(domainStats.reduce((sum, d) => sum + d.percentage, 0) / domainStats.length)
         : 0;
 
-    return { totalExams: total, avgScore: avg, passRate, scoreTrend: trend, certBreakdown, domainStats, readiness };
+    return { totalExams: total, avgScore: avg, passRate, scoreTrend: trend, studyBreakdown, domainStats, readiness };
 }
 
 // ── Helpers ──────────────────────────────────────
@@ -520,7 +571,7 @@ function scoreFromStored(
     correctAnswers: Record<string, number>,
     domains: Record<string, string>
 ): { score: number; domainScores: Record<string, DomainScore> } {
-    const domainMap = new Map<string, { correct: number; total: number; domain: string }>();
+    const domainMap = new Map<string, { correct: number; total: number; domainId: string; domain: string }>();
     let totalCorrect = 0;
     const totalQuestions = Object.keys(correctAnswers).length;
 
@@ -529,16 +580,17 @@ function scoreFromStored(
         const isCorrect = userAnswer === correctIndex;
         if (isCorrect) totalCorrect++;
 
-        const domain = domains[qId] || 'Unknown';
-        const existing = domainMap.get(domain) || { correct: 0, total: 0, domain };
+        const domainId = domains[qId] || '_none';
+        const existing = domainMap.get(domainId) || { correct: 0, total: 0, domainId, domain: domainId };
         existing.total++;
         if (isCorrect) existing.correct++;
-        domainMap.set(domain, existing);
+        domainMap.set(domainId, existing);
     }
 
     const domainScores: Record<string, DomainScore> = {};
     for (const [key, val] of domainMap) {
         domainScores[key] = {
+            domainId: val.domainId,
             domain: val.domain,
             correct: val.correct,
             total: val.total,

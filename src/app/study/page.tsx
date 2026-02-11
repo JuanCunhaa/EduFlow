@@ -4,20 +4,22 @@ import { useState, useMemo, useRef } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { Spinner } from '@/components/ui/Spinner';
 import { useQuestions } from '@/hooks/useQuestions';
-import type { Certification, Difficulty, Question } from '@/types';
+import { useStudies } from '@/hooks/useStudies';
+import type { Difficulty, Question, Study } from '@/types';
 import { Eye, EyeOff, ChevronLeft, ChevronRight, Shuffle, BookOpen } from 'lucide-react';
 
-const CERTIFICATIONS: Certification[] = ['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC'];
-
-export default function StudyPage() {
-    const [certification, setCertification] = useState<Certification>('CISSP');
+export default function FlashcardsPage() {
+    const { studies } = useStudies();
+    const [activeStudy, setActiveStudy] = useState<Study | null>(null);
     const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showAnswer, setShowAnswer] = useState(false);
     const [shuffled, setShuffled] = useState(false);
 
+    const currentStudy = activeStudy || studies[0] || null;
+
     const { questions, isLoading } = useQuestions({
-        certification,
+        studyId: currentStudy?.id,
         difficulty: difficulty === 'all' ? undefined : difficulty,
     });
 
@@ -52,11 +54,19 @@ export default function StudyPage() {
         setShowAnswer(false);
     }
 
+    // Resolve domain names from the current study
+    function getDomainLabel(domainIds: string[]): string {
+        if (!currentStudy) return domainIds.join(', ');
+        return domainIds
+            .map(id => currentStudy.domains.find(d => d.id === id)?.abbreviation || id)
+            .join(', ');
+    }
+
     return (
         <Shell>
             <div className="space-y-6 animate-fade-in">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Study Mode</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Flashcards</h1>
                     <p className="mt-1.5 text-sm text-muted-foreground">
                         Review questions at your own pace — no timer, no pressure
                     </p>
@@ -64,13 +74,21 @@ export default function StudyPage() {
 
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-3">
-                    <select
-                        value={certification}
-                        onChange={(e) => { setCertification(e.target.value as Certification); setCurrentIndex(0); setShowAnswer(false); }}
-                        className="rounded-lg border border-border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
-                    >
-                        {CERTIFICATIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    {/* Study selector */}
+                    <div className="flex gap-1.5">
+                        {studies.map((s) => (
+                            <button
+                                key={s.id}
+                                onClick={() => { setActiveStudy(s); setCurrentIndex(0); setShowAnswer(false); }}
+                                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${currentStudy?.id === s.id
+                                        ? 'bg-primary/20 text-primary ring-1 ring-primary/30'
+                                        : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                                    }`}
+                            >
+                                {s.abbreviation}
+                            </button>
+                        ))}
+                    </div>
 
                     <select
                         value={difficulty}
@@ -128,7 +146,7 @@ export default function StudyPage() {
                         <div className="card-premium p-7">
                             <div className="mb-3 flex items-center gap-2">
                                 <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                    {question.certification} • Domain {question.domainNumber}
+                                    {getDomainLabel(question.domainIds)}
                                 </span>
                                 <span className={`rounded-md px-2.5 py-0.5 text-xs font-bold ${question.difficulty === 'easy' ? 'bg-emerald-400/10 text-emerald-400' :
                                     question.difficulty === 'medium' ? 'bg-amber-400/10 text-amber-400' :

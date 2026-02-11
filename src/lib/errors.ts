@@ -114,6 +114,13 @@ export class QuestionNotFoundError extends NotFoundError {
     }
 }
 
+export class StudyNotFoundError extends NotFoundError {
+    constructor() {
+        super('Study');
+        this.name = 'StudyNotFoundError';
+    }
+}
+
 export class QuestionNotInExamError extends BadRequestError {
     constructor() {
         super('Question not in this exam');

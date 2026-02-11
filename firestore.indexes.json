@@ -2,24 +2,38 @@
     "indexes": [
         {
             "collectionGroup": "questions",
-            "queryScope": "COLLECTION_GROUP",
+            "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "certification",
+                    "fieldPath": "studyId",
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "domainNumber",
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "questions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "studyId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "difficulty",
                     "order": "ASCENDING"
                 }
             ]
         },
         {
             "collectionGroup": "questions",
-            "queryScope": "COLLECTION_GROUP",
+            "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "certification",
+                    "fieldPath": "studyId",
                     "order": "ASCENDING"
                 },
                 {
@@ -27,26 +41,8 @@
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "domainNumber",
-                    "order": "ASCENDING"
-                }
-            ]
-        },
-        {
-            "collectionGroup": "questions",
-            "queryScope": "COLLECTION_GROUP",
-            "fields": [
-                {
-                    "fieldPath": "certification",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "domainNumber",
-                    "order": "ASCENDING"
-                },
-                {
-                    "fieldPath": "difficulty",
-                    "order": "ASCENDING"
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
                 }
             ]
         },
@@ -55,7 +51,7 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "userId",
+                    "fieldPath": "studyId",
                     "order": "ASCENDING"
                 },
                 {
@@ -68,10 +64,6 @@
             "collectionGroup": "exams",
             "queryScope": "COLLECTION",
             "fields": [
-                {
-                    "fieldPath": "userId",
-                    "order": "ASCENDING"
-                },
                 {
                     "fieldPath": "status",
                     "order": "ASCENDING"
@@ -87,7 +79,7 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "userId",
+                    "fieldPath": "studyId",
                     "order": "ASCENDING"
                 },
                 {
@@ -95,8 +87,8 @@
                     "order": "ASCENDING"
                 },
                 {
-                    "fieldPath": "questionIds",
-                    "arrayConfig": "CONTAINS"
+                    "fieldPath": "startedAt",
+                    "order": "DESCENDING"
                 }
             ]
         }

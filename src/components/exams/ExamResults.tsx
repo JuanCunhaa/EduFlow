@@ -8,19 +8,11 @@ interface ExamResultsProps {
     correctAnswers: number;
     totalQuestions: number;
     domainScores: Record<string, { correct: number; total: number; percentage: number }>;
-    certification: string;
+    studyName: string;
+    passingScore?: number;
     onBackToExams: () => void;
     onRetry: () => void;
 }
-
-/** P3 #17: Per-certification passing thresholds */
-const PASSING_SCORES: Record<string, number> = {
-    CISSP: 70,
-    CC: 75,
-    CCSP: 70,
-    SSCP: 70,
-    CGRC: 70,
-};
 
 function getBarColor(pct: number, threshold: number): string {
     if (pct >= threshold) return 'gradient-bar-success';
@@ -39,11 +31,12 @@ export function ExamResults({
     correctAnswers,
     totalQuestions,
     domainScores,
-    certification,
+    studyName,
+    passingScore: passingScoreProp,
     onBackToExams,
     onRetry,
 }: Readonly<ExamResultsProps>) {
-    const passingScore = PASSING_SCORES[certification] ?? 70;
+    const passingScore = passingScoreProp ?? 70;
     const passed = score >= passingScore;
     const sortedDomains = Object.entries(domainScores).sort(
         ([, a], [, b]) => a.percentage - b.percentage
@@ -79,7 +72,7 @@ export function ExamResults({
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                    {correctAnswers} correct out of {totalQuestions} questions • {certification}
+                    {correctAnswers} correct out of {totalQuestions} questions • {studyName}
                 </p>
             </div>
 

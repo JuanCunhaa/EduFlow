@@ -1,15 +1,17 @@
 import useSWR from 'swr';
-import type { Exam, ExamConfig } from '@/types';
+import type { Exam, ExamConfig, ExamMode } from '@/types';
 import { fetcher } from '@/lib/fetcher';
 
 interface UseExamsOptions {
+    studyId?: string;
     limit?: number;
     status?: string;
 }
 
 export function useExams(options: UseExamsOptions = {}) {
-    const { limit = 20, status } = options;
+    const { studyId, limit = 20, status } = options;
     const params = new URLSearchParams({ limit: String(limit) });
+    if (studyId) params.set('studyId', studyId);
     if (status) params.set('status', status);
     const url = `/api/exams?${params}`;
 
@@ -43,9 +45,13 @@ export function useExam(examId: string | null) {
 }
 
 /** Check for an in-progress exam (resume flow) */
-export function useInProgressExam() {
+export function useInProgressExam(studyId?: string) {
+    const params = new URLSearchParams();
+    if (studyId) params.set('studyId', studyId);
+    const url = `/api/exams/in-progress?${params}`;
+
     const { data, error, isLoading, mutate } = useSWR(
-        '/api/exams/in-progress',
+        url,
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 60_000 }
     );
@@ -60,17 +66,26 @@ export function useInProgressExam() {
 
 interface CreateExamResult {
     id: string;
+    studyId: string;
+    status: string;
+    config: {
+        questionCount: number;
+        timeLimitMinutes: number;
+        domainIds: string[];
+        difficulty: string;
+        mode: ExamMode;
+    };
     questions: Array<{
         id: string;
         text: string;
         options: Array<{ label: string; text: string }>;
-        domain: string;
-        domainNumber: number;
+        studyId: string;
+        domainIds: string[];
         difficulty: string;
     }>;
 }
 
-export async function createExam(config: ExamConfig): Promise<CreateExamResult> {
+export async function createExam(config: ExamConfig & { studyId: string }): Promise<CreateExamResult> {
     const res = await fetch('/api/exams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,7 +121,7 @@ export async function saveAnswer(
 interface SubmitResult {
     examId: string;
     score: number;
-    domainScores: Record<string, { correct: number; total: number; percentage: number }>;
+    domainScores: Record<string, { domainId: string; domain: string; correct: number; total: number; percentage: number }>;
     totalQuestions: number;
     correctAnswers: number;
 }

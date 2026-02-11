@@ -7,8 +7,7 @@ interface SessionQuestion {
     id: string;
     text: string;
     options: Array<{ label: string; text: string }>;
-    domain: string;
-    domainNumber: number;
+    domainIds: string[];
     difficulty: string;
 }
 
@@ -113,10 +112,11 @@ export function ExamSession({
             {/* Question */}
             <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 animate-fade-in">
                 <div className="mb-3 flex items-center gap-2">
-                    <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                        Domain {currentQuestion.domainNumber}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{currentQuestion.domain}</span>
+                    {currentQuestion.domainIds.map((did) => (
+                        <span key={did} className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                            {did}
+                        </span>
+                    ))}
                 </div>
 
                 <h2 className="mb-8 text-lg font-medium leading-relaxed text-foreground">

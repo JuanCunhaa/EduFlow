@@ -1,75 +1,108 @@
 'use client';
 
 import { useState } from 'react';
-import type { Certification, Difficulty } from '@/types';
-import { ChevronRight, Clock, BookOpen, Target, Zap } from 'lucide-react';
+import type { Difficulty, Study, StudyDomain, ExamMode } from '@/types';
+import { ChevronRight, Clock, BookOpen, Target, Zap, Layers } from 'lucide-react';
 
 interface ExamConfigFormProps {
+    /** Available studies — the user picks one */
+    studies: Study[];
+    /** Pre-selected study (e.g. active study from context) */
+    activeStudyId?: string;
     onStart: (config: {
-        certification: Certification;
+        studyId: string;
         questionCount: number;
         timeLimitMinutes: number;
         difficulty: Difficulty | 'all';
-        domains: number[];
+        domainIds: string[];
+        mode: ExamMode;
     }) => Promise<void>;
     isLoading: boolean;
 }
 
-const CERTIFICATIONS: { value: Certification; label: string; domains: number }[] = [
-    { value: 'CISSP', label: 'CISSP — Certified Information Systems Security Professional', domains: 8 },
-    { value: 'CC', label: 'CC — Certified in Cybersecurity', domains: 5 },
-    { value: 'SSCP', label: 'SSCP — Systems Security Certified Practitioner', domains: 7 },
-    { value: 'CCSP', label: 'CCSP — Certified Cloud Security Professional', domains: 6 },
-    { value: 'CGRC', label: 'CGRC — Governance, Risk and Compliance', domains: 5 },
-];
-
 const QUESTION_COUNTS = [10, 25, 50, 100, 150];
 
-export function ExamConfigForm({ onStart, isLoading }: Readonly<ExamConfigFormProps>) {
-    const [certification, setCertification] = useState<Certification>('CISSP');
+const EXAM_MODES: { value: ExamMode; label: string; description: string }[] = [
+    { value: 'practice', label: 'Practice', description: 'Random selection across all domains' },
+    { value: 'weak_domains', label: 'Weak Domains', description: 'Focus on domains you struggle with' },
+    { value: 'missed_topics', label: 'Missed Topics', description: 'Questions you previously got wrong' },
+    { value: 'real_mix', label: 'Real Mix', description: 'Simulates a real exam distribution' },
+    { value: 'domain_focus', label: 'Domain Focus', description: 'Deep-dive into selected domains' },
+];
+
+export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: Readonly<ExamConfigFormProps>) {
+    const [selectedStudyId, setSelectedStudyId] = useState(activeStudyId || studies[0]?.id || '');
     const [questionCount, setQuestionCount] = useState(25);
     const [timeLimitMinutes, setTimeLimitMinutes] = useState(60);
     const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
-    const [selectedDomains, setSelectedDomains] = useState<number[]>([]);
+    const [selectedDomainIds, setSelectedDomainIds] = useState<string[]>([]);
+    const [mode, setMode] = useState<ExamMode>('practice');
 
-    const certConfig = CERTIFICATIONS.find((c) => c.value === certification)!;
-    const allDomains = Array.from({ length: certConfig.domains }, (_, i) => i + 1);
+    const currentStudy = studies.find((s) => s.id === selectedStudyId);
+    const domains: StudyDomain[] = currentStudy?.domains || [];
 
-    function toggleDomain(d: number) {
-        setSelectedDomains((prev) =>
-            prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]
+    function toggleDomain(domainId: string) {
+        setSelectedDomainIds((prev) =>
+            prev.includes(domainId) ? prev.filter((x) => x !== domainId) : [...prev, domainId]
         );
     }
 
     return (
         <div className="mx-auto max-w-2xl space-y-10 animate-fade-in">
-            {/* Certification selection */}
+            {/* Study selection */}
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     <div className="h-px w-3 bg-primary/50" />
-                    Certification
+                    Study
                 </h2>
                 <div className="grid gap-2">
-                    {CERTIFICATIONS.map((c) => (
+                    {studies.map((s) => (
                         <button
-                            key={c.value}
-                            onClick={() => { setCertification(c.value); setSelectedDomains([]); }}
-                            className={`flex items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-all duration-200 ${certification === c.value
+                            key={s.id}
+                            onClick={() => { setSelectedStudyId(s.id); setSelectedDomainIds([]); }}
+                            className={`flex items-center justify-between rounded-xl border px-4 py-3.5 text-left transition-all duration-200 ${selectedStudyId === s.id
                                 ? 'border-primary/30 bg-primary/5 text-foreground shadow-[0_0_12px_var(--glow)]'
                                 : 'border-border bg-card text-muted-foreground hover:border-border hover:bg-accent/30'
                                 }`}
                         >
                             <div className="flex items-center gap-3">
-                                <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold transition-colors ${certification === c.value
+                                <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold transition-colors ${selectedStudyId === s.id
                                     ? 'bg-primary/20 text-primary'
                                     : 'bg-muted text-muted-foreground'
                                     }`}>
-                                    {c.value.slice(0, 2)}
+                                    {s.abbreviation.slice(0, 2)}
                                 </div>
-                                <span className="text-sm font-medium">{c.label}</span>
+                                <span className="text-sm font-medium">{s.name}</span>
                             </div>
-                            {certification === c.value && (
+                            {selectedStudyId === s.id && (
                                 <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_6px_var(--glow)]" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Exam Mode */}
+            <div className="space-y-3">
+                <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <Layers className="h-3.5 w-3.5" /> Mode
+                </h2>
+                <div className="grid gap-2">
+                    {EXAM_MODES.map((m) => (
+                        <button
+                            key={m.value}
+                            onClick={() => setMode(m.value)}
+                            className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-200 ${mode === m.value
+                                ? 'border-primary/30 bg-primary/5 text-foreground'
+                                : 'border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                }`}
+                        >
+                            <div>
+                                <span className="text-sm font-medium">{m.label}</span>
+                                <p className="text-xs text-muted-foreground">{m.description}</p>
+                            </div>
+                            {mode === m.value && (
+                                <div className="h-2 w-2 rounded-full bg-primary" />
                             )}
                         </button>
                     ))}
@@ -146,20 +179,20 @@ export function ExamConfigForm({ onStart, isLoading }: Readonly<ExamConfigFormPr
                         <Zap className="h-3.5 w-3.5" /> Domains
                     </h2>
                     <span className="text-xs text-muted-foreground">
-                        {selectedDomains.length === 0 ? 'All domains' : `${selectedDomains.length} selected`}
+                        {selectedDomainIds.length === 0 ? 'All domains' : `${selectedDomainIds.length} selected`}
                     </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {allDomains.map((d) => (
+                    {domains.map((d) => (
                         <button
-                            key={d}
-                            onClick={() => toggleDomain(d)}
-                            className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${selectedDomains.includes(d)
+                            key={d.id}
+                            onClick={() => toggleDomain(d.id)}
+                            className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${selectedDomainIds.includes(d.id)
                                 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
                                 : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
                                 }`}
                         >
-                            Domain {d}
+                            {d.abbreviation}
                         </button>
                     ))}
                 </div>
@@ -169,14 +202,15 @@ export function ExamConfigForm({ onStart, isLoading }: Readonly<ExamConfigFormPr
             <button
                 onClick={() =>
                     onStart({
-                        certification,
+                        studyId: selectedStudyId,
                         questionCount,
                         timeLimitMinutes,
                         difficulty,
-                        domains: selectedDomains,
+                        domainIds: selectedDomainIds,
+                        mode,
                     })
                 }
-                disabled={isLoading}
+                disabled={isLoading || !selectedStudyId}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
             >
                 {isLoading ? (

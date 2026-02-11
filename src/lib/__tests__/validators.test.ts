@@ -7,9 +7,11 @@ import {
     updateQuestionSchema,
     certificationSchema,
     difficultySchema,
+    examModeSchema,
+    createStudySchema,
 } from '@/lib/validators';
 
-describe('certificationSchema', () => {
+describe('certificationSchema (deprecated, kept for migration)', () => {
     it.each(['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC'])(
         'accepts valid certification: %s',
         (cert: string) => {
@@ -32,11 +34,54 @@ describe('difficultySchema', () => {
     });
 });
 
+describe('examModeSchema', () => {
+    it.each(['practice', 'weak_domains', 'missed_topics', 'real_mix', 'domain_focus'])(
+        'accepts: %s',
+        (mode: string) => {
+            expect(examModeSchema.parse(mode)).toBe(mode);
+        }
+    );
+
+    it('rejects invalid mode', () => {
+        expect(() => examModeSchema.parse('invalid_mode')).toThrow();
+    });
+});
+
+describe('createStudySchema', () => {
+    const validStudy = {
+        abbreviation: 'CISSP',
+        name: 'Certified Information Systems Security Professional',
+        domains: [
+            { id: 'd1', abbreviation: 'SAM', name: 'Security and Risk Management', order: 0 },
+            { id: 'd2', abbreviation: 'AS', name: 'Asset Security', order: 1 },
+        ],
+    };
+
+    it('accepts a valid study', () => {
+        const result = createStudySchema.parse(validStudy);
+        expect(result.abbreviation).toBe('CISSP');
+        expect(result.domains).toHaveLength(2);
+    });
+
+    it('requires at least one domain', () => {
+        expect(() =>
+            createStudySchema.parse({ ...validStudy, domains: [] })
+        ).toThrow();
+    });
+
+    it('strips HTML from name', () => {
+        const result = createStudySchema.parse({
+            ...validStudy,
+            name: '<b>CISSP</b> Certification',
+        });
+        expect(result.name).toBe('CISSP Certification');
+    });
+});
+
 describe('createQuestionSchema', () => {
     const validQuestion = {
-        certification: 'CISSP',
-        domain: 'Security Operations',
-        domainNumber: 1,
+        studyId: 'study-cissp',
+        domainIds: ['d1'],
         text: 'What is the purpose of a firewall?',
         options: [
             { label: 'A', text: 'Block traffic' },
@@ -52,7 +97,8 @@ describe('createQuestionSchema', () => {
 
     it('accepts a valid question', () => {
         const result = createQuestionSchema.parse(validQuestion);
-        expect(result.certification).toBe('CISSP');
+        expect(result.studyId).toBe('study-cissp');
+        expect(result.domainIds).toEqual(['d1']);
         expect(result.options).toHaveLength(4);
     });
 
@@ -62,11 +108,23 @@ describe('createQuestionSchema', () => {
         expect(result.tags).toEqual([]);
     });
 
+    it('defaults whyOthersWrong to null when omitted', () => {
+        const result = createQuestionSchema.parse(validQuestion);
+        expect(result.whyOthersWrong).toBeNull();
+    });
+
+    it('accepts whyOthersWrong when provided', () => {
+        const result = createQuestionSchema.parse({
+            ...validQuestion,
+            whyOthersWrong: 'B encrypts, C logs, D backs up',
+        });
+        expect(result.whyOthersWrong).toBe('B encrypts, C logs, D backs up');
+    });
+
     it('strips HTML from text fields', () => {
         const questionWithHtml = {
             ...validQuestion,
             text: '<script>alert("xss")</script>What is a firewall?',
-            domain: '<b>Security</b> Ops',
             explanation: '<img src=x onerror=alert(1)>Firewalls filter traffic.',
             options: [
                 { label: 'A', text: '<em>Block</em> traffic' },
@@ -77,7 +135,6 @@ describe('createQuestionSchema', () => {
         };
         const result = createQuestionSchema.parse(questionWithHtml);
         expect(result.text).toBe('alert("xss")What is a firewall?');
-        expect(result.domain).toBe('Security Ops');
         expect(result.explanation).toBe('Firewalls filter traffic.');
         expect(result.options[0].text).toBe('Block traffic');
     });
@@ -99,13 +156,26 @@ describe('createQuestionSchema', () => {
         ).toThrow();
     });
 
-    it('rejects question with more than 4 options', () => {
+    it('accepts question with 5 options', () => {
+        const fiveOpts = {
+            ...validQuestion,
+            options: [
+                ...validQuestion.options,
+                { label: 'E', text: 'Extra option' },
+            ],
+        };
+        const result = createQuestionSchema.parse(fiveOpts);
+        expect(result.options).toHaveLength(5);
+    });
+
+    it('rejects question with more than 5 options', () => {
         expect(() =>
             createQuestionSchema.parse({
                 ...validQuestion,
                 options: [
                     ...validQuestion.options,
                     { label: 'E', text: 'Extra' },
+                    { label: 'F', text: 'Too many' },
                 ],
             })
         ).toThrow();
@@ -120,6 +190,15 @@ describe('createQuestionSchema', () => {
         ).toThrow();
     });
 
+    it('rejects correctOptionIndex >= options length', () => {
+        expect(() =>
+            createQuestionSchema.parse({
+                ...validQuestion,
+                correctOptionIndex: 4, // only 4 options (0-3)
+            })
+        ).toThrow();
+    });
+
     it('rejects text shorter than min length', () => {
         expect(() =>
             createQuestionSchema.parse({
@@ -129,18 +208,11 @@ describe('createQuestionSchema', () => {
         ).toThrow();
     });
 
-    it('rejects domainNumber outside 1-8', () => {
+    it('requires at least one domainId', () => {
         expect(() =>
             createQuestionSchema.parse({
                 ...validQuestion,
-                domainNumber: 0,
-            })
-        ).toThrow();
-
-        expect(() =>
-            createQuestionSchema.parse({
-                ...validQuestion,
-                domainNumber: 9,
+                domainIds: [],
             })
         ).toThrow();
     });
@@ -160,29 +232,34 @@ describe('updateQuestionSchema', () => {
 
 describe('examConfigSchema', () => {
     const validConfig = {
+        studyId: 'study-cissp',
         questionCount: 25,
         timeLimitMinutes: 60,
-        domains: [1, 2],
+        domainIds: ['d1', 'd2'],
         difficulty: 'medium',
-        certification: 'CISSP',
     };
 
     it('accepts valid exam config', () => {
         const result = examConfigSchema.parse(validConfig);
         expect(result.questionCount).toBe(25);
-        expect(result.certification).toBe('CISSP');
+        expect(result.studyId).toBe('study-cissp');
     });
 
-    it('defaults domains to empty array', () => {
-        const { domains, ...without } = validConfig;
+    it('defaults domainIds to empty array', () => {
+        const { domainIds, ...without } = validConfig;
         const result = examConfigSchema.parse(without);
-        expect(result.domains).toEqual([]);
+        expect(result.domainIds).toEqual([]);
     });
 
     it('defaults difficulty to "all"', () => {
         const { difficulty, ...without } = validConfig;
         const result = examConfigSchema.parse(without);
         expect(result.difficulty).toBe('all');
+    });
+
+    it('defaults mode to "practice"', () => {
+        const result = examConfigSchema.parse(validConfig);
+        expect(result.mode).toBe('practice');
     });
 
     it('accepts "all" as difficulty', () => {
@@ -242,9 +319,8 @@ describe('submitAnswerSchema', () => {
 
 describe('bulkImportSchema', () => {
     const validQuestion = {
-        certification: 'CISSP',
-        domain: 'Security Operations',
-        domainNumber: 1,
+        studyId: 'study-cissp',
+        domainIds: ['d1'],
         text: 'What is the purpose of a firewall?',
         options: [
             { label: 'A', text: 'Block traffic' },

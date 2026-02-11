@@ -2,20 +2,35 @@ import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/api-middleware';
 import { examConfigSchema } from '@/lib/validators';
 import { listExams, createExam } from '@/services/exam-service';
+import { checkScrapingSignals } from '@/lib/scraping-guard';
 
 /**
  * GET /api/exams
- * List user's exams (most recent first). Optional ?status= filter.
+ * List user's exams (most recent first). Optional ?studyId= and ?status= filters.
+ * Protected by scraping guard.
  */
 export const GET = withAuth(async (request, { user }) => {
+    const guard = await checkScrapingSignals(request, user.uid, {
+        category: 'exams-list',
+        maxRequestsPerMinute: 20,
+        maxRequestsPerHour: 120,
+    });
+    if (guard.blocked) {
+        return NextResponse.json(
+            { error: 'Too many requests. Please slow down.' },
+            { status: 429 }
+        );
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = Math.min(
         Math.max(1, Number.parseInt(searchParams.get('limit') || '20', 10) || 20),
         50
     );
     const status = searchParams.get('status') || undefined;
+    const studyId = searchParams.get('studyId') || undefined;
 
-    const exams = await listExams({ uid: user.uid, limit, status });
+    const exams = await listExams({ uid: user.uid, studyId, limit, status });
 
     const res = NextResponse.json({ data: exams });
     res.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=60');
