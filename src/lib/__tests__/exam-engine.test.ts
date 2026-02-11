@@ -561,3 +561,97 @@ describe('real_mix strategy', () => {
         expect(diffs.size).toBeGreaterThan(1);
     });
 });
+
+describe('spaced_review mode', () => {
+    const pool: Question[] = [
+        makeQuestion({ id: 'sr1', domainIds: ['d1'] }),
+        makeQuestion({ id: 'sr2', domainIds: ['d1'] }),
+        makeQuestion({ id: 'sr3', domainIds: ['d2'] }),
+        makeQuestion({ id: 'sr4', domainIds: ['d2'] }),
+        makeQuestion({ id: 'sr5', domainIds: ['d3'] }),
+    ];
+
+    it('returns unattempted questions when no performance data', () => {
+        const selected = selectQuestions(pool, {
+            studyId: 'study-cissp',
+            questionCount: 3,
+            timeLimitMinutes: 60,
+            domainIds: [],
+            difficulty: 'all',
+            mode: 'spaced_review',
+        });
+        expect(selected).toHaveLength(3);
+    });
+
+    it('prioritises overdue questions', () => {
+        const now = Date.now();
+        const performanceData: StrategyPerformanceData = {
+            performanceSummary: {
+                studyId: 'study-cissp',
+                domainAccuracy: {},
+                questionAttempts: {
+                    sr1: { attempts: 5, correct: 3, lastAttemptAt: now - 86400000, lastCorrect: true, nextReviewAt: now - 86400000, easeFactor: 2.5, interval: 1 },
+                    sr2: { attempts: 2, correct: 1, lastAttemptAt: now - 3600000, lastCorrect: false, nextReviewAt: now + 86400000, easeFactor: 2.0, interval: 6 },
+                    sr3: { attempts: 4, correct: 4, lastAttemptAt: now - 7200000, lastCorrect: true, nextReviewAt: now - 172800000, easeFactor: 2.8, interval: 1 },
+                },
+                recentExamQuestionIds: [],
+                recentExamWindow: 3,
+                updatedAt: now,
+            },
+            domainScores: {},
+        };
+
+        const selected = selectQuestions(pool, {
+            studyId: 'study-cissp',
+            questionCount: 3,
+            timeLimitMinutes: 60,
+            domainIds: [],
+            difficulty: 'all',
+            mode: 'spaced_review',
+        }, performanceData);
+
+        expect(selected).toHaveLength(3);
+
+        const ids = selected.map(q => q.id);
+        // sr1 and sr3 are overdue — they must be included
+        expect(ids).toContain('sr1');
+        expect(ids).toContain('sr3');
+        // sr2 is not due yet; slot 3 filled by unattempted (sr4 or sr5)
+        expect(ids).not.toContain('sr2');
+    });
+
+    it('fills remaining slots with unattempted then upcoming', () => {
+        const now = Date.now();
+        const performanceData: StrategyPerformanceData = {
+            performanceSummary: {
+                studyId: 'study-cissp',
+                domainAccuracy: {},
+                questionAttempts: {
+                    sr1: { attempts: 1, correct: 1, lastAttemptAt: now, lastCorrect: true, nextReviewAt: now + 86400000, easeFactor: 2.5, interval: 1 },
+                    sr2: { attempts: 1, correct: 1, lastAttemptAt: now, lastCorrect: true, nextReviewAt: now + 172800000, easeFactor: 2.5, interval: 6 },
+                    sr3: { attempts: 1, correct: 1, lastAttemptAt: now, lastCorrect: true, nextReviewAt: now + 259200000, easeFactor: 2.5, interval: 6 },
+                },
+                recentExamQuestionIds: [],
+                recentExamWindow: 3,
+                updatedAt: now,
+            },
+            domainScores: {},
+        };
+
+        // All attempted questions are in the future — should pick unattempted first
+        const selected = selectQuestions(pool, {
+            studyId: 'study-cissp',
+            questionCount: 4,
+            timeLimitMinutes: 60,
+            domainIds: [],
+            difficulty: 'all',
+            mode: 'spaced_review',
+        }, performanceData);
+
+        expect(selected).toHaveLength(4);
+        // sr4, sr5 are unattempted — should appear before upcoming
+        const ids = selected.map(q => q.id);
+        expect(ids).toContain('sr4');
+        expect(ids).toContain('sr5');
+    });
+});

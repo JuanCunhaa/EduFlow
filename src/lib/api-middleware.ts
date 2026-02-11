@@ -11,7 +11,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { verifyAuth, type AuthUser } from '@/lib/firebase/server-auth';
+import { verifyAuth, verifyAuthStrict, type AuthUser } from '@/lib/firebase/server-auth';
 import { createRequestLogger } from '@/lib/logger';
 import { AppError, UnauthorizedError } from '@/lib/errors';
 
@@ -33,8 +33,10 @@ type AuthenticatedHandler = (
 interface WithAuthOptions {
     /** If true, mutating methods require Content-Type: application/json (CSRF protection) */
     requireJsonContentType?: boolean;
-    /** Maximum request body size in bytes (default: 5MB) */
+    /** Maximum request body size in bytes (default: 1MB) */
     maxBodySize?: number;
+    /** If true, verifies session cookie with revocation check (adds latency). Use for destructive operations. */
+    checkRevoked?: boolean;
 }
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -51,7 +53,7 @@ export function withAuth(
     handler: AuthenticatedHandler,
     options: WithAuthOptions = {}
 ) {
-    const { requireJsonContentType = true } = options;
+    const { requireJsonContentType = true, maxBodySize = 1_048_576, checkRevoked = false } = options;
 
     return async (
         request: Request,
@@ -60,6 +62,19 @@ export function withAuth(
         const log = createRequestLogger(request);
 
         try {
+            // ── Body size enforcement ──
+            // Prevents DoS via oversized payloads before any processing
+            if (MUTATING_METHODS.has(request.method) && maxBodySize > 0) {
+                const contentLength = request.headers.get('content-length');
+                if (contentLength && parseInt(contentLength, 10) > maxBodySize) {
+                    log.warn('Request body too large', { contentLength });
+                    return NextResponse.json(
+                        { error: 'Request body too large' },
+                        { status: 413 }
+                    );
+                }
+            }
+
             // ── CSRF Protection ──
             // Mutating requests must have Content-Type: application/json
             // Browsers cannot set this header via <form> submissions
@@ -79,7 +94,10 @@ export function withAuth(
             }
 
             // ── Authentication ──
-            const user = await verifyAuth();
+            // Sensitive operations use checkRevoked to reject compromised sessions
+            const user = checkRevoked
+                ? await verifyAuthStrict()
+                : await verifyAuth();
             if (!user) {
                 throw new UnauthorizedError();
             }

@@ -30,6 +30,7 @@ interface ActiveExam {
     studyId: string;
     studyName: string;
     timeLimitMinutes: number;
+    initialTimeRemaining?: number;
     questions: SessionQuestion[];
     answers: Record<string, number | null>;
 }
@@ -41,6 +42,7 @@ interface ExamResultData {
     totalQuestions: number;
     domainScores: Record<string, { correct: number; total: number; percentage: number }>;
     studyName: string;
+    newBadges: string[];
 }
 
 // ── State machine ────────────────────────────────
@@ -223,6 +225,7 @@ function ExamsContent() {
                         studyId: json.data.studyId || json.data.certification || '',
                         studyName,
                         timeLimitMinutes: json.data.config?.timeLimitMinutes || 0,
+                        initialTimeRemaining: json.data.serverRemainingSeconds,
                         questions: json.data.questions || [],
                         answers: json.data.answers || {},
                     };
@@ -304,6 +307,7 @@ function ExamsContent() {
                     totalQuestions: result.totalQuestions,
                     domainScores: result.domainScores,
                     studyName: state.activeExam.studyName,
+                    newBadges: result.newBadges || [],
                 },
             });
         } catch (error) {
@@ -330,6 +334,7 @@ function ExamsContent() {
                 <ExamSession
                     questions={state.activeExam.questions}
                     timeLimitMinutes={state.activeExam.timeLimitMinutes}
+                    initialTimeRemaining={state.activeExam.initialTimeRemaining}
                     answers={state.activeExam.answers}
                     onAnswer={handleAnswer}
                     onSubmit={handleSubmit}
@@ -365,6 +370,7 @@ function ExamsContent() {
                     totalQuestions={state.results.totalQuestions}
                     domainScores={state.results.domainScores}
                     studyName={state.results.studyName}
+                    newBadges={state.results.newBadges as import('@/types').BadgeId[]}
                     onBackToExams={() => dispatch({ type: 'RESET' })}
                     onRetry={() => dispatch({ type: 'RESET' })}
                 />

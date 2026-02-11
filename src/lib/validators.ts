@@ -16,7 +16,7 @@ const safeString = (minLen: number) =>
 /** @deprecated Use studyId reference instead */
 export const certificationSchema = z.enum(['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC']);
 export const difficultySchema = z.enum(['easy', 'medium', 'hard']);
-export const examModeSchema = z.enum(['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus']);
+export const examModeSchema = z.enum(['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus', 'spaced_review']);
 
 // === Study ===
 
@@ -31,6 +31,7 @@ export const createStudySchema = z.object({
     abbreviation: safeString(1).pipe(z.string().max(20)),
     name: safeString(2).pipe(z.string().max(200)),
     domains: z.array(studyDomainSchema).min(1).max(30),
+    accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
 });
 
 export const updateStudySchema = createStudySchema.partial();

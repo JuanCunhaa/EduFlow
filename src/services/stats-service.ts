@@ -6,6 +6,8 @@
 import { getAdminDb } from '@/lib/firebase/admin';
 import type { UserStats, BadgeId, Question } from '@/types';
 
+import { secureRandom } from '@/lib/utils';
+
 const STATS_DOC = 'current';
 
 function statsPath(uid: string): string {
@@ -48,6 +50,7 @@ export async function updateWeeklyGoal(uid: string, weeklyGoal: number): Promise
 /**
  * Record daily activity after a question is answered or exam is completed.
  * Called from exam-service on submission.
+ * Uses a Firestore transaction to prevent race conditions on concurrent submissions.
  */
 export async function recordActivity(
     uid: string,
@@ -57,46 +60,48 @@ export async function recordActivity(
 ): Promise<void> {
     const db = getAdminDb();
     const statsRef = db.doc(`${statsPath(uid)}/${STATS_DOC}`);
-    const snap = await statsRef.get();
-    const stats: UserStats = snap.exists ? (snap.data() as UserStats) : { ...DEFAULT_STATS };
 
-    const today = getTodayString();
+    await db.runTransaction(async (tx) => {
+        const snap = await tx.get(statsRef);
+        const stats: UserStats = snap.exists ? (snap.data() as UserStats) : { ...DEFAULT_STATS };
 
-    // Update or create today's record
-    let todayRecord = stats.recentDays.find(d => d.date === today);
-    if (!todayRecord) {
-        todayRecord = { date: today, questionsAnswered: 0, correctAnswers: 0, examsCompleted: 0 };
-        stats.recentDays.push(todayRecord);
-    }
-    todayRecord.questionsAnswered += questionsAnswered;
-    todayRecord.correctAnswers += correctAnswers;
-    if (examCompleted) todayRecord.examsCompleted += 1;
+        const today = getTodayString();
 
-    // Update streak
-    const yesterday = getDateString(-1);
-    if (stats.lastActiveDate === yesterday) {
-        stats.currentStreak += 1;
-    } else if (stats.lastActiveDate !== today) {
-        stats.currentStreak = 1;
-    }
-    // else if lastActiveDate === today, streak stays the same
+        // Update or create today's record
+        let todayRecord = stats.recentDays.find(d => d.date === today);
+        if (!todayRecord) {
+            todayRecord = { date: today, questionsAnswered: 0, correctAnswers: 0, examsCompleted: 0 };
+            stats.recentDays.push(todayRecord);
+        }
+        todayRecord.questionsAnswered += questionsAnswered;
+        todayRecord.correctAnswers += correctAnswers;
+        if (examCompleted) todayRecord.examsCompleted += 1;
 
-    stats.longestStreak = Math.max(stats.longestStreak, stats.currentStreak);
-    stats.lastActiveDate = today;
+        // Update streak
+        const yesterday = getDateString(-1);
+        if (stats.lastActiveDate === yesterday) {
+            stats.currentStreak += 1;
+        } else if (stats.lastActiveDate !== today) {
+            stats.currentStreak = 1;
+        }
 
-    // Update totals
-    stats.totalQuestionsAnswered += questionsAnswered;
-    if (examCompleted) stats.totalExamsCompleted += 1;
+        stats.longestStreak = Math.max(stats.longestStreak, stats.currentStreak);
+        stats.lastActiveDate = today;
 
-    // Trim to 30 days rolling window
-    stats.recentDays = stats.recentDays
-        .sort((a, b) => b.date.localeCompare(a.date))
-        .slice(0, 30);
+        // Update totals
+        stats.totalQuestionsAnswered += questionsAnswered;
+        if (examCompleted) stats.totalExamsCompleted += 1;
 
-    // Check for new badges
-    stats.badges = checkBadges(stats);
+        // Trim to 180 days rolling window (extended for heatmap)
+        stats.recentDays = stats.recentDays
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, 180);
 
-    await statsRef.set(stats);
+        // Check for new badges
+        stats.badges = checkBadges(stats);
+
+        tx.set(statsRef, stats);
+    });
 }
 
 // ── Badges ───────────────────────────────────────
@@ -174,7 +179,7 @@ export async function getDailyChallenge(
     });
 
     // Shuffle and pick 5
-    const shuffled = pool.sort(() => Math.random() - 0.5);
+    const shuffled = pool.sort(() => secureRandom() - 0.5);
     const selected = shuffled.slice(0, 5);
 
     // Strip sensitive fields

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus, Minus } from 'lucide-react';
+import { X, Plus, Minus, Palette } from 'lucide-react';
 import { createStudy, updateStudy } from '@/hooks/useStudies';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import type { Study, StudyDomain } from '@/types';
@@ -26,6 +26,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
         study?.domains.map(d => ({ id: d.id, abbreviation: d.abbreviation, name: d.name, order: d.order }))
         || [makeEmptyDomain(0)]
     );
+    const [accentColor, setAccentColor] = useState(study?.accentColor || '#10b981');
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -73,12 +74,14 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                     abbreviation: abbreviation.trim(),
                     name: name.trim(),
                     domains: validDomains,
+                    accentColor,
                 });
             } else {
                 await createStudy({
                     abbreviation: abbreviation.trim(),
                     name: name.trim(),
                     domains: validDomains,
+                    accentColor,
                 });
             }
             onSaved();
@@ -126,6 +129,32 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                                 placeholder="Certified Information Systems Security Professional"
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
                             />
+                        </div>
+                    </div>
+
+                    {/* Accent Color */}
+                    <div>
+                        <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <Palette className="h-3 w-3" /> Accent Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="color"
+                                value={accentColor}
+                                onChange={(e) => setAccentColor(e.target.value)}
+                                className="h-9 w-9 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+                            />
+                            <input
+                                type="text"
+                                value={accentColor}
+                                onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setAccentColor(v);
+                                }}
+                                maxLength={7}
+                                className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
+                            />
+                            <div className="h-6 w-6 rounded-full border border-border" style={{ backgroundColor: accentColor }} />
                         </div>
                     </div>
 

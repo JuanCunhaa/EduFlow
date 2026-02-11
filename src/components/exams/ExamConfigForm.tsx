@@ -28,6 +28,7 @@ const EXAM_MODES: { value: ExamMode; label: string; description: string }[] = [
     { value: 'recent_misses', label: 'Recent Misses', description: 'Questions you recently got wrong (time-decay weighted)' },
     { value: 'real_mix', label: 'Real Mix', description: 'Simulates a real exam: balanced domains, mixed difficulty, no repeats' },
     { value: 'domain_focus', label: 'Domain Focus', description: 'Deep-dive into selected domains' },
+    { value: 'spaced_review', label: 'Spaced Review', description: 'SM-2 spaced repetition — prioritises questions due for review' },
 ];
 
 export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: Readonly<ExamConfigFormProps>) {

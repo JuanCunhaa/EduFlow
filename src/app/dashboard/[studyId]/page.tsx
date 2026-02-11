@@ -7,16 +7,20 @@ import { useExams } from '@/hooks/useExams';
 import { useStats } from '@/hooks/useStats';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useToast } from '@/components/ui/Toast';
 import dynamic from 'next/dynamic';
 
 const StudyFormDialog = dynamic(() => import('@/components/studies/StudyFormDialog').then(m => ({ default: m.StudyFormDialog })), { ssr: false });
 const BadgeGallery = dynamic(() => import('@/components/retention/BadgeGallery').then(m => ({ default: m.BadgeGallery })), { ssr: false });
 const DailyChallengeModal = dynamic(() => import('@/components/retention/DailyChallengeModal').then(m => ({ default: m.DailyChallengeModal })), { ssr: false });
+const ActivityHeatmap = dynamic(() => import('@/components/retention/ActivityHeatmap').then(m => ({ default: m.ActivityHeatmap })), { ssr: false });
+const PomodoroTimer = dynamic(() => import('@/components/retention/PomodoroTimer').then(m => ({ default: m.PomodoroTimer })), { ssr: false });
 import { formatTimeAgo } from '@/lib/format';
 import {
     ArrowLeft,
     ClipboardList,
     Database,
+    Download,
     Edit2,
     Flame,
     FlaskConical,
@@ -29,7 +33,7 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 
@@ -65,6 +69,38 @@ export default function StudyDetailPage() {
     const [showDelete, setShowDelete] = useState(false);
     const [showDailyChallenge, setShowDailyChallenge] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const { addToast } = useToast();
+    const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [pendingDelete, setPendingDelete] = useState(false);
+
+    // Undo delete: show undo toast, delay actual deletion by 5s
+    const handleDeleteWithUndo = useCallback(() => {
+        setShowDelete(false);
+        setPendingDelete(true);
+
+        const toastId = Date.now();
+        addToast('Study deleted. Click undo to restore.', 'warning');
+
+        undoTimerRef.current = setTimeout(async () => {
+            setPendingDelete(false);
+            try {
+                await deleteStudy(studyId);
+                router.push('/dashboard');
+            } catch {
+                addToast('Failed to delete study', 'error');
+            }
+        }, 5000);
+    }, [studyId, router, addToast]);
+
+    // Cancel pending delete
+    const handleUndoDelete = useCallback(() => {
+        if (undoTimerRef.current) {
+            clearTimeout(undoTimerRef.current);
+            undoTimerRef.current = null;
+        }
+        setPendingDelete(false);
+        addToast('Delete cancelled', 'success');
+    }, [addToast]);
 
     async function handleDelete() {
         setDeleting(true);
@@ -141,6 +177,14 @@ export default function StudyDetailPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
+                            {pendingDelete && (
+                                <button
+                                    onClick={handleUndoDelete}
+                                    className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
+                                >
+                                    Undo Delete
+                                </button>
+                            )}
                             <button
                                 onClick={() => setShowEdit(true)}
                                 className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
@@ -152,6 +196,7 @@ export default function StudyDetailPage() {
                                 onClick={() => setShowDelete(true)}
                                 className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                                 title="Delete study"
+                                disabled={pendingDelete}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </button>
@@ -312,8 +357,24 @@ export default function StudyDetailPage() {
                 {/* Badges */}
                 {stats && <BadgeGallery earned={stats.badges} />}
 
-                {/* Share progress */}
-                <div className="flex justify-end">
+                {/* Activity Heatmap */}
+                {stats && stats.recentDays && stats.recentDays.length > 0 && (
+                    <ActivityHeatmap recentDays={stats.recentDays} />
+                )}
+
+                {/* Study Timer (Pomodoro) */}
+                <PomodoroTimer />
+
+                {/* Share + Export progress */}
+                <div className="flex justify-end gap-3">
+                    <a
+                        href={`/api/export?format=csv&studyId=${studyId}`}
+                        download
+                        className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                        <Download className="h-4 w-4" />
+                        Export CSV
+                    </a>
                     <a
                         href={`/api/share-image?studyId=${studyId}`}
                         target="_blank"
@@ -389,7 +450,7 @@ export default function StudyDetailPage() {
             <ConfirmDialog
                 open={showDelete}
                 onClose={() => setShowDelete(false)}
-                onConfirm={handleDelete}
+                onConfirm={handleDeleteWithUndo}
                 title="Delete Study"
                 confirmLabel="Delete"
                 variant="danger"
@@ -397,7 +458,7 @@ export default function StudyDetailPage() {
             >
                 <p>
                     This will permanently delete <strong>{study.name}</strong> and all its questions and exams.
-                    This action cannot be undone.
+                    You&apos;ll have 5 seconds to undo.
                 </p>
             </ConfirmDialog>
         </Shell>

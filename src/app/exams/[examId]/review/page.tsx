@@ -14,8 +14,9 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import useSWR from 'swr';
+import { StickyNote, Save, Loader2 } from 'lucide-react';
 
 interface ReviewQuestion {
     id: string;
@@ -68,6 +69,39 @@ export default function ExamReviewPage() {
             setShowAll(true);
         }
     }, [showAll, review]);
+
+    /* ── Per-question notes ── */
+    const [notes, setNotes] = useState<Record<string, string>>({});
+    const [savingNote, setSavingNote] = useState<string | null>(null);
+    const notesFetched = useRef(false);
+
+    // Fetch existing notes once review loads
+    const fetchNotes = useCallback(async () => {
+        if (!examId || notesFetched.current) return;
+        notesFetched.current = true;
+        try {
+            const res = await fetch(`/api/notes?examId=${examId}`);
+            if (res.ok) {
+                const json = await res.json();
+                if (json.data) setNotes(json.data);
+            }
+        } catch { /* silent */ }
+    }, [examId]);
+
+    // trigger once
+    if (review && !notesFetched.current) fetchNotes();
+
+    const saveNote = useCallback(async (questionId: string, content: string) => {
+        setSavingNote(questionId);
+        try {
+            await fetch('/api/notes', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questionId, examId, content }),
+            });
+        } catch { /* silent */ }
+        setSavingNote(null);
+    }, [examId]);
 
     if (isLoading) {
         return (
@@ -235,6 +269,35 @@ export default function ExamReviewPage() {
                                                 </div>
                                             );
                                         })()}
+
+                                        {/* Personal notes */}
+                                        <div className="rounded-lg bg-muted/20 p-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h4 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                    <StickyNote className="h-3 w-3" /> My Notes
+                                                </h4>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => saveNote(q.id, notes[q.id] || '')}
+                                                    disabled={savingNote === q.id}
+                                                    className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                                                >
+                                                    {savingNote === q.id ? (
+                                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                                    ) : (
+                                                        <Save className="h-3 w-3" />
+                                                    )}
+                                                    Save
+                                                </button>
+                                            </div>
+                                            <textarea
+                                                value={notes[q.id] || ''}
+                                                onChange={(e) => setNotes(prev => ({ ...prev, [q.id]: e.target.value }))}
+                                                placeholder="Add your notes about this question..."
+                                                rows={2}
+                                                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-y focus:ring-1 focus:ring-primary/30"
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>

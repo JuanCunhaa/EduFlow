@@ -1,4 +1,5 @@
 import type { Question, DomainScore, ExamConfig, ExamMode, Exam, PerformanceSummary, QuestionAttemptRecord } from '@/types';
+import { secureRandom } from '@/lib/utils';
 
 // ── Public types for strategy data ──────────────
 
@@ -82,6 +83,9 @@ function applyMode(
         case 'domain_focus':
             shuffleArray(pool);
             return pool;
+
+        case 'spaced_review':
+            return selectSpacedReview(pool, count, performanceData);
 
         case 'practice':
         default:
@@ -182,7 +186,7 @@ function computeWeakScore(
     }
 
     // Small random jitter to avoid deterministic ordering
-    const jitter = Math.random() * 0.1;
+    const jitter = secureRandom() * 0.1;
 
     return domainFactor * 0.5 + attemptFactor * 0.4 + jitter;
 }
@@ -242,7 +246,7 @@ function selectRecentMisses(
         const missRate = attempt.attempts > 0 ? 1 - (attempt.correct / attempt.attempts) : 0;
 
         // Combined weight: recent misses with high miss-rate get top priority
-        const weight = decayWeight * 0.6 + missRate * 0.3 + Math.random() * 0.1;
+        const weight = decayWeight * 0.6 + missRate * 0.3 + secureRandom() * 0.1;
 
         missed.push({ question: q, weight });
     }
@@ -402,6 +406,69 @@ function roundRobinSelect(pool: Question[], count: number): Question[] {
     return selected;
 }
 
+// ── Strategy: spaced_review ─────────────────────
+//
+// SM-2 based spaced repetition review:
+// 1. Select questions where nextReviewAt <= now (due for review).
+// 2. Sort by overdue duration (most overdue first).
+// 3. Fill remaining slots with questions that have never been attempted.
+// 4. If still not enough, add upcoming reviews.
+
+function selectSpacedReview(
+    pool: Question[],
+    count: number,
+    performanceData?: StrategyPerformanceData
+): Question[] {
+    const summary = performanceData?.performanceSummary;
+    const attempts = summary?.questionAttempts ?? {};
+    const now = Date.now();
+
+    interface ScoredQ { question: Question; priority: number }
+
+    const due: ScoredQ[] = [];
+    const unattempted: Question[] = [];
+    const upcoming: ScoredQ[] = [];
+
+    for (const q of pool) {
+        const attempt = attempts[q.id];
+
+        if (!attempt) {
+            unattempted.push(q);
+            continue;
+        }
+
+        const nextReview = attempt.nextReviewAt ?? 0;
+
+        if (nextReview <= now) {
+            // Overdue — higher priority for items more overdue
+            const overdueMs = now - nextReview;
+            due.push({ question: q, priority: overdueMs });
+        } else {
+            // Not yet due — lower priority
+            upcoming.push({ question: q, priority: -(nextReview - now) });
+        }
+    }
+
+    // Sort due by most overdue first
+    due.sort((a, b) => b.priority - a.priority);
+
+    const selected: Question[] = due.slice(0, count).map(s => s.question);
+
+    // Fill with unattempted questions
+    if (selected.length < count) {
+        shuffleArray(unattempted);
+        selected.push(...unattempted.slice(0, count - selected.length));
+    }
+
+    // Fill with upcoming if still short
+    if (selected.length < count) {
+        upcoming.sort((a, b) => b.priority - a.priority); // soonest upcoming first
+        selected.push(...upcoming.slice(0, count - selected.length).map(s => s.question));
+    }
+
+    return selected;
+}
+
 /**
  * Score an exam by comparing answers to correct answers.
  */
@@ -492,7 +559,7 @@ function weightedSample<T>(
     // Assign each item a key = random^(1/weight) for weighted reservoir sampling
     const keyed = items.map(item => ({
         question: item.question,
-        key: Math.pow(Math.random(), 1 / Math.max(item.weight, 0.001)),
+        key: Math.pow(secureRandom(), 1 / Math.max(item.weight, 0.001)),
     }));
 
     // Sort descending by key, take top `count`
@@ -505,7 +572,7 @@ function weightedSample<T>(
  */
 function shuffleArray<T>(arr: T[]): void {
     for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(secureRandom() * (i + 1));
         [arr[i], arr[j]] = [arr[j], arr[i]];
     }
 }

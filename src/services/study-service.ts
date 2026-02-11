@@ -55,6 +55,7 @@ export async function createStudy(uid: string, data: CreateStudyInput): Promise<
         domains,
         questionCount: 0,
         examCount: 0,
+        ...(data.accentColor ? { accentColor: data.accentColor } : {}),
         createdAt: now,
         updatedAt: now,
     });
@@ -74,6 +75,7 @@ export async function updateStudy(
 
     if (data.abbreviation !== undefined) update.abbreviation = data.abbreviation;
     if (data.name !== undefined) update.name = data.name;
+    if (data.accentColor !== undefined) update.accentColor = data.accentColor;
     if (data.domains !== undefined) {
         update.domains = data.domains.map((d, i) => ({
             ...d,

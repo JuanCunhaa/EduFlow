@@ -35,7 +35,7 @@ describe('difficultySchema', () => {
 });
 
 describe('examModeSchema', () => {
-    it.each(['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus'])(
+    it.each(['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus', 'spaced_review'])(
         'accepts: %s',
         (mode: string) => {
             expect(examModeSchema.parse(mode)).toBe(mode);
@@ -75,6 +75,22 @@ describe('createStudySchema', () => {
             name: '<b>CISSP</b> Certification',
         });
         expect(result.name).toBe('CISSP Certification');
+    });
+
+    it('accepts valid accentColor hex', () => {
+        const result = createStudySchema.parse({ ...validStudy, accentColor: '#10b981' });
+        expect(result.accentColor).toBe('#10b981');
+    });
+
+    it('rejects invalid accentColor', () => {
+        expect(() =>
+            createStudySchema.parse({ ...validStudy, accentColor: 'red' })
+        ).toThrow();
+    });
+
+    it('allows omitting accentColor', () => {
+        const result = createStudySchema.parse(validStudy);
+        expect(result.accentColor).toBeUndefined();
     });
 });
 

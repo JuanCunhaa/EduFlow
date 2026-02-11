@@ -9,7 +9,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export type ExamStatus = 'in_progress' | 'completed' | 'abandoned';
 
-export type ExamMode = 'practice' | 'weak_domains' | 'recent_misses' | 'real_mix' | 'domain_focus';
+export type ExamMode = 'practice' | 'weak_domains' | 'recent_misses' | 'real_mix' | 'domain_focus' | 'spaced_review';
 
 // === Study ===
 
@@ -27,6 +27,7 @@ export interface Study {
     domains: StudyDomain[];
     questionCount: number;   // denormalized counter
     examCount: number;       // denormalized counter
+    accentColor?: string;    // optional hex accent color for visual differentiation
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
@@ -182,6 +183,12 @@ export interface QuestionAttemptRecord {
     lastAttemptAt: number;
     /** Was the last attempt correct? */
     lastCorrect: boolean;
+    /** SM-2 ease factor (default 2.5, min 1.3) */
+    easeFactor?: number;
+    /** SM-2 interval in days */
+    interval?: number;
+    /** Epoch ms of next scheduled review */
+    nextReviewAt?: number;
 }
 
 /**
@@ -199,6 +206,14 @@ export interface PerformanceSummary {
     recentExamQuestionIds: string[];
     /** How many past exams contributed to recentExamQuestionIds */
     recentExamWindow: number;
+    updatedAt: number; // epoch ms
+}
+
+// === Question Notes ===
+
+export interface QuestionNote {
+    questionId: string;
+    note: string;
     updatedAt: number; // epoch ms
 }
 

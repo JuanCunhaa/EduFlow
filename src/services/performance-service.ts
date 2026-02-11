@@ -104,17 +104,39 @@ export async function updatePerformanceSummary(
             }
         }
 
-        // 2. Upsert question attempt records
+        // 2. Upsert question attempt records with SM-2 scheduling
         for (const [qId, correctIndex] of Object.entries(result.correctAnswers)) {
             const userAnswer = result.answers[qId];
             const isCorrect = userAnswer === correctIndex;
 
             const prev = existing.questionAttempts[qId];
+
+            // SM-2 algorithm
+            const oldEF = prev?.easeFactor ?? 2.5;
+            const oldInterval = prev?.interval ?? 0;
+            let newEF: number;
+            let newInterval: number;
+
+            if (isCorrect) {
+                newEF = Math.max(1.3, oldEF + (0.1 - 0.08 + 0.02));
+                if (oldInterval === 0) newInterval = 1;
+                else if (oldInterval === 1) newInterval = 6;
+                else newInterval = Math.round(oldInterval * newEF);
+            } else {
+                newEF = Math.max(1.3, oldEF - 0.3);
+                newInterval = 1;
+            }
+
+            const nextReviewAt = now + newInterval * 24 * 60 * 60 * 1000;
+
             existing.questionAttempts[qId] = {
                 attempts: (prev?.attempts ?? 0) + 1,
                 correct: (prev?.correct ?? 0) + (isCorrect ? 1 : 0),
                 lastAttemptAt: now,
                 lastCorrect: isCorrect,
+                easeFactor: newEF,
+                interval: newInterval,
+                nextReviewAt,
             };
         }
 
@@ -184,17 +206,41 @@ export function buildPerformanceSummaryUpdate(
         };
     }
 
-    // Upsert question attempts
+    // Upsert question attempts with SM-2 spaced repetition scheduling
     for (const [qId, correctIndex] of Object.entries(result.correctAnswers)) {
         const userAnswer = result.answers[qId];
         const isCorrect = userAnswer === correctIndex;
         const prev = summary.questionAttempts[qId];
+
+        // SM-2 algorithm
+        const oldEF = prev?.easeFactor ?? 2.5;
+        const oldInterval = prev?.interval ?? 0;
+
+        let newEF: number;
+        let newInterval: number;
+
+        if (isCorrect) {
+            // Quality 4 (correct) — increase interval
+            newEF = Math.max(1.3, oldEF + (0.1 - 0.08 + 0.02));
+            if (oldInterval === 0) newInterval = 1;
+            else if (oldInterval === 1) newInterval = 6;
+            else newInterval = Math.round(oldInterval * newEF);
+        } else {
+            // Quality 1 (incorrect) — reset interval, decrease EF
+            newEF = Math.max(1.3, oldEF - 0.3);
+            newInterval = 1;
+        }
+
+        const nextReviewAt = now + newInterval * 24 * 60 * 60 * 1000;
 
         summary.questionAttempts[qId] = {
             attempts: (prev?.attempts ?? 0) + 1,
             correct: (prev?.correct ?? 0) + (isCorrect ? 1 : 0),
             lastAttemptAt: now,
             lastCorrect: isCorrect,
+            easeFactor: newEF,
+            interval: newInterval,
+            nextReviewAt,
         };
     }
 

@@ -26,8 +26,8 @@ import {
     buildPerformanceSummaryUpdate,
 } from '@/services/performance-service';
 import { FieldValue } from 'firebase-admin/firestore';
-import { recordActivity, awardBadge } from '@/services/stats-service';
-import type { Exam, Question, ExamConfig, DomainScore, ExamMode } from '@/types';
+import { recordActivity, awardBadge, getStats } from '@/services/stats-service';
+import type { Exam, Question, ExamConfig, DomainScore, ExamMode, BadgeId } from '@/types';
 
 const GRACE_PERIOD_SECONDS = 30;
 
@@ -62,6 +62,7 @@ export interface SubmitExamResult {
     domainScores: Record<string, DomainScore>;
     totalQuestions: number;
     correctAnswers: number;
+    newBadges: BadgeId[];
 }
 
 // ── Paths ────────────────────────────────────────
@@ -416,6 +417,31 @@ export async function submitExam(
 
     const correctAnswers = Math.round((score / 100) * totalQuestions);
 
+    // Check if all domains are ≥70%
+    const dsValues = Object.values(domainScores);
+    const allDomainsPass = dsValues.length > 0 && dsValues.every(ds => ds.percentage >= 70);
+
+    // Compute new badges synchronously before fire-and-forget
+    const currentStats = await getStats(uid);
+    const oldBadges = new Set(currentStats.badges);
+    const newBadges: BadgeId[] = [];
+
+    // Rule-based badge checks
+    if (!oldBadges.has('first_exam')) newBadges.push('first_exam');
+    if (score === 100 && !oldBadges.has('perfect_score')) newBadges.push('perfect_score');
+    if (allDomainsPass && !oldBadges.has('domain_master')) newBadges.push('domain_master');
+    if ((currentStats.totalQuestionsAnswered + totalQuestions) >= 100 && !oldBadges.has('centurion')) newBadges.push('centurion');
+
+    // Streak-based badge checks (project streak after this activity)
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })();
+    let projectedStreak = currentStats.currentStreak;
+    if (currentStats.lastActiveDate === yesterday) projectedStreak += 1;
+    else if (currentStats.lastActiveDate !== today) projectedStreak = 1;
+    if (projectedStreak >= 3 && !oldBadges.has('streak_3')) newBadges.push('streak_3');
+    if (projectedStreak >= 7 && !oldBadges.has('streak_7')) newBadges.push('streak_7');
+    if (projectedStreak >= 30 && !oldBadges.has('streak_30')) newBadges.push('streak_30');
+
     // Post-commit: stats, badges, averageScore (all fire-and-forget, non-blocking)
     recalculateAverageScore(uid).catch(() => {});
 
@@ -424,8 +450,6 @@ export async function submitExam(
     if (score === 100) {
         awardBadge(uid, 'perfect_score').catch(() => {});
     }
-    const allDomainsPass = Object.values(domainScores).length > 0
-        && Object.values(domainScores).every(ds => ds.percentage >= 70);
     if (allDomainsPass) {
         awardBadge(uid, 'domain_master').catch(() => {});
     }
@@ -436,6 +460,7 @@ export async function submitExam(
         domainScores,
         totalQuestions,
         correctAnswers,
+        newBadges,
     };
 }
 
@@ -470,10 +495,22 @@ export async function getInProgressExam(uid: string, studyId?: string): Promise<
 
 /**
  * Resume an in-progress exam — returns questions (sanitized) for the session.
+ * Includes server-calculated remaining time for timer sync.
  */
-export async function resumeExam(uid: string, examId: string): Promise<CreateExamResult> {
+export async function resumeExam(uid: string, examId: string): Promise<CreateExamResult & { serverRemainingSeconds?: number }> {
     const exam = await getExam(uid, examId);
     if (exam.status !== 'in_progress') throw new ExamAlreadyCompletedError();
+
+    // Calculate server-side remaining time for timer sync
+    let serverRemainingSeconds: number | undefined;
+    if (exam.config.timeLimitMinutes > 0 && exam.startedAt) {
+        const startMs = typeof exam.startedAt === 'object' && 'seconds' in exam.startedAt
+            ? (exam.startedAt as { seconds: number }).seconds * 1000
+            : new Date(exam.startedAt as unknown as string).getTime();
+        const elapsedSeconds = Math.floor((Date.now() - startMs) / 1000);
+        const totalSeconds = exam.config.timeLimitMinutes * 60;
+        serverRemainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+    }
 
     // Fetch actual questions from user's bank
     const db = getAdminDb();
@@ -490,6 +527,7 @@ export async function resumeExam(uid: string, examId: string): Promise<CreateExa
         status: exam.status,
         config: exam.config,
         questions: sanitizeQuestionsForExam(questions),
+        serverRemainingSeconds,
     };
 }
 

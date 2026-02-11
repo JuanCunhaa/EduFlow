@@ -32,3 +32,21 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Firestore Setup
+
+### TTL Policy for Rate Limits
+
+The rate limiter stores documents in the `_rateLimits` collection with an `expireAt` field. You **must** configure a Firestore TTL policy to auto-delete expired documents, otherwise they accumulate forever.
+
+Run this via `gcloud` CLI:
+
+```bash
+gcloud firestore fields ttls update expireAt \
+  --collection-group=_rateLimits \
+  --enable-ttl
+```
+
+Or configure it in the [Firebase Console](https://console.firebase.google.com/) → Firestore → TTL Policies → Add Policy:
+- **Collection group:** `_rateLimits`
+- **Field:** `expireAt`

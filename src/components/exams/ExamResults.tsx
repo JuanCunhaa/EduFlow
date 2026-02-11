@@ -1,7 +1,82 @@
 'use client';
 
-import { CheckCircle2, XCircle, TrendingUp, BarChart3, FileSearch } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { CheckCircle2, XCircle, TrendingUp, BarChart3, FileSearch, Award } from 'lucide-react';
 import Link from 'next/link';
+import type { BadgeId } from '@/types';
+
+const BADGE_LABELS: Record<string, { label: string; emoji: string }> = {
+    first_exam: { label: 'First Exam', emoji: '🎓' },
+    streak_3: { label: '3-Day Streak', emoji: '🔥' },
+    streak_7: { label: 'Week Warrior', emoji: '⚡' },
+    streak_30: { label: 'Monthly Master', emoji: '💎' },
+    perfect_score: { label: 'Perfect Score', emoji: '🏆' },
+    centurion: { label: 'Centurion', emoji: '💯' },
+    domain_master: { label: 'Domain Master', emoji: '🎯' },
+};
+
+/** Lightweight confetti burst using CSS-only particles */
+function ConfettiBurst() {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        const particles: Array<{
+            x: number; y: number; vx: number; vy: number;
+            color: string; size: number; life: number;
+        }> = [];
+
+        // Create particles
+        for (let i = 0; i < 120; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 3,
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 1) * 10 - 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: Math.random() * 6 + 2,
+                life: 1,
+            });
+        }
+
+        let animId: number;
+        function animate() {
+            ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+            let alive = false;
+            for (const p of particles) {
+                if (p.life <= 0) continue;
+                alive = true;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15; // gravity
+                p.life -= 0.012;
+                ctx!.globalAlpha = p.life;
+                ctx!.fillStyle = p.color;
+                ctx!.fillRect(p.x, p.y, p.size, p.size);
+            }
+            if (alive) animId = requestAnimationFrame(animate);
+        }
+        animate();
+
+        return () => cancelAnimationFrame(animId);
+    }, []);
+
+    return (
+        <canvas
+            ref={canvasRef}
+            className="pointer-events-none fixed inset-0 z-50"
+            aria-hidden="true"
+        />
+    );
+}
 
 interface ExamResultsProps {
     examId: string;
@@ -11,6 +86,7 @@ interface ExamResultsProps {
     domainScores: Record<string, { correct: number; total: number; percentage: number }>;
     studyName: string;
     passingScore?: number;
+    newBadges?: BadgeId[];
     onBackToExams: () => void;
     onRetry: () => void;
 }
@@ -35,6 +111,7 @@ export function ExamResults({
     domainScores,
     studyName,
     passingScore: passingScoreProp,
+    newBadges = [],
     onBackToExams,
     onRetry,
 }: Readonly<ExamResultsProps>) {
@@ -46,6 +123,32 @@ export function ExamResults({
 
     return (
         <div className="mx-auto max-w-2xl space-y-8 py-8 animate-fade-in">
+            {/* Confetti on perfect score */}
+            {score === 100 && <ConfettiBurst />}
+
+            {/* Badge notification */}
+            {newBadges.length > 0 && (
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 animate-slide-up">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Award className="h-5 w-5 text-primary" />
+                        <h3 className="text-sm font-bold text-foreground">
+                            {newBadges.length === 1 ? 'Badge Unlocked!' : `${newBadges.length} Badges Unlocked!`}
+                        </h3>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        {newBadges.map(badge => {
+                            const info = BADGE_LABELS[badge] || { label: badge, emoji: '🏅' };
+                            return (
+                                <div key={badge} className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 shadow-[0_0_12px_var(--glow)]">
+                                    <span className="text-xl">{info.emoji}</span>
+                                    <span className="text-sm font-semibold text-foreground">{info.label}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
             {/* Score hero */}
             <div className="flex flex-col items-center gap-5 text-center">
                 <div

@@ -37,8 +37,9 @@ export const PUT = withAuth(async (request, { user, params }) => {
 /**
  * DELETE /api/studies/[studyId]
  * Delete a study and cascade-delete associated questions and exams.
+ * Uses checkRevoked to ensure compromised sessions cannot perform destructive operations.
  */
 export const DELETE = withAuth(async (_request, { user, params }) => {
     const result = await deleteStudy(user.uid, params.studyId);
     return { data: result };
-});
+}, { checkRevoked: true });

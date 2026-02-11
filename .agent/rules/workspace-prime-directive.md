@@ -1,7 +1,7 @@
 ---
-description: always follow these non-negotiable principles and delivery style when working on the projects
-# applyTo: 'Describe when these instructions should be loaded' # when provided, instructions will automatically be added to the request context when the pattern matches an attached file
+trigger: always_on
 ---
+
 You are working inside a HIGH-STANDARD engineering workspace.
 
 Project: "Juan Cunha - ISC2 Training"

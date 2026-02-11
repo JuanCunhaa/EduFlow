@@ -22,12 +22,14 @@ const DOTS_PER_PAGE = 20;
 /** Isolated timer — re-renders every second WITHOUT re-rendering the parent. */
 function Timer({
     timeLimitMinutes,
+    initialTimeRemaining,
     onTimeUp,
 }: {
     timeLimitMinutes: number;
+    initialTimeRemaining?: number;
     onTimeUp: () => void;
 }) {
-    const [timeRemaining, setTimeRemaining] = useState(timeLimitMinutes * 60);
+    const [timeRemaining, setTimeRemaining] = useState(initialTimeRemaining ?? timeLimitMinutes * 60);
     const onTimeUpRef = useRef(onTimeUp);
 
     useEffect(() => {
@@ -35,7 +37,7 @@ function Timer({
     }, [onTimeUp]);
 
     useEffect(() => {
-        setTimeRemaining(timeLimitMinutes * 60);
+        setTimeRemaining(initialTimeRemaining ?? timeLimitMinutes * 60);
         const timer = setInterval(() => {
             setTimeRemaining((prev) => {
                 if (prev <= 1) {
@@ -47,7 +49,7 @@ function Timer({
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [timeLimitMinutes]);
+    }, [timeLimitMinutes, initialTimeRemaining]);
 
     const isTimeLow = timeRemaining < 60;
     const isTimeWarning = timeRemaining < timeLimitMinutes * 60 * 0.1;
@@ -123,6 +125,7 @@ interface ExamSessionProps {
     onAnswer: (questionId: string, optionIndex: number) => void;
     onSubmit: () => void;
     timeLimitMinutes: number;
+    initialTimeRemaining?: number;
 }
 
 export function ExamSession({
@@ -131,6 +134,7 @@ export function ExamSession({
     onAnswer,
     onSubmit,
     timeLimitMinutes,
+    initialTimeRemaining,
 }: ExamSessionProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -165,6 +169,49 @@ export function ExamSession({
         return () => document.removeEventListener('keydown', handler);
     }, [showSubmitConfirm]);
 
+    // Keyboard shortcuts: 1-5 select option, ←/→ or J/K navigate, Space toggle flag, Enter submit
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            // Don't capture when typing in an input
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+            if (showSubmitConfirm) return;
+
+            const q = questions[currentIndex];
+            if (!q) return;
+
+            switch (e.key) {
+                case '1': case '2': case '3': case '4': case '5': {
+                    const optIndex = parseInt(e.key, 10) - 1;
+                    if (optIndex < q.options.length) {
+                        e.preventDefault();
+                        onAnswer(q.id, optIndex);
+                    }
+                    break;
+                }
+                case 'ArrowLeft':
+                case 'j':
+                case 'J':
+                    e.preventDefault();
+                    setCurrentIndex(i => Math.max(0, i - 1));
+                    break;
+                case 'ArrowRight':
+                case 'k':
+                case 'K':
+                    e.preventDefault();
+                    setCurrentIndex(i => Math.min(questions.length - 1, i + 1));
+                    break;
+                case 'Enter':
+                    if (currentIndex === questions.length - 1) {
+                        e.preventDefault();
+                        setShowSubmitConfirm(true);
+                    }
+                    break;
+            }
+        };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
+    }, [currentIndex, questions, showSubmitConfirm, onAnswer]);
+
     const progress = (answeredCount / questions.length) * 100;
     const usePagination = questions.length > DOTS_PER_PAGE;
     const totalNavPages = Math.ceil(questions.length / DOTS_PER_PAGE);
@@ -190,7 +237,7 @@ export function ExamSession({
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <Timer timeLimitMinutes={timeLimitMinutes} onTimeUp={handleTimeUp} />
+                        <Timer timeLimitMinutes={timeLimitMinutes} initialTimeRemaining={initialTimeRemaining} onTimeUp={handleTimeUp} />
 
                         <button
                             onClick={() => setShowSubmitConfirm(true)}
@@ -289,6 +336,12 @@ export function ExamSession({
                     >
                         Next <ChevronRight className="h-4 w-4" />
                     </button>
+                </div>
+                {/* Keyboard shortcut hints */}
+                <div className="hidden sm:flex items-center justify-center gap-4 py-1 text-[10px] text-muted-foreground/50">
+                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">1-{currentQuestion.options.length}</kbd> select</span>
+                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">←→</kbd> navigate</span>
+                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">Enter</kbd> submit</span>
                 </div>
             </div>
 

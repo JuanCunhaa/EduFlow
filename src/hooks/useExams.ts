@@ -124,6 +124,7 @@ interface SubmitResult {
     domainScores: Record<string, { domainId: string; domain: string; correct: number; total: number; percentage: number }>;
     totalQuestions: number;
     correctAnswers: number;
+    newBadges: string[];
 }
 
 export async function submitExam(

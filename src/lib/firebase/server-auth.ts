@@ -44,6 +44,37 @@ export async function verifyAuth(): Promise<AuthUser | null> {
 }
 
 /**
+ * Verifies the auth cookie with revocation check (checkRevoked=true).
+ * Adds a network round-trip to Firebase but ensures revoked sessions
+ * are rejected immediately. Use for sensitive operations (delete study,
+ * question deletion, etc.).
+ */
+export async function verifyAuthStrict(): Promise<AuthUser | null> {
+    try {
+        const cookieStore = await cookies();
+        const sessionCookie = cookieStore.get('__session')?.value;
+
+        if (!sessionCookie) return null;
+
+        const decoded = await getAdminAuth().verifySessionCookie(sessionCookie, true);
+
+        const roles: string[] = Array.isArray(decoded.roles)
+            ? decoded.roles
+            : decoded.admin === true
+                ? ['admin']
+                : [];
+
+        return {
+            uid: decoded.uid,
+            email: decoded.email || '',
+            roles,
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Verifies auth and throws if unauthorized.
  * Convenience wrapper for routes that always require auth.
  */
