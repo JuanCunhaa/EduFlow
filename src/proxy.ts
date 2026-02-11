@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/verify'];
+const PUBLIC_EXACT = ['/'];
 
 /**
  * Decode a JWT payload without verification (edge-compatible).
@@ -22,6 +23,7 @@ export function proxy(request: NextRequest) {
 
     // Allow public paths and static assets
     if (
+        PUBLIC_EXACT.includes(pathname) ||
         PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
         pathname.startsWith('/_next')
     ) {
