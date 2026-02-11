@@ -1,0 +1,492 @@
+{
+  "metadata": {
+    "title": "ExamFlow — Gerador de Exames",
+    "description": "Plataforma premium de exames práticos para certificações CISSP, CC, SSCP, CCSP e CGRC."
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "create": "Criar",
+    "update": "Atualizar",
+    "saving": "Salvando…",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "submit": "Enviar",
+    "loading": "Carregando…",
+    "questions": "questões",
+    "question": "questão",
+    "exams": "exames",
+    "domains": "domínios",
+    "score": "Nota",
+    "date": "Data",
+    "easy": "Fácil",
+    "medium": "Médio",
+    "hard": "Difícil",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "sessions": "sessões",
+    "study": "Estudo",
+    "all": "todos"
+  },
+  "landing": {
+    "nav": {
+      "brand": "ExamFlow",
+      "signIn": "Entrar",
+      "getStarted": "Começar"
+    },
+    "hero": {
+      "badge": "Feito para quem leva certificação a sério",
+      "titleLine1": "Estude de forma inteligente.",
+      "titleLine2": "Performe melhor.",
+      "description": "Um motor de estudo adaptativo que identifica seus pontos fracos, elimina repetições desnecessárias e constrói a confiança que você precisa para passar.",
+      "cta": "Comece a estudar grátis",
+      "secondary": "Veja como funciona"
+    },
+    "socialProof": {
+      "heading": "Usado por candidatos a certificação no mundo todo"
+    },
+    "testimonials": {
+      "sarah": {
+        "name": "Sarah Mitchell",
+        "role": "Candidata CISSP",
+        "quote": "O ExamFlow me mostrou exatamente em quais domínios eu era mais fraca. Saí de 58% para aprovação em três semanas."
+      },
+      "daniel": {
+        "name": "Daniel Ortega",
+        "role": "Analista de Segurança na Deloitte",
+        "quote": "Só o modo de revisão espaçada já vale a pena. Eu retenho muito mais do que apenas relendo anotações."
+      },
+      "priya": {
+        "name": "Priya Chakraborty",
+        "role": "Certificada CC",
+        "quote": "Passei no CC na primeira tentativa. As questões adaptativas tornaram o estudo realmente eficiente."
+      },
+      "marcus": {
+        "name": "Marcus Johnson",
+        "role": "Gerente de TI preparando para SSCP",
+        "quote": "Finalmente uma plataforma que não só me testa — me ensina onde estou falhando e por quê."
+      },
+      "ana": {
+        "name": "Ana Ferreira",
+        "role": "Consultora GRC",
+        "quote": "A análise por domínio após cada exame é incrivelmente detalhada. Mudou minha forma de estudar."
+      },
+      "james": {
+        "name": "James Thornton",
+        "role": "Certificado CISSP",
+        "quote": "O modo Real Mix pareceu exatamente como o exame real. Sem surpresas no dia da prova."
+      }
+    },
+    "problem": {
+      "heading": "O estudo tradicional está quebrado",
+      "subheading": "A maioria estuda mais quando deveria estudar melhor. Veja a diferença.",
+      "without": "Sem o ExamFlow",
+      "with": "Com o ExamFlow",
+      "oldWays": [
+        "Relendo anotações passivamente",
+        "Sem saber o que você não sabe",
+        "Ordem aleatória de questões",
+        "Sem ciclo de feedback",
+        "Adivinhando sua prontidão"
+      ],
+      "newWays": [
+        "Recall ativo com prática adaptativa",
+        "Detecção de fraquezas por domínio",
+        "Seleção inteligente de questões",
+        "Feedback imediato com nota por domínio",
+        "Progresso mensurável ao longo do tempo"
+      ]
+    },
+    "benefits": {
+      "heading": "Tudo muda quando o estudo tem direção",
+      "subheading": "Pare de gastar horas em conteúdo que você já sabe. Foque nas lacunas que importam.",
+      "items": [
+        {
+          "title": "Aprenda mais rápido",
+          "description": "Algoritmos adaptativos apresentam as questões certas no momento certo, eliminando repetição desnecessária em conteúdo que você já domina."
+        },
+        {
+          "title": "Encontre seus pontos cegos",
+          "description": "O rastreamento de desempenho por domínio identifica exatamente onde seu conhecimento falha — antes que o exame o faça."
+        },
+        {
+          "title": "Retenha conhecimento por mais tempo",
+          "description": "A revisão espaçada agenda questões com base em curvas de decaimento de memória, reforçando conceitos antes que você os esqueça."
+        },
+        {
+          "title": "Construa confiança para o exame",
+          "description": "Acompanhe suas notas ao longo do tempo. Veja seus domínios fracos se tornarem fortes. Entre no exame sabendo que você está pronto."
+        }
+      ]
+    },
+    "howItWorks": {
+      "heading": "Três passos. Zero atrito.",
+      "subheading": "Vá do cadastro à prática significativa em menos de dois minutos.",
+      "steps": [
+        {
+          "title": "Escolha o que estudar",
+          "description": "Selecione sua certificação e configure foco por domínio, dificuldade e número de questões."
+        },
+        {
+          "title": "Pratique com inteligência",
+          "description": "Nosso motor se adapta ao seu desempenho — focando áreas fracas, evitando repetições e misturando níveis de dificuldade."
+        },
+        {
+          "title": "Acompanhe seu domínio",
+          "description": "Veja precisão por domínio, progresso de sequência e tendências de nota. Saiba quando você está pronto."
+        }
+      ]
+    },
+    "depth": {
+      "heading": "Por baixo do capô",
+      "subheading": "Projetado para domínio, não memorização",
+      "description": "Isto não é um app de flashcards. É um motor de desempenho construído com ciência real de aprendizagem.",
+      "features": [
+        {
+          "title": "Motor Inteligente de Questões",
+          "description": "Seis modos de exame — de prática a revisão espaçada. O motor pondera recência, precisão e cobertura de domínio para construir o conjunto ideal de questões para cada sessão."
+        },
+        {
+          "title": "Rastreamento de Domínio",
+          "description": "Histórico de tentativas por questão com modelagem de decaimento de memória. Cada resposta atualiza seu resumo de desempenho atomicamente — sem dados obsoletos, sem adivinhação."
+        },
+        {
+          "title": "Dificuldade Adaptativa",
+          "description": "O modo Real Mix espelha distribuições reais de exame. O modo domínio fraco concentra 70% das questões nas suas áreas com menor pontuação. Você estuda o que importa."
+        },
+        {
+          "title": "Análises de Desempenho",
+          "description": "Detalhamento de precisão por domínio, histórico de notas, rastreamento de sequência e metas diárias. Tudo que você precisa para tomar decisões de estudo baseadas em dados."
+        }
+      ]
+    },
+    "cta": {
+      "line1": "Pare de adivinhar seu progresso.",
+      "line2": "Comece a medir.",
+      "subheading": "Junte-se a milhares de candidatos a certificação estudando com precisão.",
+      "button": "Crie sua conta grátis"
+    },
+    "footer": {
+      "brand": "ExamFlow",
+      "copyright": "© {year} ExamFlow. Todos os direitos reservados."
+    }
+  },
+  "login": {
+    "brand": "ExamFlow",
+    "tagline": "Plataforma de prática para certificações de cibersegurança",
+    "signingIn": "Entrando…",
+    "signInGoogle": "Entrar com Google",
+    "error": "Falha ao entrar. Tente novamente.",
+    "poweredBy": "Autenticação segura via Firebase"
+  },
+  "dashboard": {
+    "title": "Estudos",
+    "subtitle": "Selecione um estudo para gerenciar questões, fazer exames e acompanhar o progresso",
+    "newStudy": "Novo Estudo",
+    "streakToday": "Comece sua sequência hoje!",
+    "dayStreak": "dias de sequência",
+    "weekly": "semanal",
+    "noStudies": "Nenhum estudo ainda",
+    "noStudiesDescription": "Crie seu primeiro estudo para começar a adicionar questões e fazer exames",
+    "createStudy": "Criar Estudo"
+  },
+  "studyDetail": {
+    "studies": "Estudos",
+    "undoDelete": "Desfazer Exclusão",
+    "editStudy": "Editar estudo",
+    "deleteStudy": "Excluir estudo",
+    "dayStreak": "dias de sequência",
+    "weeklyGoal": "Meta Semanal",
+    "dailyChallenge": "Desafio Diário",
+    "quickQuestions": "5 questões rápidas",
+    "examsTaken": "Exames Feitos",
+    "avgScore": "Nota Média",
+    "passRate": "Taxa de Aprovação",
+    "readiness": "Prontidão",
+    "startExam": "Iniciar Exame",
+    "practiceWith": "Praticar com este estudo",
+    "questionBank": "Banco de Questões",
+    "flashcards": "Flashcards",
+    "studyMode": "Modo estudo",
+    "domainMastery": "Domínio por Área",
+    "noData": "Sem dados",
+    "exportCsv": "Exportar CSV",
+    "shareProgress": "Compartilhar Progresso",
+    "recentExams": "Exames Recentes",
+    "viewAll": "Ver todos",
+    "studyNotFound": "Estudo não encontrado",
+    "backToStudies": "Voltar aos Estudos",
+    "deleteConfirm": "Isso excluirá permanentemente {name} e todas as suas questões e exames. Você terá 5 segundos para desfazer.",
+    "deleteSuccess": "Estudo excluído. Clique em desfazer para restaurar.",
+    "deleteFailed": "Falha ao excluir estudo",
+    "deleteCancelled": "Exclusão cancelada"
+  },
+  "questionsPage": {
+    "title": "Banco de Questões",
+    "subtitle": "Gerencie sua biblioteca de questões em todos os estudos",
+    "import": "Importar",
+    "newQuestion": "Nova Questão",
+    "searchPlaceholder": "Buscar questões…",
+    "deleteTitle": "Excluir Questão",
+    "deleteConfirm": "Tem certeza que deseja excluir esta questão? Esta ação não pode ser desfeita.",
+    "deleteSuccess": "Questão excluída",
+    "deleteFailed": "Falha ao excluir",
+    "invalidJson": "Formato JSON inválido. Verifique sua entrada e tente novamente."
+  },
+  "examsPage": {
+    "startExam": "Iniciar Exame",
+    "configureExam": "Configure e inicie um exame prático",
+    "createFailed": "Falha ao criar exame",
+    "submitFailed": "Falha ao enviar exame",
+    "badgeUnlocked": "Conquista desbloqueada: {badge}!"
+  },
+  "analytics": {
+    "title": "Progresso",
+    "subtitle": "Acompanhe seu desempenho em exames e prontidão",
+    "emptyState": "Complete exames para ver análises",
+    "startExam": "Iniciar um Exame",
+    "readinessScore": "Índice de Prontidão",
+    "onTrack": "Você está no caminho certo para o exame",
+    "keepStudying": "Continue estudando — você está chegando lá",
+    "focusWeak": "Foque nos seus domínios fracos",
+    "lastExamTrend": "Tendência do Último Exame",
+    "vsPrevious": "vs exame anterior",
+    "byStudy": "Por Estudo",
+    "examsCount": "{count} exames",
+    "averageScore": "nota média",
+    "domainMastery": "Domínio por Área",
+    "examHistory": "Histórico de Exames"
+  },
+  "studyPage": {
+    "title": "Flashcards",
+    "subtitle": "Revise questões no seu ritmo — sem timer, sem pressão",
+    "allDifficulties": "Todas as Dificuldades",
+    "shuffle": "Embaralhar",
+    "questionsCount": "{count} questões",
+    "noQuestions": "Nenhuma questão encontrada para esta seleção",
+    "hideAnswer": "Ocultar Resposta",
+    "showAnswer": "Mostrar Resposta",
+    "correct": "Correta:"
+  },
+  "error": {
+    "title": "Algo deu errado",
+    "description": "Ocorreu um erro inesperado. Tente novamente.",
+    "retry": "Tentar Novamente"
+  },
+  "header": {
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema",
+    "toggleTheme": "Alternar tema",
+    "theme": "Tema",
+    "userAlt": "Usuário",
+    "signOut": "Sair"
+  },
+  "sidebar": {
+    "brand": "ExamFlow",
+    "studies": "Estudos",
+    "practiceExams": "Exames Práticos",
+    "questionBank": "Banco de Questões",
+    "progress": "Progresso",
+    "openMenu": "Abrir menu",
+    "closeMenu": "Fechar menu",
+    "expandSidebar": "Expandir barra lateral",
+    "collapseSidebar": "Recolher barra lateral"
+  },
+  "examConfig": {
+    "study": "Estudo",
+    "mode": "Modo",
+    "questions": "Questões",
+    "timeLimit": "Tempo Limite",
+    "difficulty": "Dificuldade",
+    "domains": "Domínios",
+    "practice": "Prática",
+    "practiceDesc": "Seleção aleatória em todos os domínios",
+    "weakDomains": "Domínios Fracos",
+    "weakDomainsDesc": "Foque nos domínios onde você tem dificuldade",
+    "recentMisses": "Erros Recentes",
+    "recentMissesDesc": "Questões que você errou recentemente (ponderadas por tempo)",
+    "realMix": "Mix Real",
+    "realMixDesc": "Simula um exame real: domínios balanceados, dificuldade mista, sem repetições",
+    "domainFocus": "Foco em Domínio",
+    "domainFocusDesc": "Aprofunde-se nos domínios selecionados",
+    "spacedReview": "Revisão Espaçada",
+    "spacedReviewDesc": "Repetição espaçada SM-2 — prioriza questões pendentes de revisão",
+    "allDomains": "Todos os domínios",
+    "selectedCount": "{count} selecionados",
+    "min": "min",
+    "startExam": "Iniciar Exame",
+    "timeLimitLabel": "Tempo limite em minutos"
+  },
+  "examResults": {
+    "badgeUnlockedSingle": "Conquista Desbloqueada!",
+    "badgeUnlockedMulti": "{count} Conquistas Desbloqueadas!",
+    "score": "nota",
+    "passed": "APROVADO",
+    "needsImprovement": "PRECISA MELHORAR",
+    "correctOutOf": "corretas de {total} questões",
+    "correct": "Corretas",
+    "incorrect": "Incorretas",
+    "passingScore": "Nota de Aprovação",
+    "domainBreakdown": "Análise por Domínio",
+    "focusArea": "Área de Foco",
+    "focusAreaTip": "Seu domínio mais fraco é {domain} com {pct}%. Considere revisar esta área no modo estudo.",
+    "backToExams": "Voltar aos Exames",
+    "reviewAnswers": "Revisar Respostas",
+    "takeAnother": "Fazer Outro Exame",
+    "firstExam": "Primeiro Exame",
+    "streak3": "Sequência de 3 Dias",
+    "weekWarrior": "Guerreiro da Semana",
+    "monthlyMaster": "Mestre Mensal",
+    "perfectScore": "Nota Perfeita",
+    "centurion": "Centurião",
+    "domainMaster": "Mestre de Domínio"
+  },
+  "examSession": {
+    "answered": "{count} respondidas",
+    "submitExam": "Enviar Exame?",
+    "answeredOf": "Você respondeu {answered} de {total} questões.",
+    "unanswered": "{count} questões não respondidas serão marcadas como incorretas.",
+    "continueExam": "Continuar Exame",
+    "select": "selecionar",
+    "navigate": "navegar",
+    "previousPage": "Página anterior de questões",
+    "nextPage": "Próxima página de questões"
+  },
+  "examReview": {
+    "title": "Revisão do Exame",
+    "backToExams": "Exames",
+    "revealAll": "Revelar Todas",
+    "hideAll": "Ocultar Todas",
+    "explanation": "Explicação",
+    "whyOthersWrong": "Por que as Outras Opções Estão Erradas",
+    "myNotes": "Minhas Anotações",
+    "save": "Salvar",
+    "notesPlaceholder": "Adicione suas anotações sobre esta questão…",
+    "yourAnswer": "Sua resposta",
+    "correctAnswer": "Resposta correta",
+    "loadFailed": "Falha ao carregar a revisão do exame",
+    "noteSaved": "Anotação salva",
+    "noteFailed": "Falha ao salvar anotação"
+  },
+  "examError": {
+    "title": "Algo deu errado durante seu exame",
+    "description": "Não se preocupe — suas respostas estão salvas. Você pode tentar retomar ou voltar aos exames.",
+    "resume": "Tentar Retomar",
+    "backToExams": "Voltar aos Exames"
+  },
+  "importDialog": {
+    "title": "Importar Questões",
+    "dropzone": "Arraste um arquivo .json aqui ou clique para enviar",
+    "pastePlaceholder": "Ou cole um array JSON aqui…",
+    "viewFormat": "Ver formato JSON esperado",
+    "pasteLabel": "Cole ou envie dados JSON",
+    "invalid": "JSON inválido",
+    "importing": "Importando…",
+    "import": "Importar"
+  },
+  "questionForm": {
+    "editTitle": "Editar Questão",
+    "newTitle": "Nova Questão",
+    "domains": "Domínios",
+    "difficulty": "Dificuldade",
+    "question": "Questão",
+    "questionPlaceholder": "Digite o enunciado da questão…",
+    "answerOptions": "Opções de Resposta ({count})",
+    "removeOption": "Remover opção",
+    "addOption": "Adicionar opção",
+    "optionPlaceholder": "Opção {label}",
+    "correctHint": "Clique em uma letra para marcar a resposta correta",
+    "explanation": "Explicação",
+    "explanationPlaceholder": "Por que esta é a resposta correta?",
+    "whyOthersWrong": "Por que as Outras Estão Erradas",
+    "perOptionOptional": "(por opção, opcional)",
+    "whyWrongPlaceholder": "Por que {label} está errada…",
+    "tags": "Tags (separadas por vírgula)",
+    "tagsPlaceholder": "Tríade CIA, controle de acesso, criptografia",
+    "domainError": "Selecione pelo menos um domínio",
+    "saveFailed": "Falha ao salvar"
+  },
+  "questionTable": {
+    "allDifficulties": "Todas as Dificuldades",
+    "questionCount": "{count, plural, one {# questão} other {# questões}}",
+    "noQuestions": "Nenhuma questão encontrada",
+    "importQuestions": "Importar Questões",
+    "newQuestion": "Nova Questão",
+    "questionHeader": "Questão",
+    "domainsHeader": "Domínios",
+    "difficultyHeader": "Dificuldade",
+    "actionsHeader": "Ações",
+    "editQuestion": "Editar questão",
+    "deleteQuestion": "Excluir questão"
+  },
+  "studyForm": {
+    "editTitle": "Editar Estudo",
+    "newTitle": "Novo Estudo",
+    "startFromTemplate": "Começar de um modelo",
+    "code": "Código",
+    "fullName": "Nome Completo",
+    "accentColor": "Cor de Destaque",
+    "domainsLabel": "Domínios ({count})",
+    "add": "Adicionar",
+    "codeRequired": "Abreviação e nome são obrigatórios",
+    "domainRequired": "Pelo menos um domínio com abreviação e nome é obrigatório",
+    "saveFailed": "Falha ao salvar estudo",
+    "codePlaceholder": "CISSP",
+    "namePlaceholder": "Certified Information Systems Security Professional",
+    "domainCodePlaceholder": "SAM",
+    "domainNamePlaceholder": "Gestão de Segurança e Riscos"
+  },
+  "heatmap": {
+    "title": "Atividade",
+    "summary": "{questions} questões em {days} dias ativos",
+    "days": ["Seg", "Qua", "Sex"],
+    "months": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+    "less": "Menos",
+    "more": "Mais",
+    "tooltip": "{date}: {count} questões"
+  },
+  "badges": {
+    "title": "Conquistas",
+    "firstExam": "Primeiro Exame",
+    "firstExamDesc": "Complete seu primeiro exame prático",
+    "streak3": "Sequência de 3 Dias",
+    "streak3Desc": "Estude por 3 dias consecutivos",
+    "weekWarrior": "Guerreiro da Semana",
+    "weekWarriorDesc": "Estude por 7 dias consecutivos",
+    "monthlyMaster": "Mestre Mensal",
+    "monthlyMasterDesc": "Estude por 30 dias consecutivos",
+    "perfectScore": "Nota Perfeita",
+    "perfectScoreDesc": "Tire 100% em qualquer exame",
+    "centurion": "Centurião",
+    "centurionDesc": "Responda 100 questões no total",
+    "domainMaster": "Mestre de Domínio",
+    "domainMasterDesc": "Tire 70%+ em cada domínio em um único exame"
+  },
+  "dailyChallenge": {
+    "title": "Desafio Diário",
+    "questionsFromWeak": "{count} questões dos seus domínios fracos",
+    "loadFailed": "Falha ao carregar desafio. Tente novamente mais tarde.",
+    "noQuestions": "Sem questões disponíveis para hoje. Adicione mais questões ao seu estudo.",
+    "complete": "Desafio Completo!",
+    "result": "Você acertou {correct} de {total}",
+    "done": "Concluído",
+    "progress": "Questão {current} de {total}",
+    "finish": "Finalizar"
+  },
+  "pomodoro": {
+    "title": "Timer de Estudo",
+    "focus": "Foco",
+    "break": "Pausa",
+    "reset": "Reiniciar",
+    "pause": "Pausar",
+    "start": "Iniciar",
+    "sessions": "{count, plural, =0 {sessões} one {sessão} other {sessões}}"
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "English",
+    "ptBR": "Português (BR)"
+  }
+}

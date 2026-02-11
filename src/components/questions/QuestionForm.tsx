@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Question, Difficulty, StudyDomain } from '@/types';
 import type { CreateQuestionInput } from '@/lib/validators';
 import { X, Plus, Minus } from 'lucide-react';
@@ -32,6 +33,8 @@ function makeEmptyForm(studyId: string): CreateQuestionInput {
 }
 
 export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: QuestionFormProps) {
+    const t = useTranslations('questionForm');
+    const tc = useTranslations('common');
     const modalRef = useModalA11y(onClose);
     const [form, setForm] = useState<CreateQuestionInput>(() => makeEmptyForm(studyId));
     const [saving, setSaving] = useState(false);
@@ -108,7 +111,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
             await onSubmit(form);
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to save');
+            setError(err instanceof Error ? err.message : t('saveFailed'));
         } finally {
             setSaving(false);
         }
@@ -120,7 +123,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-foreground">
-                        {isEditing ? 'Edit Question' : 'New Question'}
+                        {isEditing ? t('editTitle') : t('newTitle')}
                     </h2>
                     <button
                         onClick={onClose}
@@ -135,7 +138,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Domains multi-select */}
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Domains</label>
+                            <label className="mb-1 block text-xs font-medium text-muted-foreground">{t('domains')}</label>
                             <div className="flex flex-wrap gap-1.5">
                                 {domains.map((d) => (
                                     <button
@@ -152,32 +155,32 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                                 ))}
                             </div>
                             {form.domainIds.length === 0 && (
-                                <p className="mt-1 text-xs text-amber-500">Select at least one domain</p>
+                                <p className="mt-1 text-xs text-amber-500">{t('domainError')}</p>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor="q-difficulty" className="mb-1 block text-xs font-medium text-muted-foreground">Difficulty</label>
+                            <label htmlFor="q-difficulty" className="mb-1 block text-xs font-medium text-muted-foreground">{t('difficulty')}</label>
                             <select
                                 id="q-difficulty"
                                 value={form.difficulty}
                                 onChange={(e) => updateField('difficulty', e.target.value as Difficulty)}
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
                             >
-                                {DIFFICULTIES.map((d) => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+                                {DIFFICULTIES.map((d) => <option key={d} value={d}>{tc(d)}</option>)}
                             </select>
                         </div>
                     </div>
 
                     {/* Question Text */}
                     <div>
-                        <label htmlFor="q-text" className="mb-1 block text-xs font-medium text-muted-foreground">Question</label>
+                        <label htmlFor="q-text" className="mb-1 block text-xs font-medium text-muted-foreground">{t('question')}</label>
                         <textarea
                             id="q-text"
                             value={form.text}
                             onChange={(e) => updateField('text', e.target.value)}
                             rows={3}
-                            placeholder="Enter the question stem..."
+                            placeholder={t('questionPlaceholder')}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
                         />
                     </div>
@@ -186,7 +189,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="block text-xs font-medium text-muted-foreground">
-                                Answer Options ({form.options.length})
+                                {t('answerOptions', { count: form.options.length })}
                             </label>
                             <div className="flex gap-1">
                                 <button
@@ -194,7 +197,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                                     onClick={removeOption}
                                     disabled={form.options.length <= 4}
                                     className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                                    title="Remove option"
+                                    title={t('removeOption')}
                                 >
                                     <Minus className="h-3.5 w-3.5" />
                                 </button>
@@ -203,7 +206,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                                     onClick={addOption}
                                     disabled={form.options.length >= 5}
                                     className="rounded-md p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"
-                                    title="Add option"
+                                    title={t('addOption')}
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                 </button>
@@ -225,23 +228,23 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                                     type="text"
                                     value={opt.text}
                                     onChange={(e) => updateOption(i, e.target.value)}
-                                    placeholder={`Option ${opt.label}`}
+                                    placeholder={t('optionPlaceholder', { label: opt.label })}
                                     className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
                                 />
                             </div>
                         ))}
-                        <p className="text-xs text-muted-foreground">Click a letter to mark the correct answer</p>
+                        <p className="text-xs text-muted-foreground">{t('correctHint')}</p>
                     </div>
 
                     {/* Explanation */}
                     <div>
-                        <label htmlFor="q-explanation" className="mb-1 block text-xs font-medium text-muted-foreground">Explanation</label>
+                        <label htmlFor="q-explanation" className="mb-1 block text-xs font-medium text-muted-foreground">{t('explanation')}</label>
                         <textarea
                             id="q-explanation"
                             value={form.explanation.short}
                             onChange={(e) => updateField('explanation', { ...form.explanation, short: e.target.value })}
                             rows={3}
-                            placeholder="Why is this the correct answer?"
+                            placeholder={t('explanationPlaceholder')}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
                         />
                     </div>
@@ -249,7 +252,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                     {/* Why Others Wrong — per-option */}
                     <div className="space-y-2">
                         <label className="block text-xs font-medium text-muted-foreground">
-                            Why Others Wrong <span className="text-muted-foreground/50">(per option, optional)</span>
+                            {t('whyOthersWrong')} <span className="text-muted-foreground/50">{t('perOptionOptional')}</span>
                         </label>
                         {form.options
                             .filter((_, i) => i !== form.correctOptionIndex)
@@ -270,7 +273,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                                             }
                                             updateField('explanation', { ...form.explanation, whyOthersWrong: updated });
                                         }}
-                                        placeholder={`Why ${opt.label} is wrong...`}
+                                        placeholder={t('whyWrongPlaceholder', { label: opt.label })}
                                         className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
                                     />
                                 </div>
@@ -279,13 +282,13 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
 
                     {/* Tags */}
                     <div>
-                        <label htmlFor="q-tags" className="mb-1 block text-xs font-medium text-muted-foreground">Tags (comma-separated)</label>
+                        <label htmlFor="q-tags" className="mb-1 block text-xs font-medium text-muted-foreground">{t('tags')}</label>
                         <input
                             id="q-tags"
                             type="text"
                             value={form.tags.join(', ')}
                             onChange={(e) => updateField('tags', e.target.value.split(',').map((t) => t.trim()).filter(Boolean))}
-                            placeholder="CIA triad, access control, encryption"
+                            placeholder={t('tagsPlaceholder')}
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
                         />
                     </div>
@@ -304,14 +307,14 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                             onClick={onClose}
                             className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
                         >
-                            Cancel
+                            {tc('cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={saving || form.domainIds.length === 0}
                             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                         >
-                            {saving ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+                            {saving ? tc('saving') : isEditing ? tc('update') : tc('create')}
                         </button>
                     </div>
                 </form>

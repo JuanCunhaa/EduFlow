@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { X, CheckCircle2, XCircle, ChevronRight, Loader2 } from 'lucide-react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
@@ -27,6 +28,8 @@ interface DailyChallengeModalProps {
 }
 
 export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChallengeModalProps) {
+    const t = useTranslations('dailyChallenge');
+    const tc = useTranslations('common');
     const { data, isLoading, error } = useSWR<DailyChallengeData>(
         `/api/daily-challenge?studyId=${studyId}`,
         fetcher,
@@ -69,9 +72,9 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
-                        <h2 className="text-base font-semibold text-foreground">Daily Challenge</h2>
+                        <h2 className="text-base font-semibold text-foreground">{t('title')}</h2>
                         <p className="text-xs text-muted-foreground">
-                            {data?.date || 'Loading...'} — {totalQuestions} questions from your weak domains
+                            {data?.date || '...'} — {t('questionsFromWeak', { count: totalQuestions })}
                         </p>
                     </div>
                     <button onClick={handleClose} className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground">
@@ -86,14 +89,14 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                         </div>
                     ) : error || totalQuestions === 0 ? (
                         <div className="py-12 text-center text-sm text-muted-foreground">
-                            {error ? 'Failed to load challenge. Try again later.' : 'No questions available for today. Add more questions to your study.'}
+                            {error ? t('loadFailed') : t('noQuestions')}
                         </div>
                     ) : submitted ? (
                         /* ── Results ── */
                         <div className="space-y-5 text-center animate-fade-in">
                             <div className="text-4xl">🎯</div>
                             <div>
-                                <h3 className="text-lg font-bold text-foreground">Challenge Complete!</h3>
+                                <h3 className="text-lg font-bold text-foreground">{t('complete')}</h3>
                                 {(() => {
                                     const correctCount = questions.reduce((sum, q) => {
                                         if (q.correctOptionIndex !== undefined && answers[q.id] === q.correctOptionIndex) return sum + 1;
@@ -101,7 +104,7 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                                     }, 0);
                                     return (
                                         <p className="mt-1 text-sm text-muted-foreground">
-                                            You got <strong className="text-foreground">{correctCount}</strong> of {totalQuestions} correct
+                                            {t('result', { correct: correctCount, total: totalQuestions })}
                                         </p>
                                     );
                                 })()}
@@ -110,7 +113,7 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                                 onClick={handleClose}
                                 className="rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
                             >
-                                Done
+                                {t('done')}
                             </button>
                         </div>
                     ) : currentQ ? (
@@ -118,9 +121,9 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                         <div className="space-y-5 animate-fade-in" key={currentQ.id}>
                             {/* Progress */}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>Question {currentIdx + 1} of {totalQuestions}</span>
+                                <span>{t('progress', { current: currentIdx + 1, total: totalQuestions })}</span>
                                 <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${currentQ.difficulty === 'hard' ? 'bg-red-500/10 text-red-400' : currentQ.difficulty === 'medium' ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                                    {currentQ.difficulty}
+                                    {tc(currentQ.difficulty)}
                                 </span>
                             </div>
                             <div className="h-1 overflow-hidden rounded-full bg-muted/50">
@@ -181,7 +184,7 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                                         onClick={goNext}
                                         className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                                     >
-                                        {currentIdx < totalQuestions - 1 ? 'Next' : 'Finish'}
+                                        {currentIdx < totalQuestions - 1 ? tc('next') : t('finish')}
                                         <ChevronRight className="h-4 w-4" />
                                     </button>
                                 </div>

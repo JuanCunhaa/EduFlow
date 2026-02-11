@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, memo, useMemo, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { Clock, ChevronLeft, ChevronRight, Flag, AlertTriangle } from 'lucide-react';
 
 interface SessionQuestion {
@@ -144,6 +145,8 @@ export function ExamSession({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
     const [navPage, setNavPage] = useState(0);
+    const t = useTranslations('examSession');
+    const tc = useTranslations('common');
 
     const currentQuestion = questions[currentIndex];
     const currentAnswer = answers[currentQuestion.id] ?? null;
@@ -238,7 +241,7 @@ export function ExamSession({
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
-                        <span className="text-xs text-muted-foreground">{answeredCount} answered</span>
+                        <span className="text-xs text-muted-foreground">{t('answered', { count: answeredCount })}</span>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -249,7 +252,7 @@ export function ExamSession({
                             className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary to-primary/80 px-3.5 py-1.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
                         >
                             <Flag className="h-3.5 w-3.5" />
-                            Submit
+                            {tc('submit')}
                         </button>
                     </div>
                 </div>
@@ -271,7 +274,7 @@ export function ExamSession({
                         disabled={currentIndex === 0}
                         className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                     >
-                        <ChevronLeft className="h-4 w-4" /> Previous
+                        <ChevronLeft className="h-4 w-4" /> {tc('previous')}
                     </button>
 
                     {/* Question navigator */}
@@ -281,7 +284,7 @@ export function ExamSession({
                                 onClick={() => setNavPage(p => Math.max(0, p - 1))}
                                 disabled={navPage === 0}
                                 className="flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
-                                aria-label="Previous page of questions"
+                                aria-label={t('previousPage')}
                             >
                                 «
                             </button>
@@ -308,7 +311,7 @@ export function ExamSession({
                                 onClick={() => setNavPage(p => Math.min(totalNavPages - 1, p + 1))}
                                 disabled={navPage >= totalNavPages - 1}
                                 className="flex h-8 w-8 items-center justify-center rounded-md text-sm font-bold text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
-                                aria-label="Next page of questions"
+                                aria-label={t('nextPage')}
                             >
                                 »
                             </button>
@@ -340,14 +343,14 @@ export function ExamSession({
                         disabled={currentIndex === questions.length - 1}
                         className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-30"
                     >
-                        Next <ChevronRight className="h-4 w-4" />
+                        {tc('next')} <ChevronRight className="h-4 w-4" />
                     </button>
                 </div>
                 {/* Keyboard shortcut hints */}
                 <div className="hidden sm:flex items-center justify-center gap-4 py-1 text-[10px] text-muted-foreground/50">
-                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">1-{currentQuestion.options.length}</kbd> select</span>
-                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">←→</kbd> navigate</span>
-                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">Enter</kbd> submit</span>
+                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">1-{currentQuestion.options.length}</kbd> {t('select')}</span>
+                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">←→</kbd> {t('navigate')}</span>
+                    <span><kbd className="rounded bg-muted/50 px-1 font-mono">Enter</kbd> {tc('submit')}</span>
                 </div>
             </div>
 
@@ -357,15 +360,14 @@ export function ExamSession({
                     <div className="w-full max-w-sm rounded-2xl border border-border glass-panel p-6 shadow-2xl animate-slide-up">
                         <div className="mb-4 flex items-center gap-2 text-amber-400">
                             <AlertTriangle className="h-5 w-5" />
-                            <h3 className="font-bold">Submit Exam?</h3>
+                            <h3 className="font-bold">{t('submitExam')}</h3>
                         </div>
                         <p className="mb-2 text-sm text-muted-foreground">
-                            You have answered <strong className="text-foreground">{answeredCount}</strong> of{' '}
-                            <strong className="text-foreground">{questions.length}</strong> questions.
+                            {t('answeredOf', { answered: answeredCount, total: questions.length })}
                         </p>
                         {answeredCount < questions.length && (
                             <p className="mb-4 text-xs text-amber-400/80">
-                                {questions.length - answeredCount} questions are unanswered and will be marked incorrect.
+                                {t('unanswered', { count: questions.length - answeredCount })}
                             </p>
                         )}
                         <div className="flex gap-3">
@@ -373,13 +375,13 @@ export function ExamSession({
                                 onClick={() => setShowSubmitConfirm(false)}
                                 className="flex-1 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground"
                             >
-                                Continue Exam
+                                {t('continueExam')}
                             </button>
                             <button
                                 onClick={() => { setShowSubmitConfirm(false); onSubmit(); }}
                                 className="flex-1 rounded-lg bg-gradient-to-r from-primary to-primary/80 px-3 py-2 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg"
                             >
-                                Submit
+                                {tc('submit')}
                             </button>
                         </div>
                     </div>

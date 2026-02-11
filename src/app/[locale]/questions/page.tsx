@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Shell } from '@/components/layout/Shell';
 import { Spinner } from '@/components/ui/Spinner';
 import { QuestionTable } from '@/components/questions/QuestionTable';
@@ -32,6 +33,8 @@ export default function QuestionsPage() {
 }
 
 function QuestionsContent() {
+    const t = useTranslations('questionsPage');
+    const tc = useTranslations('common');
     const { studies } = useStudies();
     const searchParams = useSearchParams();
     const studyIdParam = searchParams.get('studyId');
@@ -45,7 +48,6 @@ function QuestionsContent() {
     const [isDeleting, setIsDeleting] = useState(false);
     const { addToast } = useToast();
 
-    // Pre-select study from URL param
     useEffect(() => {
         if (studyIdParam && studies.length > 0 && !activeStudy) {
             const match = studies.find(s => s.id === studyIdParam);
@@ -53,7 +55,6 @@ function QuestionsContent() {
         }
     }, [studyIdParam, studies, activeStudy]);
 
-    // Auto-select first study if none selected
     const currentStudy = activeStudy || studies[0] || null;
 
     const { questions, isLoading, refresh } = useQuestions({
@@ -62,7 +63,6 @@ function QuestionsContent() {
         search: search || undefined,
     });
 
-    // Build domain ID → name map for display
     const domainMap: Record<string, string> = {};
     if (currentStudy) {
         for (const d of currentStudy.domains) {
@@ -87,9 +87,9 @@ function QuestionsContent() {
         try {
             await deleteQuestion(deleteTarget);
             refresh();
-            addToast('Question deleted', 'success');
+            addToast(t('deleteSuccess'), 'success');
         } catch (error) {
-            addToast(error instanceof Error ? error.message : 'Failed to delete', 'error');
+            addToast(error instanceof Error ? error.message : t('deleteFailed'), 'error');
         } finally {
             setIsDeleting(false);
             setDeleteTarget(null);
@@ -101,7 +101,7 @@ function QuestionsContent() {
         try {
             parsed = JSON.parse(jsonText);
         } catch {
-            throw new Error('Invalid JSON format. Please check your input and try again.');
+            throw new Error(t('invalidJson'));
         }
         const items = Array.isArray(parsed) ? parsed : (parsed as Record<string, unknown>).questions;
         await importQuestions(items as CreateQuestionInput[]);
@@ -111,13 +111,10 @@ function QuestionsContent() {
     return (
         <Shell>
             <div className="space-y-6">
-                {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Question Bank</h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Manage your question library across all studies
-                        </p>
+                        <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t('title')}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -125,7 +122,7 @@ function QuestionsContent() {
                             className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                         >
                             <Upload className="h-4 w-4" />
-                            Import
+                            {t('import')}
                         </button>
                         <button
                             onClick={() => { setEditingQuestion(null); setShowForm(true); }}
@@ -133,12 +130,11 @@ function QuestionsContent() {
                             className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                         >
                             <Plus className="h-4 w-4" />
-                            New Question
+                            {t('newQuestion')}
                         </button>
                     </div>
                 </div>
 
-                {/* Study selector */}
                 <div className="flex flex-wrap items-center gap-2">
                     {studies.map((study) => (
                         <button
@@ -154,19 +150,17 @@ function QuestionsContent() {
                     ))}
                 </div>
 
-                {/* Search bar */}
                 <div className="relative max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                         type="text"
-                        placeholder="Search questions..."
+                        placeholder={t('searchPlaceholder')}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full rounded-lg border border-border bg-card pl-9 pr-3 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30 placeholder:text-muted-foreground"
                     />
                 </div>
 
-                {/* Table */}
                 <QuestionTable
                     questions={questions}
                     isLoading={isLoading}
@@ -180,7 +174,6 @@ function QuestionsContent() {
                 />
             </div>
 
-            {/* Modals */}
             {showForm && currentStudy && (
                 <QuestionForm
                     question={editingQuestion}
@@ -202,12 +195,12 @@ function QuestionsContent() {
                 open={deleteTarget !== null}
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleDeleteConfirm}
-                title="Delete Question"
-                confirmLabel="Delete"
+                title={t('deleteTitle')}
+                confirmLabel={tc('delete')}
                 variant="danger"
                 loading={isDeleting}
             >
-                <p>Are you sure you want to delete this question? This action cannot be undone.</p>
+                <p>{t('deleteConfirm')}</p>
             </ConfirmDialog>
         </Shell>
     );

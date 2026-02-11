@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { X, Plus, Minus, Palette, BookOpen } from 'lucide-react';
 import { createStudy, updateStudy } from '@/hooks/useStudies';
 import { useModalA11y } from '@/hooks/useModalA11y';
@@ -85,6 +86,8 @@ function applyTemplate(template: StudyTemplate) {
 
 export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProps) {
     const isEditing = !!study;
+    const t = useTranslations('studyForm');
+    const tc = useTranslations('common');
     const modalRef = useModalA11y(onClose);
 
     const [abbreviation, setAbbreviation] = useState(study?.abbreviation || '');
@@ -124,13 +127,13 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
         setError('');
 
         if (!abbreviation.trim() || !name.trim()) {
-            setError('Abbreviation and name are required');
+            setError(t('codeRequired'));
             return;
         }
 
         const validDomains = domains.filter(d => d.abbreviation.trim() && d.name.trim());
         if (validDomains.length === 0) {
-            setError('At least one domain with abbreviation and name is required');
+            setError(t('domainRequired'));
             return;
         }
 
@@ -153,7 +156,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
             }
             onSaved();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to save study');
+            setError(err instanceof Error ? err.message : t('saveFailed'));
         } finally {
             setSaving(false);
         }
@@ -164,7 +167,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
             <div ref={modalRef} className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl animate-slide-up">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-foreground">
-                        {isEditing ? 'Edit Study' : 'New Study'}
+                        {isEditing ? t('editTitle') : t('newTitle')}
                     </h2>
                     <button onClick={onClose} className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
@@ -176,7 +179,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                     {!isEditing && (
                         <div className="space-y-2">
                             <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                                <BookOpen className="h-3 w-3" /> Start from template
+                                <BookOpen className="h-3 w-3" /> {t('startFromTemplate')}
                             </label>
                             <div className="flex flex-wrap gap-2">
                                 {CERT_TEMPLATES.map((tpl) => (
@@ -206,25 +209,25 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                     {/* Abbreviation + Name */}
                     <div className="grid grid-cols-[100px_1fr] gap-3">
                         <div>
-                            <label htmlFor="study-code" className="mb-1 block text-xs font-medium text-muted-foreground">Code</label>
+                            <label htmlFor="study-code" className="mb-1 block text-xs font-medium text-muted-foreground">{t('code')}</label>
                             <input
                                 id="study-code"
                                 type="text"
                                 value={abbreviation}
                                 onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
-                                placeholder="CISSP"
+                                placeholder={t('codePlaceholder')}
                                 maxLength={20}
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
                             />
                         </div>
                         <div>
-                            <label htmlFor="study-name" className="mb-1 block text-xs font-medium text-muted-foreground">Full Name</label>
+                            <label htmlFor="study-name" className="mb-1 block text-xs font-medium text-muted-foreground">{t('fullName')}</label>
                             <input
                                 id="study-name"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="Certified Information Systems Security Professional"
+                                placeholder={t('namePlaceholder')}
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30"
                             />
                         </div>
@@ -233,7 +236,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                     {/* Accent Color */}
                     <div>
                         <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <Palette className="h-3 w-3" /> Accent Color
+                            <Palette className="h-3 w-3" /> {t('accentColor')}
                         </label>
                         <div className="flex items-center gap-3">
                             <input
@@ -260,7 +263,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <label className="text-xs font-medium text-muted-foreground">
-                                Domains ({domains.length})
+                                {t('domainsLabel', { count: domains.length })}
                             </label>
                             <button
                                 type="button"
@@ -268,7 +271,7 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                                 disabled={domains.length >= 30}
                                 className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-30"
                             >
-                                <Plus className="h-3 w-3" /> Add
+                                <Plus className="h-3 w-3" /> {t('add')}
                             </button>
                         </div>
 
@@ -282,14 +285,14 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                                         type="text"
                                         value={d.abbreviation}
                                         onChange={(e) => updateDomain(i, 'abbreviation', e.target.value)}
-                                        placeholder="SAM"
+                                        placeholder={t('domainCodePlaceholder')}
                                         className="w-20 rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold text-foreground outline-none focus:ring-1 focus:ring-primary/30"
                                     />
                                     <input
                                         type="text"
                                         value={d.name}
                                         onChange={(e) => updateDomain(i, 'name', e.target.value)}
-                                        placeholder="Security and Risk Management"
+                                        placeholder={t('domainNamePlaceholder')}
                                         className="flex-1 rounded-lg border border-border bg-background px-2 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/30"
                                     />
                                     <button
@@ -311,14 +314,14 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
 
                     <div className="flex justify-end gap-2 pt-2">
                         <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
-                            Cancel
+                            {tc('cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={saving}
                             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                         >
-                            {saving ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+                            {saving ? tc('saving') : isEditing ? tc('update') : tc('create')}
                         </button>
                     </div>
                 </form>

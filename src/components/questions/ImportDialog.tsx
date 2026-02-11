@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { X, Upload, FileJson } from 'lucide-react';
 import { useModalA11y } from '@/hooks/useModalA11y';
 
@@ -35,6 +36,8 @@ const SAMPLE_JSON = `[
 ]`;
 
 export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
+    const t = useTranslations('importDialog');
+    const tc = useTranslations('common');
     const modalRef = useModalA11y(onClose);
     const [jsonText, setJsonText] = useState('');
     const [importing, setImporting] = useState(false);
@@ -43,7 +46,7 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
 
     async function handleImport() {
         if (!jsonText.trim()) {
-            setError('Paste or upload JSON data');
+            setError(t('pasteLabel'));
             return;
         }
 
@@ -56,7 +59,7 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
             await onImport(jsonText);
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Invalid JSON');
+            setError(err instanceof Error ? err.message : t('invalid'));
         } finally {
             setImporting(false);
         }
@@ -82,7 +85,7 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
             <div ref={modalRef} className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-foreground">Import Questions</h2>
+                    <h2 className="text-lg font-semibold text-foreground">{t('title')}</h2>
                     <button onClick={onClose} className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
@@ -108,7 +111,7 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
                 >
                     <Upload className="h-6 w-6 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">
-                        Drop a .json file here or click to upload
+                        {t('dropzone')}
                     </p>
                 </div>
 
@@ -117,7 +120,7 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
                     value={jsonText}
                     onChange={(e) => setJsonText(e.target.value)}
                     rows={10}
-                    placeholder="Or paste JSON array here..."
+                    placeholder={t('pastePlaceholder')}
                     className="mb-3 w-full rounded-lg border border-border bg-background p-3 font-mono text-xs text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
                 />
 
@@ -125,7 +128,7 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
                 <details className="mb-4">
                     <summary className="flex cursor-pointer items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                         <FileJson className="h-3.5 w-3.5" />
-                        View expected JSON format
+                        {t('viewFormat')}
                     </summary>
                     <pre className="mt-2 rounded-lg bg-muted/30 p-3 font-mono text-xs text-muted-foreground overflow-x-auto">
                         {SAMPLE_JSON}
@@ -140,14 +143,14 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
 
                 <div className="flex justify-end gap-2">
                     <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:text-foreground">
-                        Cancel
+                        {tc('cancel')}
                     </button>
                     <button
                         onClick={handleImport}
                         disabled={importing || !jsonText.trim()}
                         className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
                     >
-                        {importing ? 'Importing...' : 'Import'}
+                        {importing ? t('importing') : t('import')}
                     </button>
                 </div>
             </div>

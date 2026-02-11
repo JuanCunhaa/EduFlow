@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Question, Difficulty } from '@/types';
 import { Pencil, Trash2, ChevronDown, Upload, Plus } from 'lucide-react';
 import { SkeletonTable } from '@/components/ui/Skeleton';
@@ -39,6 +40,8 @@ export function QuestionTable({
     onAdd,
     onImport,
 }: QuestionTableProps) {
+    const t = useTranslations('questionTable');
+    const tc = useTranslations('common');
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     return (
@@ -51,12 +54,12 @@ export function QuestionTable({
                     className="rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
                 >
                     {DIFFICULTIES.map((d) => (
-                        <option key={d} value={d}>{d === 'all' ? 'All Difficulties' : d.charAt(0).toUpperCase() + d.slice(1)}</option>
+                        <option key={d} value={d}>{d === 'all' ? t('allDifficulties') : tc(d)}</option>
                     ))}
                 </select>
 
                 <span className="flex items-center text-sm text-muted-foreground">
-                    {questions.length} question{questions.length !== 1 ? 's' : ''}
+                    {t('questionCount', { count: questions.length })}
                 </span>
             </div>
 
@@ -66,14 +69,14 @@ export function QuestionTable({
                     <SkeletonTable />
                 ) : questions.length === 0 ? (
                     <div className="flex flex-col items-center gap-4 py-16">
-                        <p className="text-sm text-muted-foreground">No questions found</p>
+                        <p className="text-sm text-muted-foreground">{t('noQuestions')}</p>
                         <div className="flex gap-2">
                             {onImport && (
                                 <button
                                     onClick={onImport}
                                     className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                                 >
-                                    <Upload className="h-3.5 w-3.5" /> Import Questions
+                                    <Upload className="h-3.5 w-3.5" /> {t('importQuestions')}
                                 </button>
                             )}
                             {onAdd && (
@@ -81,7 +84,7 @@ export function QuestionTable({
                                     onClick={onAdd}
                                     className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                                 >
-                                    <Plus className="h-3.5 w-3.5" /> New Question
+                                    <Plus className="h-3.5 w-3.5" /> {t('newQuestion')}
                                 </button>
                             )}
                         </div>
@@ -90,10 +93,10 @@ export function QuestionTable({
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                                <th className="px-4 py-3">Question</th>
-                                <th className="px-4 py-3 w-32">Domains</th>
-                                <th className="px-4 py-3 w-24">Difficulty</th>
-                                <th className="px-4 py-3 w-20 text-right">Actions</th>
+                                <th className="px-4 py-3">{t('questionHeader')}</th>
+                                <th className="px-4 py-3 w-32">{t('domainsHeader')}</th>
+                                <th className="px-4 py-3 w-24">{t('difficultyHeader')}</th>
+                                <th className="px-4 py-3 w-20 text-right">{t('actionsHeader')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -149,14 +152,14 @@ export function QuestionTable({
                                             <button
                                                 onClick={() => onEdit(q)}
                                                 className="rounded-md p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                                                aria-label="Edit question"
+                                                aria-label={t('editQuestion')}
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>
                                             <button
                                                 onClick={() => onDelete(q.id)}
                                                 className="rounded-md p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                                                aria-label="Delete question"
+                                                aria-label={t('deleteQuestion')}
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </button>

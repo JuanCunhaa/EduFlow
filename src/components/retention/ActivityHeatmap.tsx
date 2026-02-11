@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { DailyRecord } from '@/types';
 
 interface ActivityHeatmapProps {
@@ -11,6 +12,7 @@ interface ActivityHeatmapProps {
  * Renders a grid of squares, one per day, colored by activity level.
  */
 export function ActivityHeatmap({ recentDays }: ActivityHeatmapProps) {
+    const t = useTranslations('heatmap');
     // Build a map of date → questions answered
     const activityMap = new Map<string, number>();
     let maxActivity = 1;
@@ -61,7 +63,7 @@ export function ActivityHeatmap({ recentDays }: ActivityHeatmapProps) {
         'bg-emerald-400',               // 4
     ];
 
-    const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const MONTH_LABELS = t.raw('months') as string[];
 
     // Determine month labels positions
     const monthPositions: Array<{ label: string; col: number }> = [];
@@ -83,9 +85,9 @@ export function ActivityHeatmap({ recentDays }: ActivityHeatmapProps) {
     return (
         <div className="card-premium p-6">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-foreground">Activity</h3>
+                <h3 className="text-sm font-bold text-foreground">{t('title')}</h3>
                 <span className="text-xs text-muted-foreground">
-                    {totalActivity} questions in {activeDays} active days
+                    {t('summary', { questions: totalActivity, days: activeDays })}
                 </span>
             </div>
 
@@ -108,7 +110,7 @@ export function ActivityHeatmap({ recentDays }: ActivityHeatmapProps) {
             <div className="flex overflow-x-auto">
                 {/* Day labels */}
                 <div className="flex flex-col shrink-0 mr-[2px]" style={{ gap: '2px' }}>
-                    {['', 'Mon', '', 'Wed', '', 'Fri', ''].map((label, i) => (
+                    {(t.raw('days') as string[]).map((label, i) => (
                         <div key={i} className="h-[11px] flex items-center text-[9px] text-muted-foreground/50 w-5">
                             {label}
                         </div>
@@ -127,7 +129,7 @@ export function ActivityHeatmap({ recentDays }: ActivityHeatmapProps) {
                                             ? 'bg-transparent'
                                             : LEVEL_COLORS[day.level]
                                     }`}
-                                    title={day.date ? `${day.date}: ${day.count} questions` : ''}
+                                    title={day.date ? t('tooltip', { date: day.date, count: day.count }) : ''}
                                 />
                             ))}
                         </div>
@@ -137,11 +139,11 @@ export function ActivityHeatmap({ recentDays }: ActivityHeatmapProps) {
 
             {/* Legend */}
             <div className="mt-3 flex items-center justify-end gap-1 text-[9px] text-muted-foreground/50">
-                <span>Less</span>
+                <span>{t('less')}</span>
                 {LEVEL_COLORS.map((color, i) => (
                     <div key={i} className={`h-[9px] w-[9px] rounded-[1px] ${color}`} />
                 ))}
-                <span>More</span>
+                <span>{t('more')}</span>
             </div>
         </div>
     );

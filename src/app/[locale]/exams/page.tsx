@@ -2,6 +2,7 @@
 
 import { useReducer, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Shell } from '@/components/layout/Shell';
 import { ExamSession } from '@/components/exams/ExamSession';
 import { ExamResults } from '@/components/exams/ExamResults';
@@ -14,8 +15,6 @@ import { useStudies } from '@/hooks/useStudies';
 import { useToast } from '@/components/ui/Toast';
 import { Spinner } from '@/components/ui/Spinner';
 import type { Difficulty, ExamMode } from '@/types';
-
-// ── Types ────────────────────────────────────────
 
 interface SessionQuestion {
     id: string;
@@ -44,8 +43,6 @@ interface ExamResultData {
     studyName: string;
     newBadges: string[];
 }
-
-// ── State machine ────────────────────────────────
 
 type ExamPhase = 'config' | 'creating' | 'session' | 'submitting' | 'results' | 'checking-resume';
 
@@ -104,8 +101,6 @@ function examReducer(state: ExamState, action: ExamAction): ExamState {
 
 const STORAGE_KEY = 'eduflow_active_exam';
 
-// ── Retry queue for saveAnswer ───────────────────
-
 interface PendingSave {
     examId: string;
     questionId: string;
@@ -128,14 +123,12 @@ function useAnswerRetryQueue() {
             const item = queueRef.current[0];
             try {
                 await saveAnswer(item.examId, item.questionId, item.optionIndex);
-                queueRef.current.shift(); // success — remove from queue
+                queueRef.current.shift();
             } catch {
                 if (item.attempt >= MAX_RETRIES) {
-                    // Drop after max retries — client answers will be reconciled on submit
                     queueRef.current.shift();
                     continue;
                 }
-                // Exponential backoff
                 item.attempt++;
                 const delay = BASE_DELAY_MS * Math.pow(2, item.attempt - 1);
                 await new Promise(resolve => setTimeout(resolve, delay));
@@ -147,7 +140,6 @@ function useAnswerRetryQueue() {
 
     const enqueue = useCallback(
         (examId: string, questionId: string, optionIndex: number) => {
-            // Deduplicate: replace any existing entry for the same question
             queueRef.current = queueRef.current.filter(
                 (p: PendingSave) => p.questionId !== questionId
             );
@@ -160,12 +152,8 @@ function useAnswerRetryQueue() {
     return enqueue;
 }
 
-// ── Persistence ──────────────────────────────────
-
 function persistExam(exam: ActiveExam) {
-    try {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(exam));
-    } catch { /* quota exceeded — non-critical */ }
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(exam)); } catch { /* quota exceeded */ }
 }
 
 function recoverExam(): ActiveExam | null {
@@ -173,16 +161,12 @@ function recoverExam(): ActiveExam | null {
         const raw = sessionStorage.getItem(STORAGE_KEY);
         if (!raw) return null;
         return JSON.parse(raw) as ActiveExam;
-    } catch {
-        return null;
-    }
+    } catch { return null; }
 }
 
 function clearPersistedExam() {
     try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
-
-// ── Component ────────────────────────────────────
 
 export default function ExamsPage() {
     return (
@@ -193,6 +177,8 @@ export default function ExamsPage() {
 }
 
 function ExamsContent() {
+    const t = useTranslations('examsPage');
+    const tErr = useTranslations('examError');
     const [state, dispatch] = useReducer(examReducer, {
         phase: 'config',
         activeExam: null,
@@ -205,7 +191,6 @@ function ExamsContent() {
     const preselectedStudyId = searchParams.get('studyId') || undefined;
     const enqueueSave = useAnswerRetryQueue();
 
-    // Recover exam session on mount (F5 recovery + server resume)
     useEffect(() => {
         const recovered = recoverExam();
         if (recovered) {
@@ -213,7 +198,6 @@ function ExamsContent() {
             return;
         }
 
-        // Check server for in-progress exam
         dispatch({ type: 'SET_CHECKING_RESUME' });
         fetch('/api/exams/in-progress')
             .then((r) => r.json())
@@ -240,7 +224,6 @@ function ExamsContent() {
             });
     }, [studies]);
 
-    // Persist exam on answer changes
     useEffect(() => {
         if (state.activeExam) {
             persistExam(state.activeExam);
@@ -277,17 +260,14 @@ function ExamsContent() {
             dispatch({ type: 'EXAM_CREATED', exam });
             persistExam(exam);
         } catch (error) {
-            dispatch({ type: 'ERROR', message: error instanceof Error ? error.message : 'Failed to create exam' });
-            addToast(error instanceof Error ? error.message : 'Failed to create exam', 'error');
+            dispatch({ type: 'ERROR', message: error instanceof Error ? error.message : t('createFailed') });
+            addToast(error instanceof Error ? error.message : t('createFailed'), 'error');
         }
     }
 
     function handleAnswer(questionId: string, selectedOptionIndex: number) {
         if (!state.activeExam) return;
-
         dispatch({ type: 'ANSWER', questionId, optionIndex: selectedOptionIndex });
-
-        // Enqueue server save with retry
         enqueueSave(state.activeExam.id, questionId, selectedOptionIndex);
     }
 
@@ -313,23 +293,20 @@ function ExamsContent() {
                 },
             });
 
-            // Celebrate new badges with toast
             if (badges.length > 0) {
                 const BADGE_EMOJI: Record<string, string> = {
                     first_exam: '🎓', streak_3: '🔥', streak_7: '⚡', streak_30: '💎',
                     perfect_score: '🏆', centurion: '💯', domain_master: '🎯',
                 };
                 for (const b of badges) {
-                    addToast(`${BADGE_EMOJI[b] || '🏅'} Badge unlocked: ${b.replace(/_/g, ' ')}!`, 'success');
+                    addToast(`${BADGE_EMOJI[b] || '🏅'} ${t('badgeUnlocked', { badge: b.replace(/_/g, ' ') })}`, 'success');
                 }
             }
         } catch (error) {
-            dispatch({ type: 'ERROR', message: error instanceof Error ? error.message : 'Failed to submit' });
-            addToast(error instanceof Error ? error.message : 'Failed to submit exam', 'error');
+            dispatch({ type: 'ERROR', message: error instanceof Error ? error.message : t('submitFailed') });
+            addToast(error instanceof Error ? error.message : t('submitFailed'), 'error');
         }
-    }, [state.activeExam, state.phase, addToast]);
-
-    // ── Render ──
+    }, [state.activeExam, state.phase, addToast, t]);
 
     if (state.phase === 'checking-resume') {
         return (
@@ -342,7 +319,6 @@ function ExamsContent() {
     }
 
     if ((state.phase === 'session' || state.phase === 'submitting') && state.activeExam) {
-        // Build domain map from the active study
         const activeStudy = studies.find(s => s.id === state.activeExam!.studyId);
         const domainMap: Record<string, string> = {};
         if (activeStudy) {
@@ -352,7 +328,15 @@ function ExamsContent() {
         }
 
         return (
-            <ExamErrorBoundary examId={state.activeExam.id}>
+            <ExamErrorBoundary
+                examId={state.activeExam.id}
+                labels={{
+                    title: tErr('title'),
+                    description: tErr('description'),
+                    resume: tErr('resume'),
+                    backToExams: tErr('backToExams'),
+                }}
+            >
                 <ExamSession
                     questions={state.activeExam.questions}
                     timeLimitMinutes={state.activeExam.timeLimitMinutes}
@@ -371,10 +355,8 @@ function ExamsContent() {
             {(state.phase === 'config' || state.phase === 'creating') && (
                 <div className="space-y-6">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Start Exam</h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            Configure and start a practice exam
-                        </p>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('startExam')}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('configureExam')}</p>
                     </div>
                     <ExamConfigForm
                         studies={studies}

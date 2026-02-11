@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import {
     BookOpen,
     ClipboardList,
@@ -16,14 +17,15 @@ import {
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
-const NAV_ITEMS = [
-    { href: '/dashboard', label: 'Studies', icon: BookOpen },
-    { href: '/exams', label: 'Practice Exams', icon: ClipboardList },
-    { href: '/questions', label: 'Question Bank', icon: Database },
-    { href: '/analytics', label: 'Progress', icon: BarChart3 },
-];
+const NAV_KEYS = [
+    { href: '/dashboard', key: 'studies', icon: BookOpen },
+    { href: '/exams', key: 'practiceExams', icon: ClipboardList },
+    { href: '/questions', key: 'questionBank', icon: Database },
+    { href: '/analytics', key: 'progress', icon: BarChart3 },
+] as const;
 
 export function Sidebar() {
+    const t = useTranslations('sidebar');
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -47,7 +49,7 @@ export function Sidebar() {
             <button
                 onClick={() => setMobileOpen(true)}
                 className="fixed left-3 top-3 z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card/80 backdrop-blur-sm text-muted-foreground transition-colors hover:text-foreground md:hidden"
-                aria-label="Open menu"
+                aria-label={t('openMenu')}
             >
                 <Menu className="h-5 w-5" />
             </button>
@@ -77,14 +79,14 @@ export function Sidebar() {
                         </div>
                         {!collapsed && (
                             <span className="text-sm font-bold tracking-tight text-foreground">
-                                ExamFlow
+                                {t('brand')}
                             </span>
                         )}
                     </div>
                     <button
                         onClick={() => setMobileOpen(false)}
                         className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground md:hidden"
-                        aria-label="Close menu"
+                        aria-label={t('closeMenu')}
                     >
                         <X className="h-4 w-4" />
                     </button>
@@ -92,8 +94,9 @@ export function Sidebar() {
 
                 {/* Navigation */}
                 <nav className="flex-1 space-y-1 px-3 py-4">
-                    {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-                        const isActive = pathname.startsWith(href);
+                    {NAV_KEYS.map(({ href, key, icon: Icon }) => {
+                        const label = t(key);
+                        const isActive = pathname.replace(/^\/(en|pt-BR)/, '').startsWith(href);
                         return (
                             <Link
                                 key={href}
@@ -124,7 +127,7 @@ export function Sidebar() {
                 <button
                     onClick={() => setCollapsed(!collapsed)}
                     className="hidden h-12 items-center justify-center border-t border-border text-muted-foreground transition-colors hover:bg-accent/30 hover:text-foreground md:flex"
-                    aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
                 >
                     {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
                 </button>

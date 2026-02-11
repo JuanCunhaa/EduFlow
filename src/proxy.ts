@@ -1,4 +1,8 @@
+import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
+import { routing } from '@/i18n/routing';
+
+const intlMiddleware = createMiddleware(routing);
 
 const PUBLIC_PATHS = ['/login', '/api/auth/verify'];
 const PUBLIC_EXACT = ['/'];
@@ -18,22 +22,36 @@ function decodeJwtPayload(token: string): { exp?: number } | null {
     }
 }
 
+/** Strip locale prefix to get the logical pathname for auth checks. */
+function stripLocale(pathname: string): string {
+    const match = pathname.match(/^\/(en|pt-BR)(\/.*)?$/);
+    return match ? (match[2] || '/') : pathname;
+}
+
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Allow public paths and static assets
-    if (
-        PUBLIC_EXACT.includes(pathname) ||
-        PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
-        pathname.startsWith('/_next')
-    ) {
+    // Skip API routes and Next.js internals
+    if (pathname.startsWith('/api/') || pathname.startsWith('/_next')) {
         return NextResponse.next();
+    }
+
+    const logicalPath = stripLocale(pathname);
+
+    // Allow public paths — delegate to intl middleware for locale handling
+    if (
+        PUBLIC_EXACT.includes(logicalPath) ||
+        PUBLIC_PATHS.some((p) => logicalPath.startsWith(p))
+    ) {
+        return intlMiddleware(request);
     }
 
     // Validate session cookie structure + expiry (not just existence)
     const session = request.cookies.get('__session');
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    const localeMatch = pathname.match(/^\/(en|pt-BR)/);
+    const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    loginUrl.searchParams.set('redirect', logicalPath);
 
     if (!session?.value) {
         return NextResponse.redirect(loginUrl);
@@ -47,7 +65,8 @@ export function proxy(request: NextRequest) {
         return response;
     }
 
-    return NextResponse.next();
+    // Auth passed — delegate to intl middleware for locale negotiation
+    return intlMiddleware(request);
 }
 
 export const config = {

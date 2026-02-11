@@ -6,6 +6,13 @@ import { AlertTriangle } from 'lucide-react';
 interface Props {
     children: ReactNode;
     examId?: string;
+    /** i18n labels — injected by parent since class components can't use hooks */
+    labels?: {
+        title: string;
+        description: string;
+        resume: string;
+        backToExams: string;
+    };
 }
 
 interface State {
@@ -42,6 +49,12 @@ export class ExamErrorBoundary extends Component<Props, State> {
 
     render() {
         if (this.state.hasError) {
+            const labels = this.props.labels || {
+                title: 'Something went wrong during your exam',
+                description: "Don't worry — your answers are saved. You can try resuming or go back to exams.",
+                resume: 'Try to Resume',
+                backToExams: 'Back to Exams',
+            };
             return (
                 <div className="flex flex-col items-center gap-6 py-20 text-center">
                     <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-500/10">
@@ -49,10 +62,10 @@ export class ExamErrorBoundary extends Component<Props, State> {
                     </div>
                     <div>
                         <h2 className="text-xl font-semibold text-foreground">
-                            Something went wrong during your exam
+                            {labels.title}
                         </h2>
                         <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                            Don&apos;t worry — your answers are saved. You can try resuming or go back to exams.
+                            {labels.description}
                         </p>
                     </div>
                     <div className="flex gap-3">
@@ -60,13 +73,13 @@ export class ExamErrorBoundary extends Component<Props, State> {
                             onClick={this.handleRetry}
                             className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                         >
-                            Try to Resume
+                            {labels.resume}
                         </button>
                         <button
                             onClick={this.handleGoBack}
                             className="rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                         >
-                            Back to Exams
+                            {labels.backToExams}
                         </button>
                     </div>
                     {this.state.error && (

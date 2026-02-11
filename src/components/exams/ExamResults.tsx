@@ -1,18 +1,19 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { CheckCircle2, XCircle, TrendingUp, BarChart3, FileSearch, Award } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import type { BadgeId } from '@/types';
 
-const BADGE_LABELS: Record<string, { label: string; emoji: string }> = {
-    first_exam: { label: 'First Exam', emoji: '🎓' },
-    streak_3: { label: '3-Day Streak', emoji: '🔥' },
-    streak_7: { label: 'Week Warrior', emoji: '⚡' },
-    streak_30: { label: 'Monthly Master', emoji: '💎' },
-    perfect_score: { label: 'Perfect Score', emoji: '🏆' },
-    centurion: { label: 'Centurion', emoji: '💯' },
-    domain_master: { label: 'Domain Master', emoji: '🎯' },
+const BADGE_EMOJI: Record<string, string> = {
+    first_exam: '🎓',
+    streak_3: '🔥',
+    streak_7: '⚡',
+    streak_30: '💎',
+    perfect_score: '🏆',
+    centurion: '💯',
+    domain_master: '🎯',
 };
 
 /** Lightweight confetti burst using CSS-only particles */
@@ -115,6 +116,7 @@ export function ExamResults({
     onBackToExams,
     onRetry,
 }: Readonly<ExamResultsProps>) {
+    const t = useTranslations('examResults');
     const passingScore = passingScoreProp ?? 70;
     const passed = score >= passingScore;
     const sortedDomains = Object.entries(domainScores).sort(
@@ -132,16 +134,21 @@ export function ExamResults({
                     <div className="flex items-center gap-2 mb-3">
                         <Award className="h-5 w-5 text-primary" />
                         <h3 className="text-sm font-bold text-foreground">
-                            {newBadges.length === 1 ? 'Badge Unlocked!' : `${newBadges.length} Badges Unlocked!`}
+                            {newBadges.length === 1 ? t('badgeUnlockedSingle') : t('badgeUnlockedMulti', { count: newBadges.length })}
                         </h3>
                     </div>
                     <div className="flex flex-wrap gap-3">
                         {newBadges.map(badge => {
-                            const info = BADGE_LABELS[badge] || { label: badge, emoji: '🏅' };
+                            const emoji = BADGE_EMOJI[badge] || '🏅';
+                            const BADGE_KEY_MAP: Record<string, string> = {
+                                first_exam: 'firstExam', streak_3: 'streak3', streak_7: 'weekWarrior',
+                                streak_30: 'monthlyMaster', perfect_score: 'perfectScore',
+                                centurion: 'centurion', domain_master: 'domainMaster',
+                            };
                             return (
                                 <div key={badge} className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 shadow-[0_0_12px_var(--glow)]">
-                                    <span className="text-xl">{info.emoji}</span>
-                                    <span className="text-sm font-semibold text-foreground">{info.label}</span>
+                                    <span className="text-xl">{emoji}</span>
+                                    <span className="text-sm font-semibold text-foreground">{t(BADGE_KEY_MAP[badge] || badge)}</span>
                                 </div>
                             );
                         })}
@@ -161,7 +168,7 @@ export function ExamResults({
                         <div className={`font-mono text-4xl font-bold ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
                             {score}%
                         </div>
-                        <div className="text-xs text-muted-foreground">score</div>
+                        <div className="text-xs text-muted-foreground">{t('score')}</div>
                     </div>
                 </div>
 
@@ -172,12 +179,12 @@ export function ExamResults({
                         <XCircle className="h-5 w-5 text-red-400" />
                     )}
                     <span className={`text-lg font-bold ${passed ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {passed ? 'PASSED' : 'NEEDS IMPROVEMENT'}
+                        {passed ? t('passed') : t('needsImprovement')}
                     </span>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                    {correctAnswers} correct out of {totalQuestions} questions • {studyName}
+                    {correctAnswers} {t('correctOutOf', { total: totalQuestions })} • {studyName}
                 </p>
             </div>
 
@@ -185,15 +192,15 @@ export function ExamResults({
             <div className="grid grid-cols-3 gap-3 animate-stagger">
                 <div className="card-premium p-4 text-center">
                     <div className="font-mono text-2xl font-bold text-foreground">{correctAnswers}</div>
-                    <div className="mt-1.5 text-xs text-muted-foreground">Correct</div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">{t('correct')}</div>
                 </div>
                 <div className="card-premium p-4 text-center">
                     <div className="font-mono text-2xl font-bold text-foreground">{totalQuestions - correctAnswers}</div>
-                    <div className="mt-1.5 text-xs text-muted-foreground">Incorrect</div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">{t('incorrect')}</div>
                 </div>
                 <div className="card-premium p-4 text-center">
                     <div className="font-mono text-2xl font-bold text-foreground">{passingScore}%</div>
-                    <div className="mt-1.5 text-xs text-muted-foreground">Passing Score</div>
+                    <div className="mt-1.5 text-xs text-muted-foreground">{t('passingScore')}</div>
                 </div>
             </div>
 
@@ -201,7 +208,7 @@ export function ExamResults({
             <div className="card-premium p-6">
                 <div className="mb-5 flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                    <h3 className="text-sm font-bold text-foreground">Domain Breakdown</h3>
+                    <h3 className="text-sm font-bold text-foreground">{t('domainBreakdown')}</h3>
                 </div>
                 <div className="space-y-4">
                     {sortedDomains.map(([domain, ds]) => (
@@ -228,11 +235,10 @@ export function ExamResults({
                 <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
                     <div className="flex items-center gap-2 text-sm text-amber-400">
                         <TrendingUp className="h-4 w-4" />
-                        <span className="font-bold">Focus Area</span>
+                        <span className="font-bold">{t('focusArea')}</span>
                     </div>
                     <p className="mt-1.5 text-sm text-muted-foreground">
-                        Your weakest domain is <strong className="text-foreground">{sortedDomains[0][0]}</strong> at{' '}
-                        {sortedDomains[0][1].percentage}%. Consider reviewing this area in study mode.
+                        {t('focusAreaTip', { domain: sortedDomains[0][0], pct: sortedDomains[0][1].percentage })}
                     </p>
                 </div>
             )}
@@ -243,20 +249,20 @@ export function ExamResults({
                     onClick={onBackToExams}
                     className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"
                 >
-                    Back to Exams
+                    {t('backToExams')}
                 </button>
                 <Link
                     href={`/exams/${examId}/review`}
                     className="flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"
                 >
                     <FileSearch className="h-4 w-4" />
-                    Review Answers
+                    {t('reviewAnswers')}
                 </Link>
                 <button
                     onClick={onRetry}
                     className="rounded-xl bg-gradient-to-r from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
                 >
-                    Take Another Exam
+                    {t('takeAnother')}
                 </button>
             </div>
         </div>

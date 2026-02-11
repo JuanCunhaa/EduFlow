@@ -1,6 +1,7 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import { Shell } from '@/components/layout/Shell';
 import { useStudy, deleteStudy } from '@/hooks/useStudies';
 import { useExams } from '@/hooks/useExams';
@@ -32,12 +33,11 @@ import {
     Trash2,
     TrendingUp,
 } from 'lucide-react';
-import Link from 'next/link';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useState, useRef, useCallback } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 
-// Domain accuracy from performance summary
 interface DomainAccuracy {
     correct: number;
     total: number;
@@ -52,6 +52,9 @@ interface StudyAnalytics {
 }
 
 export default function StudyDetailPage() {
+    const t = useTranslations('studyDetail');
+    const tc = useTranslations('common');
+    const locale = useLocale();
     const { studyId } = useParams<{ studyId: string }>();
     const router = useRouter();
     const { study, isLoading: studyLoading, refresh: refreshStudy } = useStudy(studyId);
@@ -73,13 +76,10 @@ export default function StudyDetailPage() {
     const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [pendingDelete, setPendingDelete] = useState(false);
 
-    // Undo delete: show undo toast, delay actual deletion by 5s
     const handleDeleteWithUndo = useCallback(() => {
         setShowDelete(false);
         setPendingDelete(true);
-
-        const toastId = Date.now();
-        addToast('Study deleted. Click undo to restore.', 'warning');
+        addToast(t('deleteSuccess'), 'warning');
 
         undoTimerRef.current = setTimeout(async () => {
             setPendingDelete(false);
@@ -87,20 +87,19 @@ export default function StudyDetailPage() {
                 await deleteStudy(studyId);
                 router.push('/dashboard');
             } catch {
-                addToast('Failed to delete study', 'error');
+                addToast(t('deleteFailed'), 'error');
             }
         }, 5000);
-    }, [studyId, router, addToast]);
+    }, [studyId, router, addToast, t]);
 
-    // Cancel pending delete
     const handleUndoDelete = useCallback(() => {
         if (undoTimerRef.current) {
             clearTimeout(undoTimerRef.current);
             undoTimerRef.current = null;
         }
         setPendingDelete(false);
-        addToast('Delete cancelled', 'success');
-    }, [addToast]);
+        addToast(t('deleteCancelled'), 'success');
+    }, [addToast, t]);
 
     async function handleDelete() {
         setDeleting(true);
@@ -126,9 +125,9 @@ export default function StudyDetailPage() {
         return (
             <Shell>
                 <div className="flex flex-col items-center gap-4 py-20 text-center">
-                    <p className="text-muted-foreground">Study not found</p>
+                    <p className="text-muted-foreground">{t('studyNotFound')}</p>
                     <Link href="/dashboard" className="text-sm text-primary hover:underline">
-                        Back to Studies
+                        {t('backToStudies')}
                     </Link>
                 </div>
             </Shell>
@@ -158,7 +157,7 @@ export default function StudyDetailPage() {
                         className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                         <ArrowLeft className="h-3.5 w-3.5" />
-                        Studies
+                        {t('studies')}
                     </Link>
 
                     <div className="flex items-start justify-between">
@@ -167,11 +166,9 @@ export default function StudyDetailPage() {
                                 {study.abbreviation.slice(0, 4)}
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                                    {study.name}
-                                </h1>
+                                <h1 className="text-2xl font-bold tracking-tight text-foreground">{study.name}</h1>
                                 <p className="mt-0.5 text-sm text-muted-foreground">
-                                    {study.abbreviation} • {study.domains.length} domains • {study.questionCount} questions
+                                    {study.abbreviation} • {study.domains.length} {tc('domains')} • {study.questionCount} {tc('questions')}
                                 </p>
                             </div>
                         </div>
@@ -182,20 +179,20 @@ export default function StudyDetailPage() {
                                     onClick={handleUndoDelete}
                                     className="rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-400 transition-colors hover:bg-amber-500/20"
                                 >
-                                    Undo Delete
+                                    {t('undoDelete')}
                                 </button>
                             )}
                             <button
                                 onClick={() => setShowEdit(true)}
                                 className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                                title="Edit study"
+                                title={t('editStudy')}
                             >
                                 <Edit2 className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={() => setShowDelete(true)}
                                 className="rounded-lg border border-border p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                title="Delete study"
+                                title={t('deleteStudy')}
                                 disabled={pendingDelete}
                             >
                                 <Trash2 className="h-4 w-4" />
@@ -204,25 +201,23 @@ export default function StudyDetailPage() {
                     </div>
                 </div>
 
-                {/* Retention: streak + daily goal + daily challenge */}
+                {/* Retention row */}
                 {stats && (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 animate-stagger">
-                        {/* Streak */}
                         <div className="card-premium flex items-center gap-4 p-5">
                             <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${stats.currentStreak > 0 ? 'bg-orange-500/10' : 'bg-muted/30'}`}>
                                 <Flame className={`h-5 w-5 ${stats.currentStreak > 0 ? 'text-orange-400' : 'text-muted-foreground/50'}`} />
                             </div>
                             <div>
                                 <div className="font-mono text-2xl font-bold text-foreground">{stats.currentStreak}</div>
-                                <div className="text-xs text-muted-foreground">day streak</div>
+                                <div className="text-xs text-muted-foreground">{t('dayStreak')}</div>
                             </div>
                         </div>
 
-                        {/* Weekly goal */}
                         <div className="card-premium p-5">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                                 <Target className="h-3.5 w-3.5" />
-                                Weekly Goal
+                                {t('weeklyGoal')}
                             </div>
                             {(() => {
                                 const now = new Date();
@@ -251,7 +246,6 @@ export default function StudyDetailPage() {
                             })()}
                         </div>
 
-                        {/* Daily Challenge CTA */}
                         <button
                             onClick={() => setShowDailyChallenge(true)}
                             className="card-premium flex items-center gap-4 p-5 text-left transition-all hover:border-primary/30"
@@ -260,8 +254,8 @@ export default function StudyDetailPage() {
                                 <Sparkles className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                                <div className="text-sm font-semibold text-foreground">Daily Challenge</div>
-                                <div className="text-xs text-muted-foreground">5 quick questions</div>
+                                <div className="text-sm font-semibold text-foreground">{t('dailyChallenge')}</div>
+                                <div className="text-xs text-muted-foreground">{t('quickQuestions')}</div>
                             </div>
                         </button>
                     </div>
@@ -270,10 +264,10 @@ export default function StudyDetailPage() {
                 {/* Quick stats */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 animate-stagger">
                     {[
-                        { label: 'Exams Taken', value: totalExams, icon: ClipboardList },
-                        { label: 'Avg Score', value: `${avgScore}%`, icon: TrendingUp },
-                        { label: 'Pass Rate', value: `${passRate}%`, icon: GraduationCap },
-                        { label: 'Readiness', value: `${readiness}%`, icon: FlaskConical },
+                        { label: t('examsTaken'), value: totalExams, icon: ClipboardList },
+                        { label: t('avgScore'), value: `${avgScore}%`, icon: TrendingUp },
+                        { label: t('passRate'), value: `${passRate}%`, icon: GraduationCap },
+                        { label: t('readiness'), value: `${readiness}%`, icon: FlaskConical },
                     ].map(({ label, value, icon: Icon }) => (
                         <div key={label} className="card-premium p-5">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -293,8 +287,8 @@ export default function StudyDetailPage() {
                     >
                         <ClipboardList className="h-5 w-5 text-primary" />
                         <div>
-                            <div className="text-sm font-semibold text-foreground">Start Exam</div>
-                            <div className="text-xs text-muted-foreground">Practice with this study</div>
+                            <div className="text-sm font-semibold text-foreground">{t('startExam')}</div>
+                            <div className="text-xs text-muted-foreground">{t('practiceWith')}</div>
                         </div>
                     </Link>
                     <Link
@@ -303,8 +297,8 @@ export default function StudyDetailPage() {
                     >
                         <Database className="h-5 w-5 text-primary" />
                         <div>
-                            <div className="text-sm font-semibold text-foreground">Question Bank</div>
-                            <div className="text-xs text-muted-foreground">{study.questionCount} questions</div>
+                            <div className="text-sm font-semibold text-foreground">{t('questionBank')}</div>
+                            <div className="text-xs text-muted-foreground">{study.questionCount} {tc('questions')}</div>
                         </div>
                     </Link>
                     <Link
@@ -313,15 +307,15 @@ export default function StudyDetailPage() {
                     >
                         <BookOpen className="h-5 w-5 text-primary" />
                         <div>
-                            <div className="text-sm font-semibold text-foreground">Flashcards</div>
-                            <div className="text-xs text-muted-foreground">Study mode</div>
+                            <div className="text-sm font-semibold text-foreground">{t('flashcards')}</div>
+                            <div className="text-xs text-muted-foreground">{t('studyMode')}</div>
                         </div>
                     </Link>
                 </div>
 
                 {/* Domain mastery */}
                 <div className="card-premium p-6">
-                    <h3 className="mb-5 text-sm font-bold text-foreground">Domain Mastery</h3>
+                    <h3 className="mb-5 text-sm font-bold text-foreground">{t('domainMastery')}</h3>
                     <div className="space-y-4">
                         {study.domains.map((d) => {
                             const acc = domainAccuracy[d.id];
@@ -339,7 +333,7 @@ export default function StudyDetailPage() {
                                                 {acc.correct}/{acc.total} ({pct}%)
                                             </span>
                                         ) : (
-                                            <span className="text-xs text-muted-foreground/50">No data</span>
+                                            <span className="text-xs text-muted-foreground/50">{t('noData')}</span>
                                         )}
                                     </div>
                                     <div className="h-2 overflow-hidden rounded-full bg-muted/50">
@@ -354,18 +348,13 @@ export default function StudyDetailPage() {
                     </div>
                 </div>
 
-                {/* Badges */}
                 {stats && <BadgeGallery earned={stats.badges} />}
-
-                {/* Activity Heatmap */}
                 {stats && stats.recentDays && stats.recentDays.length > 0 && (
                     <ActivityHeatmap recentDays={stats.recentDays} />
                 )}
-
-                {/* Study Timer (Pomodoro) */}
                 <PomodoroTimer />
 
-                {/* Share + Export progress */}
+                {/* Share + Export */}
                 <div className="flex justify-end gap-3">
                     <a
                         href={`/api/export?format=csv&studyId=${studyId}`}
@@ -373,7 +362,7 @@ export default function StudyDetailPage() {
                         className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                         <Download className="h-4 w-4" />
-                        Export CSV
+                        {t('exportCsv')}
                     </a>
                     <a
                         href={`/api/share-image?studyId=${studyId}`}
@@ -382,7 +371,7 @@ export default function StudyDetailPage() {
                         className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                         <Share2 className="h-4 w-4" />
-                        Share Progress
+                        {t('shareProgress')}
                     </a>
                 </div>
 
@@ -390,20 +379,17 @@ export default function StudyDetailPage() {
                 {!examsLoading && exams.length > 0 && (
                     <div className="card-premium overflow-hidden">
                         <div className="px-6 py-5 flex items-center justify-between">
-                            <h3 className="text-sm font-bold text-foreground">Recent Exams</h3>
-                            <Link
-                                href={`/analytics?studyId=${studyId}`}
-                                className="text-xs text-primary hover:underline"
-                            >
-                                View all
+                            <h3 className="text-sm font-bold text-foreground">{t('recentExams')}</h3>
+                            <Link href={`/analytics?studyId=${studyId}`} className="text-xs text-primary hover:underline">
+                                {t('viewAll')}
                             </Link>
                         </div>
                         <table className="w-full">
                             <thead>
                                 <tr className="border-t border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                    <th className="px-6 py-3">Date</th>
-                                    <th className="px-6 py-3">Questions</th>
-                                    <th className="px-6 py-3 text-right">Score</th>
+                                    <th className="px-6 py-3">{tc('date')}</th>
+                                    <th className="px-6 py-3">{tc('questions')}</th>
+                                    <th className="px-6 py-3 text-right">{tc('score')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
@@ -414,7 +400,7 @@ export default function StudyDetailPage() {
                                         onClick={() => router.push(`/exams/${exam.id}/review`)}
                                     >
                                         <td className="px-6 py-3 text-sm text-muted-foreground">
-                                            {exam.completedAt ? formatTimeAgo(exam.completedAt) : '—'}
+                                            {exam.completedAt ? formatTimeAgo(exam.completedAt, locale) : '—'}
                                         </td>
                                         <td className="px-6 py-3 text-sm text-muted-foreground">
                                             {exam.questionIds.length}
@@ -432,7 +418,6 @@ export default function StudyDetailPage() {
                 )}
             </div>
 
-            {/* Edit dialog */}
             {showEdit && (
                 <StudyFormDialog
                     study={study}
@@ -441,7 +426,6 @@ export default function StudyDetailPage() {
                 />
             )}
 
-            {/* Daily Challenge modal */}
             {showDailyChallenge && (
                 <DailyChallengeModal
                     studyId={studyId}
@@ -450,20 +434,16 @@ export default function StudyDetailPage() {
                 />
             )}
 
-            {/* Delete confirm */}
             <ConfirmDialog
                 open={showDelete}
                 onClose={() => setShowDelete(false)}
                 onConfirm={handleDeleteWithUndo}
-                title="Delete Study"
-                confirmLabel="Delete"
+                title={t('deleteStudy')}
+                confirmLabel={tc('delete')}
                 variant="danger"
                 loading={deleting}
             >
-                <p>
-                    This will permanently delete <strong>{study.name}</strong> and all its questions and exams.
-                    You&apos;ll have 5 seconds to undo.
-                </p>
+                <p>{t('deleteConfirm', { name: study.name })}</p>
             </ConfirmDialog>
         </Shell>
     );

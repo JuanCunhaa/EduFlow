@@ -1,0 +1,492 @@
+{
+  "metadata": {
+    "title": "ExamFlow — Exams Generator",
+    "description": "Premium practice exam platform for CISSP, CC, SSCP, CCSP, and CGRC certifications."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "create": "Create",
+    "update": "Update",
+    "saving": "Saving…",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "loading": "Loading…",
+    "questions": "questions",
+    "question": "question",
+    "exams": "exams",
+    "domains": "domains",
+    "score": "Score",
+    "date": "Date",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "close": "Close",
+    "confirm": "Confirm",
+    "sessions": "sessions",
+    "study": "Study",
+    "all": "all"
+  },
+  "landing": {
+    "nav": {
+      "brand": "ExamFlow",
+      "signIn": "Sign in",
+      "getStarted": "Get started"
+    },
+    "hero": {
+      "badge": "Built for serious certification prep",
+      "titleLine1": "Study smarter.",
+      "titleLine2": "Perform higher.",
+      "description": "An adaptive study engine that identifies your weak areas, eliminates wasted repetition, and builds the confidence you need to pass.",
+      "cta": "Start studying for free",
+      "secondary": "See how it works"
+    },
+    "socialProof": {
+      "heading": "Trusted by certification candidates worldwide"
+    },
+    "testimonials": {
+      "sarah": {
+        "name": "Sarah Mitchell",
+        "role": "CISSP Candidate",
+        "quote": "ExamFlow showed me exactly which domains I was weakest in. I went from 58% to passing in three weeks."
+      },
+      "daniel": {
+        "name": "Daniel Ortega",
+        "role": "Security Analyst at Deloitte",
+        "quote": "The spaced-review mode alone is worth it. I retain so much more compared to just re-reading notes."
+      },
+      "priya": {
+        "name": "Priya Chakraborty",
+        "role": "CC Certified",
+        "quote": "I passed CC on my first attempt. The adaptive questions made studying actually efficient."
+      },
+      "marcus": {
+        "name": "Marcus Johnson",
+        "role": "IT Manager preparing for SSCP",
+        "quote": "Finally a platform that doesn't just quiz me — it teaches me where I'm failing and why."
+      },
+      "ana": {
+        "name": "Ana Ferreira",
+        "role": "GRC Consultant",
+        "quote": "The domain breakdown after each exam is incredibly detailed. It changed how I study."
+      },
+      "james": {
+        "name": "James Thornton",
+        "role": "CISSP Certified",
+        "quote": "Real Mix mode felt just like the real exam. No surprises on test day."
+      }
+    },
+    "problem": {
+      "heading": "Traditional study is broken",
+      "subheading": "Most people study harder when they should study smarter. Here is the difference.",
+      "without": "Without ExamFlow",
+      "with": "With ExamFlow",
+      "oldWays": [
+        "Rereading notes passively",
+        "No idea what you don't know",
+        "Random question order",
+        "No feedback loop",
+        "Guessing your readiness"
+      ],
+      "newWays": [
+        "Active recall with adaptive practice",
+        "Domain-level weakness detection",
+        "Intelligent question selection",
+        "Instant scored feedback per domain",
+        "Measurable progress over time"
+      ]
+    },
+    "benefits": {
+      "heading": "Everything changes when studying has direction",
+      "subheading": "Stop burning hours on material you already know. Focus on the gaps that matter.",
+      "items": [
+        {
+          "title": "Learn faster",
+          "description": "Adaptive algorithms surface the right questions at the right time, eliminating wasted repetition on material you already know."
+        },
+        {
+          "title": "Find your blind spots",
+          "description": "Domain-level performance tracking identifies exactly where your knowledge breaks down — before the exam does."
+        },
+        {
+          "title": "Retain knowledge longer",
+          "description": "Spaced review schedules questions based on memory decay curves, reinforcing concepts right before you forget them."
+        },
+        {
+          "title": "Build exam confidence",
+          "description": "Track your scores over time. Watch your weak domains become strong ones. Walk into the exam knowing you are ready."
+        }
+      ]
+    },
+    "howItWorks": {
+      "heading": "Three steps. Zero friction.",
+      "subheading": "Get from signup to meaningful practice in under two minutes.",
+      "steps": [
+        {
+          "title": "Choose what to study",
+          "description": "Select your certification and configure domain focus, difficulty, and question count."
+        },
+        {
+          "title": "Practice intelligently",
+          "description": "Our engine adapts to your performance — targeting weak areas, avoiding repeats, and mixing difficulty levels."
+        },
+        {
+          "title": "Track your mastery",
+          "description": "See per-domain accuracy, streak progress, and score trends. Know when you are ready."
+        }
+      ]
+    },
+    "depth": {
+      "heading": "Under the hood",
+      "subheading": "Engineered for mastery, not memorization",
+      "description": "This is not a flashcard app. It is a performance engine built on real learning science.",
+      "features": [
+        {
+          "title": "Intelligent Question Engine",
+          "description": "Six exam modes — from practice to spaced review. The engine weighs recency, accuracy, and domain coverage to build the optimal question set for each session."
+        },
+        {
+          "title": "Mastery Tracking",
+          "description": "Per-question attempt history with memory-decay modeling. Every answer updates your performance summary atomically — no stale data, no guessing."
+        },
+        {
+          "title": "Adaptive Difficulty",
+          "description": "Real-mix mode mirrors actual exam distributions. Weak-domain mode concentrates 70% of questions on your lowest-scoring areas. You study what matters."
+        },
+        {
+          "title": "Performance Analytics",
+          "description": "Domain accuracy breakdowns, score history, streak tracking, and daily goals. Everything you need to make data-driven study decisions."
+        }
+      ]
+    },
+    "cta": {
+      "line1": "Stop guessing your progress.",
+      "line2": "Start measuring it.",
+      "subheading": "Join thousands of certification candidates studying with precision.",
+      "button": "Create your free account"
+    },
+    "footer": {
+      "brand": "ExamFlow",
+      "copyright": "© {year} ExamFlow. All rights reserved."
+    }
+  },
+  "login": {
+    "brand": "ExamFlow",
+    "tagline": "Cybersecurity certification practice platform",
+    "signingIn": "Signing in…",
+    "signInGoogle": "Sign in with Google",
+    "error": "Sign-in failed. Please try again.",
+    "poweredBy": "Secure authentication powered by Firebase"
+  },
+  "dashboard": {
+    "title": "Studies",
+    "subtitle": "Select a study to manage questions, take exams, and track progress",
+    "newStudy": "New Study",
+    "streakToday": "Start your streak today!",
+    "dayStreak": "day streak",
+    "weekly": "weekly",
+    "noStudies": "No studies yet",
+    "noStudiesDescription": "Create your first study to start adding questions and taking exams",
+    "createStudy": "Create Study"
+  },
+  "studyDetail": {
+    "studies": "Studies",
+    "undoDelete": "Undo Delete",
+    "editStudy": "Edit study",
+    "deleteStudy": "Delete study",
+    "dayStreak": "day streak",
+    "weeklyGoal": "Weekly Goal",
+    "dailyChallenge": "Daily Challenge",
+    "quickQuestions": "5 quick questions",
+    "examsTaken": "Exams Taken",
+    "avgScore": "Avg Score",
+    "passRate": "Pass Rate",
+    "readiness": "Readiness",
+    "startExam": "Start Exam",
+    "practiceWith": "Practice with this study",
+    "questionBank": "Question Bank",
+    "flashcards": "Flashcards",
+    "studyMode": "Study mode",
+    "domainMastery": "Domain Mastery",
+    "noData": "No data",
+    "exportCsv": "Export CSV",
+    "shareProgress": "Share Progress",
+    "recentExams": "Recent Exams",
+    "viewAll": "View all",
+    "studyNotFound": "Study not found",
+    "backToStudies": "Back to Studies",
+    "deleteConfirm": "This will permanently delete {name} and all its questions and exams. You'll have 5 seconds to undo.",
+    "deleteSuccess": "Study deleted. Click undo to restore.",
+    "deleteFailed": "Failed to delete study",
+    "deleteCancelled": "Delete cancelled"
+  },
+  "questionsPage": {
+    "title": "Question Bank",
+    "subtitle": "Manage your question library across all studies",
+    "import": "Import",
+    "newQuestion": "New Question",
+    "searchPlaceholder": "Search questions…",
+    "deleteTitle": "Delete Question",
+    "deleteConfirm": "Are you sure you want to delete this question? This action cannot be undone.",
+    "deleteSuccess": "Question deleted",
+    "deleteFailed": "Failed to delete",
+    "invalidJson": "Invalid JSON format. Please check your input and try again."
+  },
+  "examsPage": {
+    "startExam": "Start Exam",
+    "configureExam": "Configure and start a practice exam",
+    "createFailed": "Failed to create exam",
+    "submitFailed": "Failed to submit exam",
+    "badgeUnlocked": "Badge unlocked: {badge}!"
+  },
+  "analytics": {
+    "title": "Progress",
+    "subtitle": "Track your exam performance and readiness",
+    "emptyState": "Complete exams to see analytics",
+    "startExam": "Start an Exam",
+    "readinessScore": "Readiness Score",
+    "onTrack": "You're on track for the exam",
+    "keepStudying": "Keep studying — you're getting closer",
+    "focusWeak": "Focus on your weak domains",
+    "lastExamTrend": "Last Exam Trend",
+    "vsPrevious": "vs previous exam",
+    "byStudy": "By Study",
+    "examsCount": "{count} exams",
+    "averageScore": "average score",
+    "domainMastery": "Domain Mastery",
+    "examHistory": "Exam History"
+  },
+  "studyPage": {
+    "title": "Flashcards",
+    "subtitle": "Review questions at your own pace — no timer, no pressure",
+    "allDifficulties": "All Difficulties",
+    "shuffle": "Shuffle",
+    "questionsCount": "{count} questions",
+    "noQuestions": "No questions found for this selection",
+    "hideAnswer": "Hide Answer",
+    "showAnswer": "Show Answer",
+    "correct": "Correct:"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Please try again.",
+    "retry": "Try Again"
+  },
+  "header": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggleTheme": "Toggle theme",
+    "theme": "Theme",
+    "userAlt": "User",
+    "signOut": "Sign out"
+  },
+  "sidebar": {
+    "brand": "ExamFlow",
+    "studies": "Studies",
+    "practiceExams": "Practice Exams",
+    "questionBank": "Question Bank",
+    "progress": "Progress",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar"
+  },
+  "examConfig": {
+    "study": "Study",
+    "mode": "Mode",
+    "questions": "Questions",
+    "timeLimit": "Time Limit",
+    "difficulty": "Difficulty",
+    "domains": "Domains",
+    "practice": "Practice",
+    "practiceDesc": "Random selection across all domains",
+    "weakDomains": "Weak Domains",
+    "weakDomainsDesc": "Focus on domains you struggle with",
+    "recentMisses": "Recent Misses",
+    "recentMissesDesc": "Questions you recently got wrong (time-decay weighted)",
+    "realMix": "Real Mix",
+    "realMixDesc": "Simulates a real exam: balanced domains, mixed difficulty, no repeats",
+    "domainFocus": "Domain Focus",
+    "domainFocusDesc": "Deep-dive into selected domains",
+    "spacedReview": "Spaced Review",
+    "spacedReviewDesc": "SM-2 spaced repetition — prioritises questions due for review",
+    "allDomains": "All domains",
+    "selectedCount": "{count} selected",
+    "min": "min",
+    "startExam": "Start Exam",
+    "timeLimitLabel": "Time limit in minutes"
+  },
+  "examResults": {
+    "badgeUnlockedSingle": "Badge Unlocked!",
+    "badgeUnlockedMulti": "{count} Badges Unlocked!",
+    "score": "score",
+    "passed": "PASSED",
+    "needsImprovement": "NEEDS IMPROVEMENT",
+    "correctOutOf": "correct out of {total} questions",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "passingScore": "Passing Score",
+    "domainBreakdown": "Domain Breakdown",
+    "focusArea": "Focus Area",
+    "focusAreaTip": "Your weakest domain is {domain} at {pct}%. Consider reviewing this area in study mode.",
+    "backToExams": "Back to Exams",
+    "reviewAnswers": "Review Answers",
+    "takeAnother": "Take Another Exam",
+    "firstExam": "First Exam",
+    "streak3": "3-Day Streak",
+    "weekWarrior": "Week Warrior",
+    "monthlyMaster": "Monthly Master",
+    "perfectScore": "Perfect Score",
+    "centurion": "Centurion",
+    "domainMaster": "Domain Master"
+  },
+  "examSession": {
+    "answered": "{count} answered",
+    "submitExam": "Submit Exam?",
+    "answeredOf": "You have answered {answered} of {total} questions.",
+    "unanswered": "{count} questions are unanswered and will be marked incorrect.",
+    "continueExam": "Continue Exam",
+    "select": "select",
+    "navigate": "navigate",
+    "previousPage": "Previous page of questions",
+    "nextPage": "Next page of questions"
+  },
+  "examReview": {
+    "title": "Exam Review",
+    "backToExams": "Exams",
+    "revealAll": "Reveal All",
+    "hideAll": "Hide All",
+    "explanation": "Explanation",
+    "whyOthersWrong": "Why Other Options Are Wrong",
+    "myNotes": "My Notes",
+    "save": "Save",
+    "notesPlaceholder": "Add your notes about this question…",
+    "yourAnswer": "Your answer",
+    "correctAnswer": "Correct answer",
+    "loadFailed": "Failed to load exam review",
+    "noteSaved": "Note saved",
+    "noteFailed": "Failed to save note"
+  },
+  "examError": {
+    "title": "Something went wrong during your exam",
+    "description": "Don't worry — your answers are saved. You can try resuming or go back to exams.",
+    "resume": "Try to Resume",
+    "backToExams": "Back to Exams"
+  },
+  "importDialog": {
+    "title": "Import Questions",
+    "dropzone": "Drop a .json file here or click to upload",
+    "pastePlaceholder": "Or paste JSON array here…",
+    "viewFormat": "View expected JSON format",
+    "pasteLabel": "Paste or upload JSON data",
+    "invalid": "Invalid JSON",
+    "importing": "Importing…",
+    "import": "Import"
+  },
+  "questionForm": {
+    "editTitle": "Edit Question",
+    "newTitle": "New Question",
+    "domains": "Domains",
+    "difficulty": "Difficulty",
+    "question": "Question",
+    "questionPlaceholder": "Enter the question stem…",
+    "answerOptions": "Answer Options ({count})",
+    "removeOption": "Remove option",
+    "addOption": "Add option",
+    "optionPlaceholder": "Option {label}",
+    "correctHint": "Click a letter to mark the correct answer",
+    "explanation": "Explanation",
+    "explanationPlaceholder": "Why is this the correct answer?",
+    "whyOthersWrong": "Why Others Wrong",
+    "perOptionOptional": "(per option, optional)",
+    "whyWrongPlaceholder": "Why {label} is wrong…",
+    "tags": "Tags (comma-separated)",
+    "tagsPlaceholder": "CIA triad, access control, encryption",
+    "domainError": "Select at least one domain",
+    "saveFailed": "Failed to save"
+  },
+  "questionTable": {
+    "allDifficulties": "All Difficulties",
+    "questionCount": "{count, plural, one {# question} other {# questions}}",
+    "noQuestions": "No questions found",
+    "importQuestions": "Import Questions",
+    "newQuestion": "New Question",
+    "questionHeader": "Question",
+    "domainsHeader": "Domains",
+    "difficultyHeader": "Difficulty",
+    "actionsHeader": "Actions",
+    "editQuestion": "Edit question",
+    "deleteQuestion": "Delete question"
+  },
+  "studyForm": {
+    "editTitle": "Edit Study",
+    "newTitle": "New Study",
+    "startFromTemplate": "Start from template",
+    "code": "Code",
+    "fullName": "Full Name",
+    "accentColor": "Accent Color",
+    "domainsLabel": "Domains ({count})",
+    "add": "Add",
+    "codeRequired": "Abbreviation and name are required",
+    "domainRequired": "At least one domain with abbreviation and name is required",
+    "saveFailed": "Failed to save study",
+    "codePlaceholder": "CISSP",
+    "namePlaceholder": "Certified Information Systems Security Professional",
+    "domainCodePlaceholder": "SAM",
+    "domainNamePlaceholder": "Security and Risk Management"
+  },
+  "heatmap": {
+    "title": "Activity",
+    "summary": "{questions} questions in {days} active days",
+    "days": ["Mon", "Wed", "Fri"],
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "less": "Less",
+    "more": "More",
+    "tooltip": "{date}: {count} questions"
+  },
+  "badges": {
+    "title": "Badges",
+    "firstExam": "First Exam",
+    "firstExamDesc": "Complete your first practice exam",
+    "streak3": "3-Day Streak",
+    "streak3Desc": "Study for 3 consecutive days",
+    "weekWarrior": "Week Warrior",
+    "weekWarriorDesc": "Study for 7 consecutive days",
+    "monthlyMaster": "Monthly Master",
+    "monthlyMasterDesc": "Study for 30 consecutive days",
+    "perfectScore": "Perfect Score",
+    "perfectScoreDesc": "Score 100% on any exam",
+    "centurion": "Centurion",
+    "centurionDesc": "Answer 100 questions total",
+    "domainMaster": "Domain Master",
+    "domainMasterDesc": "Score 70%+ in every domain on a single exam"
+  },
+  "dailyChallenge": {
+    "title": "Daily Challenge",
+    "questionsFromWeak": "{count} questions from your weak domains",
+    "loadFailed": "Failed to load challenge. Try again later.",
+    "noQuestions": "No questions available for today. Add more questions to your study.",
+    "complete": "Challenge Complete!",
+    "result": "You got {correct} of {total} correct",
+    "done": "Done",
+    "progress": "Question {current} of {total}",
+    "finish": "Finish"
+  },
+  "pomodoro": {
+    "title": "Study Timer",
+    "focus": "Focus",
+    "break": "Break",
+    "reset": "Reset",
+    "pause": "Pause",
+    "start": "Start",
+    "sessions": "{count, plural, =0 {sessions} one {session} other {sessions}}"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ptBR": "Português (BR)"
+  }
+}

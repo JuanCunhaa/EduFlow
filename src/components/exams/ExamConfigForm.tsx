@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Difficulty, Study, StudyDomain, ExamMode } from '@/types';
+import { useTranslations } from 'next-intl';
 import { ChevronRight, Clock, BookOpen, Target, Zap, Layers } from 'lucide-react';
 
 interface ExamConfigFormProps {
@@ -22,16 +23,20 @@ interface ExamConfigFormProps {
 
 const QUESTION_COUNTS = [10, 25, 50, 100, 150];
 
-const EXAM_MODES: { value: ExamMode; label: string; description: string }[] = [
-    { value: 'practice', label: 'Practice', description: 'Random selection across all domains' },
-    { value: 'weak_domains', label: 'Weak Domains', description: 'Focus on domains you struggle with' },
-    { value: 'recent_misses', label: 'Recent Misses', description: 'Questions you recently got wrong (time-decay weighted)' },
-    { value: 'real_mix', label: 'Real Mix', description: 'Simulates a real exam: balanced domains, mixed difficulty, no repeats' },
-    { value: 'domain_focus', label: 'Domain Focus', description: 'Deep-dive into selected domains' },
-    { value: 'spaced_review', label: 'Spaced Review', description: 'SM-2 spaced repetition — prioritises questions due for review' },
-];
+const MODE_KEYS: ExamMode[] = ['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus', 'spaced_review'];
+
+const MODE_I18N_MAP: Record<ExamMode, { label: string; desc: string }> = {
+    practice: { label: 'practice', desc: 'practiceDesc' },
+    weak_domains: { label: 'weakDomains', desc: 'weakDomainsDesc' },
+    recent_misses: { label: 'recentMisses', desc: 'recentMissesDesc' },
+    real_mix: { label: 'realMix', desc: 'realMixDesc' },
+    domain_focus: { label: 'domainFocus', desc: 'domainFocusDesc' },
+    spaced_review: { label: 'spacedReview', desc: 'spacedReviewDesc' },
+};
 
 export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: Readonly<ExamConfigFormProps>) {
+    const t = useTranslations('examConfig');
+    const tc = useTranslations('common');
     const [selectedStudyId, setSelectedStudyId] = useState(activeStudyId || studies[0]?.id || '');
     const [questionCount, setQuestionCount] = useState(25);
     const [timeLimitMinutes, setTimeLimitMinutes] = useState(60);
@@ -54,7 +59,7 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     <div className="h-px w-3 bg-primary/50" />
-                    Study
+                    {t('study')}
                 </h2>
                 <div className="grid gap-2">
                     {studies.map((s) => (
@@ -86,34 +91,37 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
             {/* Exam Mode */}
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Layers className="h-3.5 w-3.5" /> Mode
+                    <Layers className="h-3.5 w-3.5" /> {t('mode')}
                 </h2>
                 <div className="grid gap-2">
-                    {EXAM_MODES.map((m) => (
-                        <button
-                            key={m.value}
-                            onClick={() => setMode(m.value)}
-                            className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-200 ${mode === m.value
-                                ? 'border-primary/30 bg-primary/5 text-foreground'
-                                : 'border-border bg-card text-muted-foreground hover:bg-accent/30'
-                                }`}
-                        >
-                            <div>
-                                <span className="text-sm font-medium">{m.label}</span>
-                                <p className="text-xs text-muted-foreground">{m.description}</p>
-                            </div>
-                            {mode === m.value && (
-                                <div className="h-2 w-2 rounded-full bg-primary" />
-                            )}
-                        </button>
-                    ))}
+                    {MODE_KEYS.map((mValue) => {
+                        const keys = MODE_I18N_MAP[mValue];
+                        return (
+                            <button
+                                key={mValue}
+                                onClick={() => setMode(mValue)}
+                                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-200 ${mode === mValue
+                                    ? 'border-primary/30 bg-primary/5 text-foreground'
+                                    : 'border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                    }`}
+                            >
+                                <div>
+                                    <span className="text-sm font-medium">{t(keys.label)}</span>
+                                    <p className="text-xs text-muted-foreground">{t(keys.desc)}</p>
+                                </div>
+                                {mode === mValue && (
+                                    <div className="h-2 w-2 rounded-full bg-primary" />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* Question count */}
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <BookOpen className="h-3.5 w-3.5" /> Questions
+                    <BookOpen className="h-3.5 w-3.5" /> {t('questions')}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                     {QUESTION_COUNTS.map((n) => (
@@ -134,7 +142,7 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
             {/* Time limit */}
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Clock className="h-3.5 w-3.5" /> Time Limit
+                    <Clock className="h-3.5 w-3.5" /> {t('timeLimit')}
                 </h2>
                 <div className="flex items-center gap-4">
                     <input
@@ -145,10 +153,10 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                         value={timeLimitMinutes}
                         onChange={(e) => setTimeLimitMinutes(Number.parseInt(e.target.value, 10))}
                         className="flex-1 accent-primary"
-                        aria-label="Time limit in minutes"
+                        aria-label={t('timeLimitLabel')}
                     />
                     <span className="min-w-[4rem] text-right font-mono text-sm font-semibold text-foreground">
-                        {timeLimitMinutes} min
+                        {timeLimitMinutes} {t('min')}
                     </span>
                 </div>
             </div>
@@ -156,7 +164,7 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
             {/* Difficulty */}
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Target className="h-3.5 w-3.5" /> Difficulty
+                    <Target className="h-3.5 w-3.5" /> {t('difficulty')}
                 </h2>
                 <div className="flex flex-wrap gap-2">
                     {(['all', 'easy', 'medium', 'hard'] as const).map((d) => (
@@ -168,7 +176,7 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                                 : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
                                 }`}
                         >
-                            {d}
+                            {d === 'all' ? tc('all') : tc(d)}
                         </button>
                     ))}
                 </div>
@@ -178,10 +186,10 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        <Zap className="h-3.5 w-3.5" /> Domains
+                        <Zap className="h-3.5 w-3.5" /> {t('domains')}
                     </h2>
                     <span className="text-xs text-muted-foreground">
-                        {selectedDomainIds.length === 0 ? 'All domains' : `${selectedDomainIds.length} selected`}
+                        {selectedDomainIds.length === 0 ? t('allDomains') : t('selectedCount', { count: selectedDomainIds.length })}
                     </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -219,7 +227,7 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
                 ) : (
                     <>
-                        Start Exam <ChevronRight className="h-4 w-4" />
+                        {t('startExam')} <ChevronRight className="h-4 w-4" />
                     </>
                 )}
             </button>

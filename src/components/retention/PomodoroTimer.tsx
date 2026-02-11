@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Coffee } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 type TimerPhase = 'focus' | 'break';
 
@@ -15,6 +16,7 @@ function formatTime(totalSeconds: number): string {
 }
 
 export function PomodoroTimer() {
+    const t = useTranslations('pomodoro');
     const [phase, setPhase] = useState<TimerPhase>('focus');
     const [isRunning, setIsRunning] = useState(false);
     const [timeLeft, setTimeLeft] = useState(FOCUS_MINUTES * 60);
@@ -66,9 +68,9 @@ export function PomodoroTimer() {
     return (
         <div className="card-premium p-5">
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-foreground">Study Timer</h3>
+                <h3 className="text-sm font-bold text-foreground">{t('title')}</h3>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <span className="font-mono">{completedSessions}</span> sessions
+                    <span className="font-mono">{completedSessions}</span> {t('sessions', { count: completedSessions })}
                 </div>
             </div>
 
@@ -82,7 +84,7 @@ export function PomodoroTimer() {
                             : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
-                    Focus
+                    {t('focus')}
                 </button>
                 <button
                     onClick={() => switchPhase('break')}
@@ -92,7 +94,7 @@ export function PomodoroTimer() {
                             : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
-                    <Coffee className="h-3 w-3" /> Break
+                    <Coffee className="h-3 w-3" /> {t('break')}
                 </button>
             </div>
 
@@ -129,7 +131,7 @@ export function PomodoroTimer() {
                 <button
                     onClick={handleReset}
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    title="Reset"
+                    title={t('reset')}
                 >
                     <RotateCcw className="h-4 w-4" />
                 </button>
@@ -140,7 +142,7 @@ export function PomodoroTimer() {
                             ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             : 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md shadow-primary/20'
                     }`}
-                    title={isRunning ? 'Pause' : 'Start'}
+                    title={isRunning ? t('pause') : t('start')}
                 >
                     {isRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
                 </button>
