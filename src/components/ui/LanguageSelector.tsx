@@ -1,32 +1,25 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
-import { routing, type Locale } from '@/i18n/routing';
-import { Globe } from 'lucide-react';
-import { useTransition, useState, useRef, useEffect } from 'react';
+import { type Locale } from '@/i18n/routing';
+import { useTransition } from 'react';
 
-const FLAG: Record<Locale, string> = { en: '🇺🇸', 'pt-BR': '🇧🇷' };
+const LABELS: Record<Locale, string> = { en: 'EN', 'pt-BR': 'BR' };
 
+/**
+ * Inline language toggle — click to switch between en ↔ pt-BR.
+ * No dropdown, no extra clicks. Clean pill design.
+ */
 export function LanguageSelector({ variant = 'default' }: { variant?: 'default' | 'minimal' }) {
-    const t = useTranslations('language');
     const locale = useLocale() as Locale;
     const router = useRouter();
     const pathname = usePathname();
     const [isPending, startTransition] = useTransition();
-    const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-        }
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+    const next: Locale = locale === 'en' ? 'pt-BR' : 'en';
 
-    function switchLocale(next: Locale) {
-        setOpen(false);
+    function toggle() {
         startTransition(() => {
             router.replace(pathname, { locale: next });
         });
@@ -34,64 +27,59 @@ export function LanguageSelector({ variant = 'default' }: { variant?: 'default' 
 
     if (variant === 'minimal') {
         return (
-            <div ref={ref} className="relative">
-                <button
-                    onClick={() => setOpen(o => !o)}
-                    disabled={isPending}
-                    className="flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                    aria-label={t('label')}
+            <button
+                onClick={toggle}
+                disabled={isPending}
+                className="flex items-center rounded-full bg-muted/50 p-0.5 text-[11px] font-semibold tracking-wide transition-all disabled:opacity-50"
+                aria-label={`Switch to ${LABELS[next]}`}
+            >
+                <span
+                    className={`rounded-full px-2 py-0.5 transition-all duration-200 ${
+                        locale === 'en'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground'
+                    }`}
                 >
-                    <Globe size={14} />
-                    {FLAG[locale]}
-                </button>
-                {open && (
-                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-md border border-border bg-popover p-1 shadow-lg">
-                        {routing.locales.map(l => (
-                            <button
-                                key={l}
-                                onClick={() => switchLocale(l)}
-                                className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors ${
-                                    l === locale ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent/50'
-                                }`}
-                            >
-                                <span>{FLAG[l]}</span>
-                                {t(l === 'pt-BR' ? 'ptBR' : l)}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
+                    EN
+                </span>
+                <span
+                    className={`rounded-full px-2 py-0.5 transition-all duration-200 ${
+                        locale === 'pt-BR'
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'text-muted-foreground'
+                    }`}
+                >
+                    BR
+                </span>
+            </button>
         );
     }
 
     return (
-        <div ref={ref} className="relative">
-            <button
-                onClick={() => setOpen(o => !o)}
-                disabled={isPending}
-                className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-                aria-label={t('label')}
+        <button
+            onClick={toggle}
+            disabled={isPending}
+            className="flex items-center rounded-full border border-border/60 bg-card/40 backdrop-blur-md p-0.5 text-xs font-semibold tracking-wide transition-all hover:border-border disabled:opacity-50"
+            aria-label={`Switch to ${LABELS[next]}`}
+        >
+            <span
+                className={`rounded-full px-2.5 py-1 transition-all duration-200 ${
+                    locale === 'en'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                }`}
             >
-                <Globe size={16} />
-                <span>{FLAG[locale]}</span>
-                <span className="hidden sm:inline">{t(locale === 'pt-BR' ? 'ptBR' : locale)}</span>
-            </button>
-            {open && (
-                <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded-md border border-border bg-popover p-1 shadow-lg">
-                    {routing.locales.map(l => (
-                        <button
-                            key={l}
-                            onClick={() => switchLocale(l)}
-                            className={`flex w-full items-center gap-2 rounded-sm px-3 py-2 text-sm transition-colors ${
-                                l === locale ? 'bg-accent text-accent-foreground' : 'text-popover-foreground hover:bg-accent/50'
-                            }`}
-                        >
-                            <span>{FLAG[l]}</span>
-                            {t(l === 'pt-BR' ? 'ptBR' : l)}
-                        </button>
-                    ))}
-                </div>
-            )}
-        </div>
+                EN
+            </span>
+            <span
+                className={`rounded-full px-2.5 py-1 transition-all duration-200 ${
+                    locale === 'pt-BR'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                }`}
+            >
+                BR
+            </span>
+        </button>
     );
 }
