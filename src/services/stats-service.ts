@@ -5,8 +5,8 @@
 
 import { getAdminDb } from '@/lib/firebase/admin';
 import type { UserStats, BadgeId, Question } from '@/types';
-
 import { secureRandom } from '@/lib/utils';
+import { DAILY_CHALLENGE_COUNT, HEATMAP_ROLLING_DAYS } from '@/lib/constants';
 
 const STATS_DOC = 'current';
 
@@ -95,7 +95,7 @@ export async function recordActivity(
         // Trim to 180 days rolling window (extended for heatmap)
         stats.recentDays = stats.recentDays
             .sort((a, b) => b.date.localeCompare(a.date))
-            .slice(0, 180);
+            .slice(0, HEATMAP_ROLLING_DAYS);
 
         // Check for new badges
         stats.badges = checkBadges(stats);
@@ -162,8 +162,8 @@ export async function getDailyChallenge(
         return cached.data() as DailyChallengeResult;
     }
 
-    // Fetch analytics to find weak domains
-    const { getAnalytics } = await import('@/services/exam-service');
+    // Fetch analytics to find weak domains (import from analytics service directly to avoid circular dep)
+    const { getAnalytics } = await import('@/services/exam-analytics-service');
     const analytics = await getAnalytics(uid, studyId);
     const weakDomainIds = analytics.domainStats
         .slice(0, 3) // already sorted weakest first
@@ -178,9 +178,9 @@ export async function getDailyChallenge(
         limit: 50,
     });
 
-    // Shuffle and pick 5
+    // Shuffle and pick daily challenge questions
     const shuffled = pool.sort(() => secureRandom() - 0.5);
-    const selected = shuffled.slice(0, 5);
+    const selected = shuffled.slice(0, DAILY_CHALLENGE_COUNT);
 
     // Strip sensitive fields
     const sanitized = selected.map(({ correctOptionIndex: _, explanation: __, ...rest }) => rest);

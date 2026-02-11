@@ -1,4 +1,6 @@
-import type { Exam } from '@/types';
+/**
+ * Format utilities — date/time formatting for UI display.
+ */
 
 /**
  * Format a Firestore Timestamp or date string for display.
@@ -29,32 +31,4 @@ export function formatTimeAgo(ts: unknown): string {
     const diffD = Math.floor(diffH / 24);
     if (diffD < 30) return `${diffD}d ago`;
     return formatDate(ts);
-}
-
-/**
- * Aggregate domain scores across completed exams.
- */
-export function computeDomainStats(exams: Exam[]) {
-    const aggregates: Record<string, { correct: number; total: number }> = {};
-
-    for (const exam of exams) {
-        if (exam.domainScores) {
-            for (const [domain, ds] of Object.entries(exam.domainScores)) {
-                if (!aggregates[domain]) {
-                    aggregates[domain] = { correct: 0, total: 0 };
-                }
-                aggregates[domain].correct += ds.correct;
-                aggregates[domain].total += ds.total;
-            }
-        }
-    }
-
-    return Object.entries(aggregates)
-        .map(([domain, { correct, total }]) => ({
-            domain,
-            percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
-            correct,
-            total,
-        }))
-        .sort((a, b) => a.percentage - b.percentage);
 }

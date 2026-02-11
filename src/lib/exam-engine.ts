@@ -1,5 +1,12 @@
 import type { Question, DomainScore, ExamConfig, ExamMode, Exam, PerformanceSummary, QuestionAttemptRecord } from '@/types';
 import { secureRandom } from '@/lib/utils';
+import {
+    DECAY_LAMBDA,
+    WEAK_DOMAIN_RATIO,
+    WEAK_DOMAIN_THRESHOLD,
+    REAL_MIX_DIFFICULTY,
+    RECENT_EXAM_WINDOW,
+} from '@/lib/constants';
 
 // ── Public types for strategy data ──────────────
 
@@ -11,19 +18,7 @@ export interface StrategyPerformanceData {
 }
 
 // ── Constants ───────────────────────────────────
-
-/** Time-decay half-life in days for recent_misses weighting */
-const DECAY_HALF_LIFE_DAYS = 7;
-/** λ for exponential decay: weight = e^(-λ * daysSinceAttempt) */
-const DECAY_LAMBDA = Math.LN2 / DECAY_HALF_LIFE_DAYS;
-/** Proportion of weak-domain questions in weak_domains mode */
-const WEAK_DOMAIN_RATIO = 0.7;
-/** Accuracy threshold below which a domain is considered "weak" */
-const WEAK_DOMAIN_THRESHOLD = 0.7;
-/** Target difficulty distribution for real_mix mode */
-const REAL_MIX_DIFFICULTY: Record<string, number> = { easy: 0.2, medium: 0.5, hard: 0.3 };
-/** Default number of recent exams to avoid repeats from */
-const RECENT_EXAM_WINDOW = 3;
+// (imported from @/lib/constants)
 
 /**
  * Select questions for an exam based on the configuration and mode.

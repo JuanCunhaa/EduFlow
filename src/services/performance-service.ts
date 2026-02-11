@@ -16,8 +16,8 @@
 
 import { getAdminDb } from '@/lib/firebase/admin';
 import type { PerformanceSummary, QuestionAttemptRecord } from '@/types';
+import { RECENT_EXAM_WINDOW } from '@/lib/constants';
 
-const RECENT_EXAM_WINDOW = 3;
 /** Max questions to track in questionAttempts before pruning old ones */
 const MAX_TRACKED_QUESTIONS = 2000;
 

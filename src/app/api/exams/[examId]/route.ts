@@ -3,6 +3,7 @@ import { withAuth } from '@/lib/api-middleware';
 import { submitAnswerSchema } from '@/lib/validators';
 import { getExamForClient, saveAnswer } from '@/services/exam-service';
 import { rateLimit } from '@/lib/rate-limit';
+import { ANSWER_SAVE_RATE_LIMIT } from '@/lib/constants';
 
 /**
  * GET /api/exams/[examId]
@@ -22,7 +23,7 @@ export const GET = withAuth(async (_request, { user, params }) => {
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
     // P2-4: Rate limit answer saves to prevent spam writes
-    const allowed = await rateLimit(`answer-save:${user.uid}`, 60, 60_000);
+    const allowed = await rateLimit(`answer-save:${user.uid}`, ANSWER_SAVE_RATE_LIMIT, 60_000);
     if (!allowed) {
         return NextResponse.json(
             { error: 'Too many requests. Please slow down.' },

@@ -27,9 +27,9 @@ import {
 } from '@/services/performance-service';
 import { FieldValue } from 'firebase-admin/firestore';
 import { recordActivity, awardBadge, getStats } from '@/services/stats-service';
+import { GRACE_PERIOD_SECONDS, EXAM_CREATE_RATE_LIMIT } from '@/lib/constants';
+import { recalculateAverageScore } from '@/services/exam-analytics-service';
 import type { Exam, Question, ExamConfig, DomainScore, ExamMode, BadgeId } from '@/types';
-
-const GRACE_PERIOD_SECONDS = 30;
 
 // ── Types ────────────────────────────────────────
 
@@ -133,8 +133,8 @@ export async function getExamForClient(uid: string, examId: string): Promise<Par
 // ── Create exam ──────────────────────────────────
 
 export async function createExam(uid: string, config: CreateExamInput): Promise<CreateExamResult> {
-    // Rate limit: max 5 exam creations per minute per user
-    const allowed = await rateLimit(`exam-create:${uid}`, 5, 60_000, false);
+    // Rate limit: max exam creations per minute per user
+    const allowed = await rateLimit(`exam-create:${uid}`, EXAM_CREATE_RATE_LIMIT, 60_000, false);
     if (!allowed) throw new RateLimitError();
 
     const fetchLimit = Math.min(config.questionCount * 5, 500);
@@ -586,105 +586,11 @@ export async function getExamReview(uid: string, examId: string): Promise<{
     return { exam, questions };
 }
 
-// ── Analytics ────────────────────────────────────
-
-export interface AnalyticsData {
-    totalExams: number;
-    avgScore: number;
-    passRate: number;
-    scoreTrend: Array<{ score: number; studyId: string; date: string }>;
-    studyBreakdown: Record<string, { exams: number; avgScore: number }>;
-    domainStats: Array<{ domainId: string; domain: string; percentage: number; correct: number; total: number }>;
-    readiness: number;
-}
-
-export async function getAnalytics(uid: string, studyId?: string): Promise<AnalyticsData> {
-    const exams = await listExams({ uid, studyId, limit: 50, status: 'completed' });
-
-    const total = exams.length;
-    const avg = total > 0
-        ? Math.round(exams.reduce((sum, e) => sum + (e.score || 0), 0) / total)
-        : 0;
-    const passedCount = exams.filter(e => (e.score || 0) >= 70).length;
-    const passRate = total > 0 ? Math.round((passedCount / total) * 100) : 0;
-
-    // Score trend (chronological)
-    const trend = [...exams].reverse().map(e => ({
-        score: e.score || 0,
-        studyId: e.studyId,
-        date: formatTimestamp(e.completedAt),
-    }));
-
-    // Study breakdown
-    const studies: Record<string, { exams: number; scores: number[] }> = {};
-    for (const exam of exams) {
-        const sid = exam.studyId;
-        if (!studies[sid]) studies[sid] = { exams: 0, scores: [] };
-        studies[sid].exams++;
-        studies[sid].scores.push(exam.score || 0);
-    }
-    const studyBreakdown: Record<string, { exams: number; avgScore: number }> = {};
-    for (const [sid, data] of Object.entries(studies)) {
-        studyBreakdown[sid] = {
-            exams: data.exams,
-            avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length),
-        };
-    }
-
-    // Domain stats — prefer PerformanceSummary (single-doc read) over re-aggregation
-    let domainStats: AnalyticsData['domainStats'] = [];
-    const studyIdsForSummary = studyId ? [studyId] : Object.keys(studies);
-
-    if (studyIdsForSummary.length > 0) {
-        const domainAgg: Record<string, { domainId: string; domain: string; correct: number; total: number }> = {};
-        let usedSummary = false;
-
-        for (const sid of studyIdsForSummary) {
-            const summary = await getPerformanceSummary(uid, sid);
-            if (summary) {
-                usedSummary = true;
-                for (const [domainId, acc] of Object.entries(summary.domainAccuracy)) {
-                    if (!domainAgg[domainId]) {
-                        domainAgg[domainId] = { domainId, domain: domainId, correct: 0, total: 0 };
-                    }
-                    domainAgg[domainId].correct += acc.correct;
-                    domainAgg[domainId].total += acc.total;
-                }
-            }
-        }
-
-        // Fallback: aggregate from exam domainScores if no summaries found
-        if (!usedSummary) {
-            for (const exam of exams) {
-                if (exam.domainScores) {
-                    for (const [domainId, ds] of Object.entries(exam.domainScores)) {
-                        if (!domainAgg[domainId]) {
-                            domainAgg[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0 };
-                        }
-                        domainAgg[domainId].correct += ds.correct;
-                        domainAgg[domainId].total += ds.total;
-                    }
-                }
-            }
-        }
-
-        domainStats = Object.entries(domainAgg)
-            .map(([, { domainId, domain, correct, total }]) => ({
-                domainId,
-                domain,
-                percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
-                correct,
-                total,
-            }))
-            .sort((a, b) => a.percentage - b.percentage);
-    }
-
-    const readiness = domainStats.length > 0
-        ? Math.round(domainStats.reduce((sum, d) => sum + d.percentage, 0) / domainStats.length)
-        : 0;
-
-    return { totalExams: total, avgScore: avg, passRate, scoreTrend: trend, studyBreakdown, domainStats, readiness };
-}
+// ── Analytics (see exam-analytics-service.ts) ───
+// getAnalytics and recalculateAverageScore have been extracted
+// to exam-analytics-service.ts for better cohesion.
+// Re-export for backward compatibility with existing imports.
+export { getAnalytics, type AnalyticsData } from '@/services/exam-analytics-service';
 
 // ── Helpers ──────────────────────────────────────
 
@@ -723,41 +629,4 @@ function scoreFromStored(
 
     const score = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
     return { score, domainScores };
-}
-
-/** Recalculate averageScore from actual exam history to prevent drift */
-async function recalculateAverageScore(uid: string): Promise<void> {
-    const db = getAdminDb();
-    const historySnap = await db
-        .collection(`users/${uid}/examHistory`)
-        .orderBy('completedAt', 'desc')
-        .limit(100)
-        .get();
-
-    if (historySnap.empty) return;
-
-    let totalScore = 0;
-    let count = 0;
-    for (const doc of historySnap.docs) {
-        const data = doc.data();
-        if (typeof data.score === 'number') {
-            totalScore += data.score;
-            count++;
-        }
-    }
-
-    if (count > 0) {
-        await db.collection('users').doc(uid).set({
-            averageScore: Math.round(totalScore / count),
-            examsTaken: count,
-        }, { merge: true });
-    }
-}
-
-function formatTimestamp(ts: unknown): string {
-    if (!ts) return '';
-    const date = typeof ts === 'object' && ts !== null && 'seconds' in ts
-        ? new Date((ts as { seconds: number }).seconds * 1000)
-        : new Date(ts as string);
-    return date.toISOString().split('T')[0];
 }

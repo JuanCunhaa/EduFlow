@@ -197,11 +197,5 @@ export interface QuestionNote {
 
 // === API ===
 
-export interface ApiError {
-    error: string;
-    details?: string;
-}
-
-export interface ApiSuccess<T = unknown> {
-    data: T;
-}
+// Re-export API types from dedicated module
+export type { ApiResponse, ApiError, PaginatedResponse } from '@/types/api';
