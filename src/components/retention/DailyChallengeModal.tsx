@@ -138,7 +138,7 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
 
                             {/* Options */}
                             <div className="space-y-2">
-                                {currentQ.options.map((opt, oi) => {
+                                {(currentQ.options ?? []).map((opt, oi) => {
                                     const selected = answers[currentQ.id] === oi;
                                     const answered = answers[currentQ.id] !== undefined;
                                     const isCorrect = currentQ.correctOptionIndex === oi;

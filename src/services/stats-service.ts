@@ -179,8 +179,11 @@ export async function getDailyChallenge(
         limit: 50,
     });
 
+    // Filter out malformed questions (e.g. missing options)
+    const valid = pool.filter(q => Array.isArray(q.options) && q.options.length >= 4);
+
     // Shuffle and pick daily challenge questions
-    const shuffled = pool.sort(() => secureRandom() - 0.5);
+    const shuffled = valid.sort(() => secureRandom() - 0.5);
     const selected = shuffled.slice(0, DAILY_CHALLENGE_COUNT);
 
     // Strip explanation but keep correctOptionIndex for client-side feedback
