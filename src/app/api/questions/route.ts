@@ -40,7 +40,7 @@ export const GET = withAuth(async (request, { user }) => {
     });
 
     // Strip sensitive fields from list responses (content protection)
-    const safeQuestions = result.questions.map(({ correctOptionIndex: _, explanation: __, whyOthersWrong: ___, ...rest }) => rest);
+    const safeQuestions = result.questions.map(({ correctOptionIndex: _, explanation: __, ...rest }) => rest);
 
     const res = NextResponse.json({ data: safeQuestions, nextCursor: result.nextCursor });
     res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');

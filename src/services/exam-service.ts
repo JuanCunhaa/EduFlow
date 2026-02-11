@@ -491,8 +491,7 @@ export interface ExamReviewQuestion {
     domainIds: string[];
     difficulty: string;
     correctOptionIndex: number;
-    explanation: string;
-    whyOthersWrong: string | null;
+    explanation: { short: string; whyOthersWrong: Record<string, string> };
     userAnswer: number | null;
     isCorrect: boolean;
 }
@@ -517,6 +516,11 @@ export async function getExamReview(uid: string, examId: string): Promise<{
             const data = s.data()!;
             const qId = s.id;
             const userAnswer = exam.answers[qId] ?? null;
+            // Normalize explanation: support legacy string format
+            const rawExplanation = data.explanation;
+            const explanation = typeof rawExplanation === 'string'
+                ? { short: rawExplanation, whyOthersWrong: data.whyOthersWrong ? { _legacy: data.whyOthersWrong } : {} }
+                : { short: rawExplanation?.short || '', whyOthersWrong: rawExplanation?.whyOthersWrong || {} };
             return {
                 id: qId,
                 text: data.text,
@@ -524,8 +528,7 @@ export async function getExamReview(uid: string, examId: string): Promise<{
                 domainIds: data.domainIds || [],
                 difficulty: data.difficulty,
                 correctOptionIndex: data.correctOptionIndex,
-                explanation: data.explanation,
-                whyOthersWrong: data.whyOthersWrong || null,
+                explanation,
                 userAnswer,
                 isCorrect: userAnswer === data.correctOptionIndex,
             };

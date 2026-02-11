@@ -10,9 +10,8 @@ interface ImportDialogProps {
 
 const SAMPLE_JSON = `[
   {
-    "certification": "CISSP",
-    "domain": "Security and Risk Management",
-    "domainNumber": 1,
+    "studyId": "your-study-id",
+    "domainIds": ["d1"],
     "text": "Which of the following best describes...",
     "options": [
       { "label": "A", "text": "Option A text" },
@@ -21,7 +20,14 @@ const SAMPLE_JSON = `[
       { "label": "D", "text": "Option D text" }
     ],
     "correctOptionIndex": 0,
-    "explanation": "A is correct because...",
+    "explanation": {
+      "short": "A is correct because...",
+      "whyOthersWrong": {
+        "B": "B is wrong because...",
+        "C": "C is wrong because...",
+        "D": "D is wrong because..."
+      }
+    },
     "difficulty": "medium",
     "tags": ["risk", "governance"]
   }

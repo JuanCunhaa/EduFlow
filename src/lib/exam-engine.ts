@@ -454,8 +454,8 @@ export function scoreExam(
  */
 export function sanitizeQuestionsForExam(
     questions: Question[]
-): Omit<Question, 'correctOptionIndex' | 'explanation' | 'whyOthersWrong'>[] {
-    return questions.map(({ correctOptionIndex: _, explanation: __, whyOthersWrong: ___, ...rest }) => rest);
+): Omit<Question, 'correctOptionIndex' | 'explanation'>[] {
+    return questions.map(({ correctOptionIndex: _, explanation: __, ...rest }) => rest);
 }
 
 /**

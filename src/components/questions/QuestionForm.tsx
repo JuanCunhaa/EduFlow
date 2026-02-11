@@ -24,8 +24,7 @@ function makeEmptyForm(studyId: string): CreateQuestionInput {
         text: '',
         options: DEFAULT_LABELS.slice(0, 4).map((label) => ({ label, text: '' })),
         correctOptionIndex: 0,
-        explanation: '',
-        whyOthersWrong: null,
+        explanation: { short: '', whyOthersWrong: {} },
         difficulty: 'medium',
         tags: [],
     };
@@ -46,8 +45,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                 text: question.text,
                 options: question.options,
                 correctOptionIndex: question.correctOptionIndex,
-                explanation: question.explanation,
-                whyOthersWrong: question.whyOthersWrong ?? null,
+                explanation: typeof question.explanation === 'string'
+                    ? { short: question.explanation, whyOthersWrong: {} }
+                    : question.explanation,
                 difficulty: question.difficulty,
                 tags: question.tags,
             });
@@ -233,26 +233,43 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                     <div>
                         <label className="mb-1 block text-xs font-medium text-muted-foreground">Explanation</label>
                         <textarea
-                            value={form.explanation}
-                            onChange={(e) => updateField('explanation', e.target.value)}
+                            value={form.explanation.short}
+                            onChange={(e) => updateField('explanation', { ...form.explanation, short: e.target.value })}
                             rows={3}
                             placeholder="Why is this the correct answer?"
                             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
                         />
                     </div>
 
-                    {/* Why Others Wrong */}
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                            Why Others Wrong <span className="text-muted-foreground/50">(optional)</span>
+                    {/* Why Others Wrong — per-option */}
+                    <div className="space-y-2">
+                        <label className="block text-xs font-medium text-muted-foreground">
+                            Why Others Wrong <span className="text-muted-foreground/50">(per option, optional)</span>
                         </label>
-                        <textarea
-                            value={form.whyOthersWrong || ''}
-                            onChange={(e) => updateField('whyOthersWrong', e.target.value || null)}
-                            rows={2}
-                            placeholder="Briefly explain why the other options are incorrect..."
-                            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring resize-none"
-                        />
+                        {form.options
+                            .filter((_, i) => i !== form.correctOptionIndex)
+                            .map((opt) => (
+                                <div key={opt.label} className="flex items-center gap-2">
+                                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-medium text-muted-foreground">
+                                        {opt.label}
+                                    </span>
+                                    <input
+                                        type="text"
+                                        value={form.explanation.whyOthersWrong[opt.label] || ''}
+                                        onChange={(e) => {
+                                            const updated = { ...form.explanation.whyOthersWrong };
+                                            if (e.target.value) {
+                                                updated[opt.label] = e.target.value;
+                                            } else {
+                                                delete updated[opt.label];
+                                            }
+                                            updateField('explanation', { ...form.explanation, whyOthersWrong: updated });
+                                        }}
+                                        placeholder={`Why ${opt.label} is wrong...`}
+                                        className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
+                                    />
+                                </div>
+                            ))}
                     </div>
 
                     {/* Tags */}

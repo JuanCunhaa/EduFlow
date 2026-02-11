@@ -42,14 +42,18 @@ export const optionSchema = z.object({
     text: safeString(1),
 });
 
+export const explanationSchema = z.object({
+    short: safeString(10),
+    whyOthersWrong: z.record(z.string().max(1), z.string().transform(stripHtml)).default({}),
+});
+
 export const createQuestionSchema = z.object({
     studyId: z.string().min(1),
     domainIds: z.array(z.string().min(1)).min(1).max(10),
     text: safeString(10),
     options: z.array(optionSchema).min(4).max(5),
     correctOptionIndex: z.number().int().min(0).max(4),
-    explanation: safeString(10),
-    whyOthersWrong: z.string().transform(stripHtml).nullable().default(null),
+    explanation: explanationSchema,
     difficulty: difficultySchema,
     tags: z.array(z.string().transform(stripHtml)).default([]),
 }).refine(
@@ -63,8 +67,7 @@ export const updateQuestionSchema = z.object({
     text: safeString(10).optional(),
     options: z.array(optionSchema).min(4).max(5).optional(),
     correctOptionIndex: z.number().int().min(0).max(4).optional(),
-    explanation: safeString(10).optional(),
-    whyOthersWrong: z.string().transform(stripHtml).nullable().optional(),
+    explanation: explanationSchema.optional(),
     difficulty: difficultySchema.optional(),
     tags: z.array(z.string().transform(stripHtml)).optional(),
 });

@@ -38,6 +38,14 @@ export interface Option {
     text: string;
 }
 
+/** Structured explanation for a question */
+export interface Explanation {
+    /** Concise reason why the correct answer is correct */
+    short: string;
+    /** Per-option reasoning keyed by label (e.g. "A", "B"). Correct option may be omitted. */
+    whyOthersWrong: Record<string, string>;
+}
+
 export interface Question {
     id: string;
     studyId: string;
@@ -45,8 +53,7 @@ export interface Question {
     text: string;
     options: Option[];                // 4 or 5 items
     correctOptionIndex: number;       // 0–3 or 0–4
-    explanation: string;
-    whyOthersWrong: string | null;    // why each wrong option is wrong
+    explanation: Explanation;
     difficulty: Difficulty;
     tags: string[];
     createdAt: Timestamp;
@@ -62,7 +69,7 @@ export interface Question {
 }
 
 /** Question as sent to the client during an active exam (no correct answer) */
-export type ExamQuestion = Omit<Question, 'correctOptionIndex' | 'explanation' | 'whyOthersWrong'>;
+export type ExamQuestion = Omit<Question, 'correctOptionIndex' | 'explanation'>;
 
 // === Exam ===
 

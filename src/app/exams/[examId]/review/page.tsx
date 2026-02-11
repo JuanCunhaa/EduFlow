@@ -24,8 +24,7 @@ interface ReviewQuestion {
     domainIds: string[];
     difficulty: string;
     correctOptionIndex: number;
-    explanation: string;
-    whyOthersWrong: string | null;
+    explanation: { short: string; whyOthersWrong: Record<string, string> };
     userAnswer: number | null;
     isCorrect: boolean;
 }
@@ -208,21 +207,34 @@ export default function ExamReviewPage() {
                                                 Explanation
                                             </h4>
                                             <p className="text-sm text-foreground leading-relaxed">
-                                                {q.explanation}
+                                                {typeof q.explanation === 'string' ? q.explanation : q.explanation.short}
                                             </p>
                                         </div>
 
-                                        {/* Why others wrong */}
-                                        {q.whyOthersWrong && (
-                                            <div className="rounded-lg bg-muted/20 p-4">
-                                                <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                                    Why Other Options Are Wrong
-                                                </h4>
-                                                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-                                                    {q.whyOthersWrong}
-                                                </p>
-                                            </div>
-                                        )}
+                                        {/* Why others wrong — per option */}
+                                        {(() => {
+                                            const wrongEntries = typeof q.explanation === 'object'
+                                                ? Object.entries(q.explanation.whyOthersWrong || {})
+                                                : [];
+                                            if (wrongEntries.length === 0) return null;
+                                            return (
+                                                <div className="rounded-lg bg-muted/20 p-4">
+                                                    <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                                        Why Other Options Are Wrong
+                                                    </h4>
+                                                    <div className="space-y-1.5">
+                                                        {wrongEntries.map(([label, reason]) => (
+                                                            <div key={label} className="flex items-start gap-2 text-sm">
+                                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[10px] font-bold text-muted-foreground">
+                                                                    {label}
+                                                                </span>
+                                                                <span className="text-muted-foreground">{reason}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 )}
                             </div>

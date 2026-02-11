@@ -90,7 +90,10 @@ describe('createQuestionSchema', () => {
             { label: 'D', text: 'Backup files' },
         ],
         correctOptionIndex: 0,
-        explanation: 'Firewalls are used to control network traffic.',
+        explanation: {
+            short: 'Firewalls are used to control network traffic.',
+            whyOthersWrong: { B: 'Encrypts, not blocks', C: 'Stores logs only', D: 'Backs up files' },
+        },
         difficulty: 'medium',
         tags: ['networking'],
     };
@@ -108,24 +111,29 @@ describe('createQuestionSchema', () => {
         expect(result.tags).toEqual([]);
     });
 
-    it('defaults whyOthersWrong to null when omitted', () => {
-        const result = createQuestionSchema.parse(validQuestion);
-        expect(result.whyOthersWrong).toBeNull();
+    it('defaults whyOthersWrong to empty object when omitted', () => {
+        const q = { ...validQuestion, explanation: { short: 'Firewalls block.' } };
+        const result = createQuestionSchema.parse(q);
+        expect(result.explanation.whyOthersWrong).toEqual({});
     });
 
-    it('accepts whyOthersWrong when provided', () => {
-        const result = createQuestionSchema.parse({
-            ...validQuestion,
-            whyOthersWrong: 'B encrypts, C logs, D backs up',
+    it('accepts whyOthersWrong per-option entries', () => {
+        const result = createQuestionSchema.parse(validQuestion);
+        expect(result.explanation.whyOthersWrong).toEqual({
+            B: 'Encrypts, not blocks',
+            C: 'Stores logs only',
+            D: 'Backs up files',
         });
-        expect(result.whyOthersWrong).toBe('B encrypts, C logs, D backs up');
     });
 
     it('strips HTML from text fields', () => {
         const questionWithHtml = {
             ...validQuestion,
             text: '<script>alert("xss")</script>What is a firewall?',
-            explanation: '<img src=x onerror=alert(1)>Firewalls filter traffic.',
+            explanation: {
+                short: '<img src=x onerror=alert(1)>Firewalls filter traffic.',
+                whyOthersWrong: { B: '<b>wrong</b>' },
+            },
             options: [
                 { label: 'A', text: '<em>Block</em> traffic' },
                 { label: 'B', text: 'Encrypt data' },
@@ -135,7 +143,8 @@ describe('createQuestionSchema', () => {
         };
         const result = createQuestionSchema.parse(questionWithHtml);
         expect(result.text).toBe('alert("xss")What is a firewall?');
-        expect(result.explanation).toBe('Firewalls filter traffic.');
+        expect(result.explanation.short).toBe('Firewalls filter traffic.');
+        expect(result.explanation.whyOthersWrong.B).toBe('wrong');
         expect(result.options[0].text).toBe('Block traffic');
     });
 
@@ -329,7 +338,10 @@ describe('bulkImportSchema', () => {
             { label: 'D', text: 'Backup files' },
         ],
         correctOptionIndex: 0,
-        explanation: 'Firewalls are used to control network traffic.',
+        explanation: {
+            short: 'Firewalls are used to control network traffic.',
+            whyOthersWrong: {},
+        },
         difficulty: 'medium',
     };
 

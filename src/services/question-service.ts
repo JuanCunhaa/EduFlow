@@ -77,11 +77,16 @@ export async function listQuestions(options: ListQuestionsOptions): Promise<List
     // Client-side text search (Firestore doesn't support full-text search)
     if (search) {
         const lower = search.toLowerCase();
-        questions = questions.filter(q =>
-            q.text.toLowerCase().includes(lower) ||
-            q.explanation.toLowerCase().includes(lower) ||
-            q.tags.some(t => t.toLowerCase().includes(lower))
-        );
+        questions = questions.filter(q => {
+            const explanationText = typeof q.explanation === 'string'
+                ? q.explanation
+                : q.explanation.short;
+            return (
+                q.text.toLowerCase().includes(lower) ||
+                explanationText.toLowerCase().includes(lower) ||
+                q.tags.some(t => t.toLowerCase().includes(lower))
+            );
+        });
     }
 
     const hasMore = questions.length > limitCount;
@@ -103,7 +108,6 @@ export async function createQuestion(uid: string, data: CreateQuestionInput): Pr
     const now = serverTimestamp();
     const id = await adminCreateDoc(questionsPath(uid), {
         ...data,
-        whyOthersWrong: data.whyOthersWrong ?? null,
         createdAt: now,
         updatedAt: now,
     });
@@ -160,7 +164,6 @@ export async function importQuestions(
         const ref = questionsCol.doc();
         batch.set(ref, {
             ...question,
-            whyOthersWrong: question.whyOthersWrong ?? null,
             createdAt: now,
             updatedAt: now,
         });

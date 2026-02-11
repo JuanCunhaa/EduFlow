@@ -17,8 +17,7 @@ function makeQuestion(overrides: Partial<Question> & { id: string }): Question {
             { label: 'D', text: 'Option D' },
         ],
         correctOptionIndex: 0,
-        explanation: 'Test explanation',
-        whyOthersWrong: null,
+        explanation: { short: 'Test explanation', whyOthersWrong: {} },
         difficulty: 'medium',
         tags: [],
         createdAt: {} as Timestamp,
@@ -206,15 +205,18 @@ describe('scoreExam', () => {
 });
 
 describe('sanitizeQuestionsForExam', () => {
-    it('strips correctOptionIndex, explanation, and whyOthersWrong', () => {
+    it('strips correctOptionIndex and explanation', () => {
         const questions = [
-            makeQuestion({ id: 'q1', correctOptionIndex: 2, explanation: 'Secret', whyOthersWrong: 'Also secret' }),
+            makeQuestion({
+                id: 'q1',
+                correctOptionIndex: 2,
+                explanation: { short: 'Secret', whyOthersWrong: { A: 'Also secret' } },
+            }),
         ];
         const sanitized = sanitizeQuestionsForExam(questions);
 
         expect(sanitized[0]).not.toHaveProperty('correctOptionIndex');
         expect(sanitized[0]).not.toHaveProperty('explanation');
-        expect(sanitized[0]).not.toHaveProperty('whyOthersWrong');
         expect(sanitized[0]).toHaveProperty('id', 'q1');
         expect(sanitized[0]).toHaveProperty('text');
         expect(sanitized[0]).toHaveProperty('options');

@@ -195,7 +195,9 @@ export default function FlashcardsPage() {
                                         <p className="mb-1.5 font-bold text-emerald-400">
                                             Correct: {question.options[question.correctOptionIndex].label}
                                         </p>
-                                        {question.explanation}
+                                        {typeof question.explanation === 'string'
+                                            ? question.explanation
+                                            : question.explanation.short}
                                     </div>
                                 )}
                             </div>
