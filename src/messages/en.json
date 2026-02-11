@@ -41,7 +41,27 @@
       "titleLine2": "Perform higher.",
       "description": "An adaptive study engine that identifies your weak areas, eliminates wasted repetition, and builds the confidence you need to pass.",
       "cta": "Start studying for free",
-      "secondary": "See how it works"
+      "secondary": "See how it works",
+      "preview": {
+        "readiness": "Exam Readiness",
+        "streak": "Current Streak",
+        "streakDays": "days",
+        "avgScore": "Avg. Score",
+        "examTitle": "SAT",
+        "domainMastery": "Section Mastery",
+        "domain1": "Reading & Writing",
+        "domain2": "Math",
+        "domain3": "Essay",
+        "domain4": "Vocabulary",
+        "domain5": "Data Analysis",
+        "recentScores": "Recent Scores",
+        "badges": "Badges Earned",
+        "badge1": "First Exam",
+        "badge2": "7-Day Streak",
+        "badge3": "Speed Run",
+        "badge4": "Perfect Score",
+        "badge5": "Domain Master"
+      }
     },
     "socialProof": {
       "heading": "Trusted by certification candidates worldwide"

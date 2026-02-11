@@ -193,34 +193,9 @@ function Hero() {
                     initial="hidden"
                     animate="visible"
                     transition={{ delay: 0.5 }}
-                    className="relative mx-auto mt-16 max-w-3xl"
+                    className="relative mx-auto mt-16 max-w-4xl"
                 >
-                    <div className="aspect-[16/9] rounded-2xl border border-border/40 bg-card/30 backdrop-blur-sm overflow-hidden">
-                        <div className="h-full w-full p-6 sm:p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="h-3 w-3 rounded-full bg-red-500/60" />
-                                <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
-                                <div className="h-3 w-3 rounded-full bg-green-500/60" />
-                                <div className="ml-4 h-4 w-48 rounded bg-muted/40" />
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 mb-6">
-                                {[82, 67, 91].map((score, i) => (
-                                    <div key={i} className="rounded-xl border border-border/30 bg-background/40 p-4">
-                                        <div className="h-2.5 w-16 rounded bg-muted/50 mb-3" />
-                                        <div className="text-2xl font-bold tracking-tight text-foreground/80">{score}%</div>
-                                        <div className="mt-2 h-1.5 w-full rounded-full bg-muted/30">
-                                            <div className="h-full rounded-full bg-primary/60" style={{ width: `${score}%` }} />
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex items-end gap-1.5 h-20">
-                                {[40, 55, 48, 62, 58, 72, 68, 78, 74, 85, 82, 88].map((h, i) => (
-                                    <div key={i} className="flex-1 rounded-t bg-primary/30" style={{ height: `${h}%` }} />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    <DashboardPreview />
                     <div className="absolute -inset-4 -z-10 rounded-3xl bg-primary/[0.06] blur-2xl" />
                 </motion.div>
             </div>
@@ -433,6 +408,160 @@ function FinalCTA() {
                 </motion.div>
             </div>
         </AnimatedSection>
+    );
+}
+
+// ── Dashboard Preview (Hero) ─────────────────────
+
+const MOCK_DOMAINS = [
+    { key: 'domain1', pct: 88 },
+    { key: 'domain2', pct: 74 },
+    { key: 'domain3', pct: 82 },
+    { key: 'domain4', pct: 65 },
+    { key: 'domain5', pct: 91 },
+];
+
+const MOCK_SCORES = [62, 71, 68, 75, 82, 78, 85, 80, 88, 91];
+
+const MOCK_BADGES: Array<{ emoji: string; key: string }> = [
+    { emoji: '🏆', key: 'badge1' },
+    { emoji: '🔥', key: 'badge2' },
+    { emoji: '⚡', key: 'badge3' },
+    { emoji: '💎', key: 'badge4' },
+    { emoji: '🎯', key: 'badge5' },
+];
+
+function DashboardPreview() {
+    const t = useTranslations('landing.hero.preview');
+    return (
+        <div className="rounded-2xl border border-border/40 bg-card/20 backdrop-blur-sm overflow-hidden shadow-2xl shadow-black/20">
+            {/* Title bar */}
+            <div className="flex items-center gap-2.5 border-b border-border/30 px-5 py-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-red-500/50" />
+                <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/50" />
+                <div className="h-2.5 w-2.5 rounded-full bg-green-500/50" />
+                <div className="ml-3 flex items-center gap-2">
+                    <Shield className="h-3.5 w-3.5 text-primary/60" />
+                    <span className="text-[11px] font-medium text-muted-foreground/60">ExamFlow — {t('examTitle')}</span>
+                </div>
+            </div>
+
+            <div className="p-4 sm:p-6 space-y-4">
+                {/* Top stats row */}
+                <div className="grid grid-cols-3 gap-3">
+                    {/* Readiness */}
+                    <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4 text-center">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground/70 mb-1.5">{t('readiness')}</p>
+                        <div className="flex items-baseline justify-center gap-1.5">
+                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-emerald-400">78%</span>
+                            <TrendingUp className="h-3.5 w-3.5 text-emerald-400/60" />
+                        </div>
+                        <div className="mt-2.5 h-1 rounded-full bg-muted/30">
+                            <div className="h-full rounded-full bg-gradient-to-r from-emerald-500/50 to-emerald-400/80" style={{ width: '78%' }} />
+                        </div>
+                    </div>
+
+                    {/* Streak */}
+                    <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4 text-center">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground/70 mb-1.5">{t('streak')}</p>
+                        <div className="flex items-baseline justify-center gap-1.5">
+                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-400">12</span>
+                            <span className="text-[10px] sm:text-xs text-amber-400/60 font-medium">{t('streakDays')}</span>
+                        </div>
+                        <div className="mt-2.5 flex gap-0.5">
+                            {Array.from({ length: 7 }).map((_, i) => (
+                                <div key={i} className="h-1 flex-1 rounded-full bg-amber-400/50" />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Avg Score */}
+                    <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4 text-center">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground/70 mb-1.5">{t('avgScore')}</p>
+                        <div className="flex items-baseline justify-center">
+                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">82%</span>
+                        </div>
+                        <div className="mt-2.5 h-1 rounded-full bg-muted/30">
+                            <div className="h-full rounded-full bg-primary/60" style={{ width: '82%' }} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bottom two-col: domains + score chart + badges */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Domain mastery — left */}
+                    <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4 flex flex-col">
+                        <p className="text-[10px] sm:text-xs font-medium text-muted-foreground/70 mb-3">{t('domainMastery')}</p>
+                        <div className="flex flex-col justify-between flex-1">
+                            {MOCK_DOMAINS.map((d) => (
+                                <div key={d.key} className="flex items-center gap-2">
+                                    <span className="w-[120px] sm:w-[150px] truncate text-[10px] sm:text-[11px] text-foreground/60">{t(d.key)}</span>
+                                    <div className="flex-1 h-1.5 rounded-full bg-muted/30">
+                                        <div
+                                            className={`h-full rounded-full transition-all ${
+                                                d.pct >= 80 ? 'bg-emerald-500/60' : d.pct >= 65 ? 'bg-primary/50' : 'bg-amber-500/50'
+                                            }`}
+                                            style={{ width: `${d.pct}%` }}
+                                        />
+                                    </div>
+                                    <span className={`text-[10px] font-mono font-medium min-w-[28px] text-right ${
+                                        d.pct >= 80 ? 'text-emerald-400/70' : d.pct >= 65 ? 'text-foreground/50' : 'text-amber-400/70'
+                                    }`}>{d.pct}%</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Right column — score trend + badges */}
+                    <div className="space-y-3">
+                        {/* Score trend mini chart */}
+                        <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4">
+                            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground/70 mb-3">{t('recentScores')}</p>
+                            <div className="flex items-end gap-1.5 h-16">
+                                {MOCK_SCORES.map((s, i) => (
+                                    <div
+                                        key={i}
+                                        className={`group relative flex-1 rounded-t cursor-default transition-all hover:brightness-125 ${
+                                            s >= 80 ? 'bg-emerald-500/50' : s >= 70 ? 'bg-primary/40' : 'bg-amber-500/40'
+                                        }`}
+                                        style={{ height: `${s}%` }}
+                                    >
+                                        <span className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-popover border border-border px-1.5 py-0.5 text-[10px] font-mono font-medium text-popover-foreground shadow-md opacity-0 transition-opacity group-hover:opacity-100">
+                                            {s}%
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex justify-between mt-1.5 border-t border-border/20 pt-1">
+                                <span className="text-[9px] text-muted-foreground/50 font-mono">62%</span>
+                                <span className="text-[9px] text-muted-foreground/50">→</span>
+                                <span className="text-[9px] text-emerald-400/60 font-mono font-medium">91%</span>
+                            </div>
+                        </div>
+
+                        {/* Badges with tooltips */}
+                        <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4">
+                            <p className="text-[10px] sm:text-xs font-medium text-muted-foreground/70 mb-4">{t('badges')}</p>
+                            <div className="flex flex-row justify-between">
+                                {MOCK_BADGES.map((b) => (
+                                    <div
+                                        key={b.key}
+                                        className="group relative flex flex-1 flex-col items-center gap-1.5"
+                                    >
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/[0.08] border border-primary/10 text-sm cursor-default transition-all group-hover:bg-primary/[0.15] group-hover:scale-110">
+                                            {b.emoji}
+                                        </div>
+                                        <span className="text-[9px] font-medium text-muted-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 whitespace-nowrap">
+                                            {t(b.key)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 

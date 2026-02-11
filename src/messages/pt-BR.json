@@ -41,7 +41,27 @@
       "titleLine2": "Performe melhor.",
       "description": "Um motor de estudo adaptativo que identifica seus pontos fracos, elimina repetições desnecessárias e constrói a confiança que você precisa para passar.",
       "cta": "Comece a estudar grátis",
-      "secondary": "Veja como funciona"
+      "secondary": "Veja como funciona",
+      "preview": {
+        "readiness": "Prontidão p/ Exame",
+        "streak": "Sequência Atual",
+        "streakDays": "dias",
+        "avgScore": "Média Geral",
+        "examTitle": "ENEM",
+        "domainMastery": "Desempenho por Área",
+        "domain1": "Linguagens e Códigos",
+        "domain2": "Matemática",
+        "domain3": "Ciências Humanas",
+        "domain4": "Ciências da Natureza",
+        "domain5": "Redação",
+        "recentScores": "Notas Recentes",
+        "badges": "Conquistas",
+        "badge1": "Primeiro Exame",
+        "badge2": "Sequência de 7 Dias",
+        "badge3": "Velocidade",
+        "badge4": "Nota Perfeita",
+        "badge5": "Mestre de Domínio"
+      }
     },
     "socialProof": {
       "heading": "Usado por candidatos a certificação no mundo todo"
@@ -174,7 +194,7 @@
   },
   "login": {
     "brand": "ExamFlow",
-    "tagline": "Plataforma de prática para certificações de cibersegurança",
+    "tagline": "Plataforma de prática para certificações e estudos",
     "signingIn": "Entrando…",
     "signInGoogle": "Entrar com Google",
     "error": "Falha ao entrar. Tente novamente.",
