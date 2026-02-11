@@ -21,6 +21,7 @@ const DEFAULT_STATS: UserStats = {
     totalQuestionsAnswered: 0,
     totalExamsCompleted: 0,
     dailyGoal: 10,
+    weeklyGoal: 50,
     badges: [],
     recentDays: [],
 };
@@ -37,6 +38,11 @@ export async function getStats(uid: string): Promise<UserStats> {
 export async function updateDailyGoal(uid: string, dailyGoal: number): Promise<void> {
     const db = getAdminDb();
     await db.doc(`${statsPath(uid)}/${STATS_DOC}`).set({ dailyGoal }, { merge: true });
+}
+
+export async function updateWeeklyGoal(uid: string, weeklyGoal: number): Promise<void> {
+    const db = getAdminDb();
+    await db.doc(`${statsPath(uid)}/${STATS_DOC}`).set({ weeklyGoal }, { merge: true });
 }
 
 /**

@@ -2,6 +2,7 @@
 
 import { Shell } from '@/components/layout/Shell';
 import { useStudies } from '@/hooks/useStudies';
+import { useStats } from '@/hooks/useStats';
 import { Spinner } from '@/components/ui/Spinner';
 import type { Study } from '@/types';
 import {
@@ -11,6 +12,8 @@ import {
     ChevronRight,
     Plus,
     GraduationCap,
+    Flame,
+    Target,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -78,7 +81,20 @@ function StudyCard({ study }: { study: Study }) {
 
 export default function DashboardPage() {
     const { studies, isLoading, refresh } = useStudies();
+    const { stats } = useStats();
     const [showCreate, setShowCreate] = useState(false);
+
+    // Weekly progress computed from recentDays
+    const weeklyAnswered = stats?.recentDays
+        ?.filter(d => {
+            const dDate = new Date(d.date);
+            const now = new Date();
+            const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+            return dDate >= weekAgo;
+        })
+        .reduce((sum, d) => sum + d.questionsAnswered, 0) ?? 0;
+    const weeklyGoal = stats?.weeklyGoal ?? 50;
+    const weeklyPct = Math.min(100, Math.round((weeklyAnswered / weeklyGoal) * 100));
 
     return (
         <Shell>
@@ -99,6 +115,29 @@ export default function DashboardPage() {
                         New Study
                     </button>
                 </div>
+
+                {/* Streak + Weekly goal bar */}
+                {stats && (stats.currentStreak > 0 || weeklyAnswered > 0) && (
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5">
+                            <Flame className={`h-4 w-4 ${stats.currentStreak > 0 ? 'text-orange-400' : 'text-muted-foreground/30'}`} />
+                            <span className="font-mono text-sm font-bold text-foreground">{stats.currentStreak}</span>
+                            <span className="text-xs text-muted-foreground">day streak</span>
+                        </div>
+                        <div className="flex flex-1 items-center gap-3 rounded-xl border border-border bg-card px-4 py-2.5 min-w-[200px]">
+                            <Target className="h-4 w-4 text-primary shrink-0" />
+                            <div className="flex-1">
+                                <div className="h-2 overflow-hidden rounded-full bg-muted/50">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-700 ${weeklyPct >= 100 ? 'gradient-bar-success' : weeklyPct >= 50 ? 'gradient-bar-warning' : 'gradient-bar-danger'}`}
+                                        style={{ width: `${weeklyPct}%` }}
+                                    />
+                                </div>
+                            </div>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">{weeklyAnswered}/{weeklyGoal} weekly</span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Studies grid */}
                 {isLoading ? (

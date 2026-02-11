@@ -4,18 +4,25 @@ import { useParams, useRouter } from 'next/navigation';
 import { Shell } from '@/components/layout/Shell';
 import { useStudy, deleteStudy } from '@/hooks/useStudies';
 import { useExams } from '@/hooks/useExams';
+import { useStats } from '@/hooks/useStats';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StudyFormDialog } from '@/components/studies/StudyFormDialog';
+import { BadgeGallery } from '@/components/retention/BadgeGallery';
+import { DailyChallengeModal } from '@/components/retention/DailyChallengeModal';
 import { formatTimeAgo } from '@/lib/format';
 import {
     ArrowLeft,
     ClipboardList,
     Database,
     Edit2,
+    Flame,
     FlaskConical,
     GraduationCap,
     BookOpen,
+    Share2,
+    Sparkles,
+    Target,
     Trash2,
     TrendingUp,
 } from 'lucide-react';
@@ -50,8 +57,11 @@ export default function StudyDetailPage() {
         { revalidateOnFocus: false, dedupingInterval: 60_000 }
     );
 
+    const { stats } = useStats();
+
     const [showEdit, setShowEdit] = useState(false);
     const [showDelete, setShowDelete] = useState(false);
+    const [showDailyChallenge, setShowDailyChallenge] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
     async function handleDelete() {
@@ -147,6 +157,69 @@ export default function StudyDetailPage() {
                     </div>
                 </div>
 
+                {/* Retention: streak + daily goal + daily challenge */}
+                {stats && (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 animate-stagger">
+                        {/* Streak */}
+                        <div className="card-premium flex items-center gap-4 p-5">
+                            <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${stats.currentStreak > 0 ? 'bg-orange-500/10' : 'bg-muted/30'}`}>
+                                <Flame className={`h-5 w-5 ${stats.currentStreak > 0 ? 'text-orange-400' : 'text-muted-foreground/50'}`} />
+                            </div>
+                            <div>
+                                <div className="font-mono text-2xl font-bold text-foreground">{stats.currentStreak}</div>
+                                <div className="text-xs text-muted-foreground">day streak</div>
+                            </div>
+                        </div>
+
+                        {/* Weekly goal */}
+                        <div className="card-premium p-5">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                                <Target className="h-3.5 w-3.5" />
+                                Weekly Goal
+                            </div>
+                            {(() => {
+                                const now = new Date();
+                                const weekAgo = new Date(now);
+                                weekAgo.setDate(weekAgo.getDate() - 7);
+                                const weekKey = weekAgo.toISOString().slice(0, 10);
+                                const weeklyAnswered = (stats.recentDays || [])
+                                    .filter((d) => d.date >= weekKey)
+                                    .reduce((sum, d) => sum + d.questionsAnswered, 0);
+                                const goal = stats.weeklyGoal || 50;
+                                const pct = Math.min(100, Math.round((weeklyAnswered / goal) * 100));
+                                return (
+                                    <>
+                                        <div className="flex items-end justify-between mb-1">
+                                            <span className="font-mono text-lg font-bold text-foreground">{weeklyAnswered}<span className="text-xs font-normal text-muted-foreground">/{goal}</span></span>
+                                            <span className="text-xs text-muted-foreground">{pct}%</span>
+                                        </div>
+                                        <div className="h-2 overflow-hidden rounded-full bg-muted/50">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-700 ${pct >= 100 ? 'gradient-bar-success' : pct >= 50 ? 'gradient-bar-warning' : 'gradient-bar-danger'}`}
+                                                style={{ width: `${pct}%` }}
+                                            />
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Daily Challenge CTA */}
+                        <button
+                            onClick={() => setShowDailyChallenge(true)}
+                            className="card-premium flex items-center gap-4 p-5 text-left transition-all hover:border-primary/30"
+                        >
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+                                <Sparkles className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <div className="text-sm font-semibold text-foreground">Daily Challenge</div>
+                                <div className="text-xs text-muted-foreground">5 quick questions</div>
+                            </div>
+                        </button>
+                    </div>
+                )}
+
                 {/* Quick stats */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 animate-stagger">
                     {[
@@ -234,6 +307,22 @@ export default function StudyDetailPage() {
                     </div>
                 </div>
 
+                {/* Badges */}
+                {stats && <BadgeGallery earned={stats.badges} />}
+
+                {/* Share progress */}
+                <div className="flex justify-end">
+                    <a
+                        href={`/api/share-image?studyId=${studyId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                        <Share2 className="h-4 w-4" />
+                        Share Progress
+                    </a>
+                </div>
+
                 {/* Recent exams */}
                 {!examsLoading && exams.length > 0 && (
                     <div className="card-premium overflow-hidden">
@@ -282,6 +371,15 @@ export default function StudyDetailPage() {
                     study={study}
                     onClose={() => setShowEdit(false)}
                     onSaved={() => { setShowEdit(false); refreshStudy(); }}
+                />
+            )}
+
+            {/* Daily Challenge modal */}
+            {showDailyChallenge && (
+                <DailyChallengeModal
+                    studyId={studyId}
+                    onClose={() => setShowDailyChallenge(false)}
+                    onCompleted={() => setShowDailyChallenge(false)}
                 />
             )}
 

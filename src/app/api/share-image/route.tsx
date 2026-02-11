@@ -3,14 +3,13 @@ import { NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/firebase/server-auth';
 import { getStats } from '@/services/stats-service';
 import { getStudy } from '@/services/study-service';
+import { getAdminAuth } from '@/lib/firebase/admin';
 
 /**
- * GET /api/share-image?studyId=xxx
- * Generates a shareable progress card as a 1200×630 PNG image.
+ * GET /api/share-image?studyId=xxx&name=Juan
+ * Generates a shareable progress card as a 1200x630 PNG image.
  * Shows: study name, streak, accuracy, badge count, daily goal progress.
- *
- * Auth is handled inline because ImageResponse is not compatible
- * with the withAuth wrapper's expected return type.
+ * Privacy: uses ?name= param, falls back to Firebase displayName, never email.
  */
 export async function GET(request: Request) {
     // ── Auth ──
@@ -21,15 +20,20 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const studyId = searchParams.get('studyId');
+    const customName = searchParams.get('name');
 
     if (!studyId) {
         return NextResponse.json({ error: 'studyId is required' }, { status: 400 });
     }
 
-    const [stats, study] = await Promise.all([
+    const [stats, study, firebaseUser] = await Promise.all([
         getStats(user.uid),
         getStudy(user.uid, studyId),
+        getAdminAuth().getUser(user.uid).catch(() => null),
     ]);
+
+    // Privacy: user-chosen name → Firebase displayName → 'Student' (never email)
+    const displayName = customName || firebaseUser?.displayName || 'Student';
 
     // Calculate today's goal progress
     const today = new Date().toISOString().split('T')[0];
@@ -190,7 +194,7 @@ export async function GET(request: Request) {
                     }}
                 >
                     <div style={{ fontSize: '14px', color: '#64748b' }}>
-                        {user.email ?? 'Student'}
+                        {displayName}
                     </div>
                     <div style={{ fontSize: '14px', color: '#64748b' }}>
                         {new Date().toLocaleDateString('en-US', {

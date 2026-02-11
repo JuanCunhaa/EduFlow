@@ -1,5 +1,5 @@
 import { withAuth } from '@/lib/api-middleware';
-import { getStats, updateDailyGoal } from '@/services/stats-service';
+import { getStats, updateDailyGoal, updateWeeklyGoal } from '@/services/stats-service';
 import { updateGoalSchema } from '@/lib/validators';
 import { NextResponse } from 'next/server';
 
@@ -14,7 +14,7 @@ export const GET = withAuth(async (_request, { user }) => {
 
 /**
  * PUT /api/stats
- * Update user's daily goal.
+ * Update user's daily/weekly goals.
  */
 export const PUT = withAuth(async (request, { user }) => {
     const body = await request.json();
@@ -27,6 +27,11 @@ export const PUT = withAuth(async (request, { user }) => {
         );
     }
 
-    await updateDailyGoal(user.uid, parsed.data.dailyGoal);
+    if (parsed.data.dailyGoal !== undefined) {
+        await updateDailyGoal(user.uid, parsed.data.dailyGoal);
+    }
+    if (parsed.data.weeklyGoal !== undefined) {
+        await updateWeeklyGoal(user.uid, parsed.data.weeklyGoal);
+    }
     return { data: { success: true } };
 });

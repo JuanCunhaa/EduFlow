@@ -26,6 +26,7 @@ import {
     buildPerformanceSummaryUpdate,
 } from '@/services/performance-service';
 import { FieldValue } from 'firebase-admin/firestore';
+import { recordActivity, awardBadge } from '@/services/stats-service';
 import type { Exam, Question, ExamConfig, DomainScore, ExamMode } from '@/types';
 
 const GRACE_PERIOD_SECONDS = 30;
@@ -402,15 +403,28 @@ export async function submitExam(
 
     await batch.commit();
 
-    // Post-commit: recalculate averageScore
+    const correctAnswers = Math.round((score / 100) * totalQuestions);
+
+    // Post-commit: stats, badges, averageScore (fire-and-forget, non-blocking)
     await recalculateAverageScore(uid);
+
+    recordActivity(uid, totalQuestions, correctAnswers, true).catch(() => {});
+
+    if (score === 100) {
+        awardBadge(uid, 'perfect_score').catch(() => {});
+    }
+    const allDomainsPass = Object.values(domainScores).length > 0
+        && Object.values(domainScores).every(ds => ds.percentage >= 70);
+    if (allDomainsPass) {
+        awardBadge(uid, 'domain_master').catch(() => {});
+    }
 
     return {
         examId,
         score,
         domainScores,
         totalQuestions,
-        correctAnswers: Math.round((score / 100) * totalQuestions),
+        correctAnswers,
     };
 }
 

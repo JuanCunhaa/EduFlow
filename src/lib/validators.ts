@@ -97,7 +97,10 @@ export const bulkImportSchema = z.object({
 // === Stats ===
 
 export const updateGoalSchema = z.object({
-    dailyGoal: z.number().int().min(1).max(200),
+    dailyGoal: z.number().int().min(1).max(200).optional(),
+    weeklyGoal: z.number().int().min(1).max(1000).optional(),
+}).refine(d => d.dailyGoal !== undefined || d.weeklyGoal !== undefined, {
+    message: 'At least one goal field is required',
 });
 
 // === Type Exports ===

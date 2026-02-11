@@ -147,6 +147,7 @@ export interface UserStats {
     totalQuestionsAnswered: number;
     totalExamsCompleted: number;
     dailyGoal: number;                // questions per day (default 10)
+    weeklyGoal: number;               // questions per week (default 50)
     badges: string[];                 // badge IDs earned
     recentDays: DailyRecord[];        // last 30 days (rolling)
 }
