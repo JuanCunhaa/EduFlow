@@ -4,7 +4,6 @@ import { useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, useInView } from 'framer-motion';
 import {
-    Shield,
     Brain,
     Target,
     BarChart3,
@@ -18,9 +17,12 @@ import {
     Star,
     CheckCircle2,
     XCircle,
+    Sun,
+    Moon,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import { LanguageSelector } from '@/components/ui/LanguageSelector';
+import { useTheme } from '@/components/ui/ThemeProvider';
 
 // ── Animation Helpers ────────────────────────────
 
@@ -69,9 +71,9 @@ export default function LandingPage() {
         <div className="relative min-h-screen bg-background text-foreground overflow-x-hidden">
             {/* Ambient background glows */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">
-                <div className="absolute -top-40 left-1/3 h-[800px] w-[800px] rounded-full bg-primary/[0.04] blur-[150px]" />
-                <div className="absolute top-1/2 -right-40 h-[600px] w-[600px] rounded-full bg-primary/[0.03] blur-[120px]" />
-                <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-primary/[0.02] blur-[100px]" />
+                <div className="absolute -top-40 left-1/3 h-[800px] w-[800px] rounded-full bg-primary/[0.04] dark:bg-primary/[0.04] blur-[150px]" />
+                <div className="absolute top-1/2 -right-40 h-[600px] w-[600px] rounded-full bg-primary/[0.03] dark:bg-primary/[0.03] blur-[120px]" />
+                <div className="absolute bottom-0 left-0 h-[500px] w-[500px] rounded-full bg-primary/[0.02] dark:bg-primary/[0.02] blur-[100px]" />
             </div>
 
             <Nav />
@@ -91,6 +93,7 @@ export default function LandingPage() {
 
 function Nav() {
     const t = useTranslations('landing.nav');
+    const { resolvedTheme, setTheme } = useTheme();
     return (
         <motion.nav
             initial={{ opacity: 0, y: -12 }}
@@ -98,21 +101,21 @@ function Nav() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="fixed top-0 z-50 w-full"
         >
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
                 <Link href="/" className="flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/40 backdrop-blur-md">
-                        <Shield className="h-4.5 w-4.5 text-primary" />
-                    </div>
+                    <img src="/images/logo.png" alt="ExamFlow" width={36} height={36} className="h-9 w-9 rounded-lg" />
                     <span className="text-lg font-semibold tracking-tight">{t('brand')}</span>
                 </Link>
                 <div className="flex items-center gap-3">
-                    <LanguageSelector />
-                    <Link
-                        href="/login"
-                        className="hidden sm:inline-flex text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4 py-2"
+                    <button
+                        type="button"
+                        onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-card/40 backdrop-blur-md text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label="Toggle theme"
                     >
-                        {t('signIn')}
-                    </Link>
+                        {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    </button>
+                    <LanguageSelector />
                     <Link
                         href="/login"
                         className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:brightness-110 active:scale-[0.98]"
@@ -441,7 +444,7 @@ function DashboardPreview() {
                 <div className="h-2.5 w-2.5 rounded-full bg-yellow-500/50" />
                 <div className="h-2.5 w-2.5 rounded-full bg-green-500/50" />
                 <div className="ml-3 flex items-center gap-2">
-                    <Shield className="h-3.5 w-3.5 text-primary/60" />
+                    <img src="/images/logo.png" alt="ExamFlow" width={14} height={14} className="h-3.5 w-3.5 rounded-sm" />
                     <span className="text-[11px] font-medium text-muted-foreground/60">ExamFlow — {t('examTitle')}</span>
                 </div>
             </div>
@@ -453,11 +456,11 @@ function DashboardPreview() {
                     <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4 text-center">
                         <p className="text-[10px] sm:text-xs text-muted-foreground/70 mb-1.5">{t('readiness')}</p>
                         <div className="flex items-baseline justify-center gap-1.5">
-                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-emerald-400">78%</span>
-                            <TrendingUp className="h-3.5 w-3.5 text-emerald-400/60" />
+                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">78%</span>
+                            <TrendingUp className="h-3.5 w-3.5 text-emerald-600/60 dark:text-emerald-400/60" />
                         </div>
                         <div className="mt-2.5 h-1 rounded-full bg-muted/30">
-                            <div className="h-full rounded-full bg-gradient-to-r from-emerald-500/50 to-emerald-400/80" style={{ width: '78%' }} />
+                            <div className="h-full rounded-full bg-gradient-to-r from-emerald-600/50 to-emerald-500/80 dark:from-emerald-500/50 dark:to-emerald-400/80" style={{ width: '78%' }} />
                         </div>
                     </div>
 
@@ -465,12 +468,12 @@ function DashboardPreview() {
                     <div className="rounded-xl border border-border/30 bg-background/30 p-3 sm:p-4 text-center">
                         <p className="text-[10px] sm:text-xs text-muted-foreground/70 mb-1.5">{t('streak')}</p>
                         <div className="flex items-baseline justify-center gap-1.5">
-                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-400">12</span>
-                            <span className="text-[10px] sm:text-xs text-amber-400/60 font-medium">{t('streakDays')}</span>
+                            <span className="text-2xl sm:text-3xl font-bold tracking-tight text-amber-600 dark:text-amber-400">12</span>
+                            <span className="text-[10px] sm:text-xs text-amber-600/60 dark:text-amber-400/60 font-medium">{t('streakDays')}</span>
                         </div>
                         <div className="mt-2.5 flex gap-0.5">
                             {Array.from({ length: 7 }).map((_, i) => (
-                                <div key={i} className="h-1 flex-1 rounded-full bg-amber-400/50" />
+                                <div key={i} className="h-1 flex-1 rounded-full bg-amber-500/50 dark:bg-amber-400/50" />
                             ))}
                         </div>
                     </div>
@@ -505,7 +508,7 @@ function DashboardPreview() {
                                         />
                                     </div>
                                     <span className={`text-[10px] font-mono font-medium min-w-[28px] text-right ${
-                                        d.pct >= 80 ? 'text-emerald-400/70' : d.pct >= 65 ? 'text-foreground/50' : 'text-amber-400/70'
+                                        d.pct >= 80 ? 'text-emerald-600/70 dark:text-emerald-400/70' : d.pct >= 65 ? 'text-foreground/50' : 'text-amber-600/70 dark:text-amber-400/70'
                                     }`}>{d.pct}%</span>
                                 </div>
                             ))}
@@ -535,7 +538,7 @@ function DashboardPreview() {
                             <div className="flex justify-between mt-1.5 border-t border-border/20 pt-1">
                                 <span className="text-[9px] text-muted-foreground/50 font-mono">62%</span>
                                 <span className="text-[9px] text-muted-foreground/50">→</span>
-                                <span className="text-[9px] text-emerald-400/60 font-mono font-medium">91%</span>
+                                <span className="text-[9px] text-emerald-600/60 dark:text-emerald-400/60 font-mono font-medium">91%</span>
                             </div>
                         </div>
 
@@ -571,9 +574,9 @@ function Footer() {
     const t = useTranslations('landing.footer');
     return (
         <footer className="border-t border-border/40">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-8">
                 <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary/60" />
+                    <img src="/images/logo.png" alt="ExamFlow" width={16} height={16} className="h-4 w-4 rounded-sm" />
                     <span className="text-sm text-muted-foreground">{t('brand')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground/60">

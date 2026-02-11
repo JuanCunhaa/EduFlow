@@ -31,8 +31,8 @@ function stripLocale(pathname: string): string {
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Skip API routes and Next.js internals
-    if (pathname.startsWith('/api/') || pathname.startsWith('/_next')) {
+    // Skip API routes, Next.js internals, and static assets
+    if (pathname.startsWith('/api/') || pathname.startsWith('/_next') || pathname.startsWith('/images/') || pathname === '/favicon.ico') {
         return NextResponse.next();
     }
 

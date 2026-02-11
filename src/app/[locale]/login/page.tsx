@@ -3,7 +3,6 @@
 import { Suspense, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth } from '@/hooks/useAuth';
-import { Shield } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import { useEffect } from 'react';
@@ -43,8 +42,8 @@ function LoginContent() {
             <div className="relative z-10 flex w-full max-w-sm flex-col items-center gap-8 animate-fade-in">
                 {/* Logo & Title */}
                 <div className="flex flex-col items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-card/50 backdrop-blur-sm animate-glow-pulse">
-                        <Shield className="h-8 w-8 text-primary" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl animate-glow-pulse">
+                        <img src="/images/logo.png" alt="ExamFlow" width={64} height={64} className="h-16 w-16 rounded-2xl" />
                     </div>
                     <div className="text-center">
                         <h1 className="text-2xl font-bold tracking-tight text-foreground">{t('brand')}</h1>

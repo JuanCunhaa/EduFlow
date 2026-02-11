@@ -10,7 +10,6 @@ import {
     Database,
     ChevronLeft,
     ChevronRight,
-    Shield,
     Menu,
     X,
 } from 'lucide-react';
@@ -74,9 +73,7 @@ export function Sidebar() {
                 {/* Logo + mobile close */}
                 <div className="flex h-16 items-center justify-between border-b border-border px-4">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 glow-ring">
-                            <Shield className="h-5 w-5 text-primary" />
-                        </div>
+                        <img src="/images/logo.png" alt="ExamFlow" width={36} height={36} className="h-9 w-9 rounded-xl" />
                         {!collapsed && (
                             <span className="text-sm font-bold tracking-tight text-foreground">
                                 {t('brand')}
