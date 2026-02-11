@@ -8,6 +8,9 @@ import {
     difficultySchema,
     examModeSchema,
     createStudySchema,
+    updateStudySchema,
+    studyDomainSchema,
+    updateGoalSchema,
 } from '@/lib/validators';
 
 describe('difficultySchema', () => {
@@ -354,5 +357,210 @@ describe('bulkImportSchema', () => {
 
     it('rejects empty array', () => {
         expect(() => bulkImportSchema.parse({ questions: [] })).toThrow();
+    });
+});
+
+// ── studyDomainSchema ────────────────────────────
+
+describe('studyDomainSchema', () => {
+    const validDomain = {
+        id: 'd1',
+        abbreviation: 'SAM',
+        name: 'Security and Risk Management',
+        order: 0,
+    };
+
+    it('accepts a valid domain', () => {
+        const result = studyDomainSchema.parse(validDomain);
+        expect(result.id).toBe('d1');
+        expect(result.order).toBe(0);
+    });
+
+    it('rejects empty id', () => {
+        expect(() => studyDomainSchema.parse({ ...validDomain, id: '' })).toThrow();
+    });
+
+    it('rejects id longer than 20 chars', () => {
+        expect(() => studyDomainSchema.parse({ ...validDomain, id: 'x'.repeat(21) })).toThrow();
+    });
+
+    it('rejects negative order', () => {
+        expect(() => studyDomainSchema.parse({ ...validDomain, order: -1 })).toThrow();
+    });
+
+    it('accepts order 0', () => {
+        const result = studyDomainSchema.parse({ ...validDomain, order: 0 });
+        expect(result.order).toBe(0);
+    });
+
+    it('strips HTML from name', () => {
+        const result = studyDomainSchema.parse({ ...validDomain, name: '<b>Security</b>' });
+        expect(result.name).toBe('Security');
+    });
+
+    it('strips HTML from abbreviation', () => {
+        const result = studyDomainSchema.parse({ ...validDomain, abbreviation: '<i>SAM</i>' });
+        expect(result.abbreviation).toBe('SAM');
+    });
+});
+
+// ── updateStudySchema ────────────────────────────
+
+describe('updateStudySchema', () => {
+    it('accepts partial update with only name', () => {
+        const result = updateStudySchema.parse({ name: 'Updated Name' });
+        expect(result.name).toBe('Updated Name');
+    });
+
+    it('accepts partial update with only domains', () => {
+        const result = updateStudySchema.parse({
+            domains: [{ id: 'd1', abbreviation: 'X', name: 'Domain X', order: 0 }],
+        });
+        expect(result.domains).toHaveLength(1);
+    });
+
+    it('accepts empty object', () => {
+        const result = updateStudySchema.parse({});
+        expect(result).toBeDefined();
+    });
+
+    it('rejects invalid accentColor in partial update', () => {
+        expect(() => updateStudySchema.parse({ accentColor: 'not-hex' })).toThrow();
+    });
+
+    it('accepts valid accentColor in partial update', () => {
+        const result = updateStudySchema.parse({ accentColor: '#ff5733' });
+        expect(result.accentColor).toBe('#ff5733');
+    });
+});
+
+// ── updateGoalSchema ─────────────────────────────
+
+describe('updateGoalSchema', () => {
+    it('accepts dailyGoal only', () => {
+        const result = updateGoalSchema.parse({ dailyGoal: 20 });
+        expect(result.dailyGoal).toBe(20);
+    });
+
+    it('accepts weeklyGoal only', () => {
+        const result = updateGoalSchema.parse({ weeklyGoal: 100 });
+        expect(result.weeklyGoal).toBe(100);
+    });
+
+    it('accepts both goals', () => {
+        const result = updateGoalSchema.parse({ dailyGoal: 15, weeklyGoal: 75 });
+        expect(result.dailyGoal).toBe(15);
+        expect(result.weeklyGoal).toBe(75);
+    });
+
+    it('rejects empty object (at least one goal required)', () => {
+        expect(() => updateGoalSchema.parse({})).toThrow();
+    });
+
+    it('rejects dailyGoal below 1', () => {
+        expect(() => updateGoalSchema.parse({ dailyGoal: 0 })).toThrow();
+    });
+
+    it('rejects dailyGoal above 200', () => {
+        expect(() => updateGoalSchema.parse({ dailyGoal: 201 })).toThrow();
+    });
+
+    it('rejects weeklyGoal below 1', () => {
+        expect(() => updateGoalSchema.parse({ weeklyGoal: 0 })).toThrow();
+    });
+
+    it('rejects weeklyGoal above 1000', () => {
+        expect(() => updateGoalSchema.parse({ weeklyGoal: 1001 })).toThrow();
+    });
+
+    it('rejects non-integer dailyGoal', () => {
+        expect(() => updateGoalSchema.parse({ dailyGoal: 10.5 })).toThrow();
+    });
+
+    it('rejects non-integer weeklyGoal', () => {
+        expect(() => updateGoalSchema.parse({ weeklyGoal: 50.5 })).toThrow();
+    });
+
+    it('accepts boundary values', () => {
+        expect(() => updateGoalSchema.parse({ dailyGoal: 1 })).not.toThrow();
+        expect(() => updateGoalSchema.parse({ dailyGoal: 200 })).not.toThrow();
+        expect(() => updateGoalSchema.parse({ weeklyGoal: 1 })).not.toThrow();
+        expect(() => updateGoalSchema.parse({ weeklyGoal: 1000 })).not.toThrow();
+    });
+});
+
+// ── createStudySchema edge cases ─────────────────
+
+describe('createStudySchema (edge cases)', () => {
+    it('rejects abbreviation longer than 20 chars', () => {
+        expect(() =>
+            createStudySchema.parse({
+                abbreviation: 'X'.repeat(21),
+                name: 'Valid Name Here',
+                domains: [{ id: 'd1', abbreviation: 'D', name: 'Domain', order: 0 }],
+            })
+        ).toThrow();
+    });
+
+    it('rejects name longer than 200 chars', () => {
+        expect(() =>
+            createStudySchema.parse({
+                abbreviation: 'TEST',
+                name: 'X'.repeat(201),
+                domains: [{ id: 'd1', abbreviation: 'D', name: 'Domain', order: 0 }],
+            })
+        ).toThrow();
+    });
+
+    it('rejects more than 30 domains', () => {
+        const domains = Array.from({ length: 31 }, (_, i) => ({
+            id: `d${i}`,
+            abbreviation: `D${i}`,
+            name: `Domain ${i}`,
+            order: i,
+        }));
+        expect(() =>
+            createStudySchema.parse({
+                abbreviation: 'TEST',
+                name: 'Test Study',
+                domains,
+            })
+        ).toThrow();
+    });
+});
+
+// ── examConfigSchema edge cases ──────────────────
+
+describe('examConfigSchema (edge cases)', () => {
+    it('accepts timeLimitMinutes = 0 (untimed)', () => {
+        const result = examConfigSchema.parse({
+            studyId: 'study-1',
+            questionCount: 25,
+            timeLimitMinutes: 0,
+        });
+        expect(result.timeLimitMinutes).toBe(0);
+    });
+
+    it('rejects empty studyId', () => {
+        expect(() =>
+            examConfigSchema.parse({
+                studyId: '',
+                questionCount: 25,
+                timeLimitMinutes: 60,
+            })
+        ).toThrow();
+    });
+
+    it('accepts all exam modes', () => {
+        const modes = ['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus', 'spaced_review'];
+        for (const mode of modes) {
+            const result = examConfigSchema.parse({
+                studyId: 'study-1',
+                questionCount: 25,
+                timeLimitMinutes: 60,
+                mode,
+            });
+            expect(result.mode).toBe(mode);
+        }
     });
 });
