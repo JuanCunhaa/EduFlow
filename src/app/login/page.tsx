@@ -11,6 +11,7 @@ function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [signingIn, setSigningIn] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!loading && user) {
@@ -56,10 +57,11 @@ function LoginContent() {
                         onClick={async () => {
                             if (signingIn) return;
                             setSigningIn(true);
+                            setError(null);
                             try {
                                 await signIn();
                             } catch {
-                                // errors are handled inside useAuth
+                                setError('Sign-in failed. Please try again.');
                             } finally {
                                 setSigningIn(false);
                             }
@@ -87,6 +89,9 @@ function LoginContent() {
                         </svg>
                         {signingIn ? 'Signing in…' : 'Sign in with Google'}
                     </button>
+                    {error && (
+                        <p className="mt-3 text-center text-sm text-red-400 animate-fade-in">{error}</p>
+                    )}
                 </div>
 
                 {/* Footer */}

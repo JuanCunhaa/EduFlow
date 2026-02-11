@@ -62,6 +62,14 @@ function QuestionsContent() {
         search: search || undefined,
     });
 
+    // Build domain ID → name map for display
+    const domainMap: Record<string, string> = {};
+    if (currentStudy) {
+        for (const d of currentStudy.domains) {
+            domainMap[d.id] = d.abbreviation;
+        }
+    }
+
     async function handleCreate(data: CreateQuestionInput) {
         await createQuestion(data);
         refresh();
@@ -166,6 +174,9 @@ function QuestionsContent() {
                     onDelete={(id) => setDeleteTarget(id)}
                     difficulty={difficulty}
                     onDifficultyChange={setDifficulty}
+                    domainMap={domainMap}
+                    onAdd={() => { setEditingQuestion(null); setShowForm(true); }}
+                    onImport={() => setShowImport(true)}
                 />
             </div>
 

@@ -408,7 +408,11 @@ export default function StudyDetailPage() {
                             </thead>
                             <tbody className="divide-y divide-border">
                                 {exams.map((exam) => (
-                                    <tr key={exam.id} className="transition-colors hover:bg-accent/20">
+                                    <tr
+                                        key={exam.id}
+                                        className="transition-colors hover:bg-accent/20 cursor-pointer"
+                                        onClick={() => router.push(`/exams/${exam.id}/review`)}
+                                    >
                                         <td className="px-6 py-3 text-sm text-muted-foreground">
                                             {exam.completedAt ? formatTimeAgo(exam.completedAt) : '—'}
                                         </td>

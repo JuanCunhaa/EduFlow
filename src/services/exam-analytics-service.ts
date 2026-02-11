@@ -14,7 +14,7 @@ export interface AnalyticsData {
     totalExams: number;
     avgScore: number;
     passRate: number;
-    scoreTrend: Array<{ score: number; studyId: string; date: string }>;
+    scoreTrend: Array<{ examId: string; score: number; studyId: string; date: string }>;
     studyBreakdown: Record<string, { exams: number; avgScore: number }>;
     domainStats: Array<{ domainId: string; domain: string; percentage: number; correct: number; total: number }>;
     readiness: number;
@@ -34,6 +34,7 @@ export async function getAnalytics(uid: string, studyId?: string): Promise<Analy
 
     // Score trend (chronological)
     const trend = [...exams].reverse().map(e => ({
+        examId: e.id,
         score: e.score || 0,
         studyId: e.studyId,
         date: formatTimestamp(e.completedAt),

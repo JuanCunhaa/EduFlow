@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import type { Question, Difficulty } from '@/types';
-import { Pencil, Trash2, ChevronDown } from 'lucide-react';
+import { Pencil, Trash2, ChevronDown, Upload, Plus } from 'lucide-react';
+import { SkeletonTable } from '@/components/ui/Skeleton';
 
 interface QuestionTableProps {
     questions: Question[];
@@ -11,6 +12,12 @@ interface QuestionTableProps {
     onDelete: (questionId: string) => void;
     difficulty: Difficulty | 'all';
     onDifficultyChange: (diff: Difficulty | 'all') => void;
+    /** Map of domainId → domain name for human-readable display */
+    domainMap?: Record<string, string>;
+    /** Called when user clicks "New Question" from empty state */
+    onAdd?: () => void;
+    /** Called when user clicks "Import" from empty state */
+    onImport?: () => void;
 }
 
 const DIFFICULTIES: (Difficulty | 'all')[] = ['all', 'easy', 'medium', 'hard'];
@@ -28,6 +35,9 @@ export function QuestionTable({
     onDelete,
     difficulty,
     onDifficultyChange,
+    domainMap = {},
+    onAdd,
+    onImport,
 }: QuestionTableProps) {
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -53,12 +63,28 @@ export function QuestionTable({
             {/* Table */}
             <div className="rounded-xl border border-border bg-card overflow-hidden">
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
-                    </div>
+                    <SkeletonTable />
                 ) : questions.length === 0 ? (
-                    <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-                        No questions found
+                    <div className="flex flex-col items-center gap-4 py-16">
+                        <p className="text-sm text-muted-foreground">No questions found</p>
+                        <div className="flex gap-2">
+                            {onImport && (
+                                <button
+                                    onClick={onImport}
+                                    className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                                >
+                                    <Upload className="h-3.5 w-3.5" /> Import Questions
+                                </button>
+                            )}
+                            {onAdd && (
+                                <button
+                                    onClick={onAdd}
+                                    className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                                >
+                                    <Plus className="h-3.5 w-3.5" /> New Question
+                                </button>
+                            )}
+                        </div>
                     </div>
                 ) : (
                     <table className="w-full">
@@ -107,8 +133,8 @@ export function QuestionTable({
                                     <td className="px-4 py-3">
                                         <div className="flex flex-wrap gap-1">
                                             {q.domainIds.map((did) => (
-                                                <span key={did} className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                                                    {did}
+                                                <span key={did} className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary" title={domainMap[did] || did}>
+                                                    {domainMap[did] || did}
                                                 </span>
                                             ))}
                                         </div>

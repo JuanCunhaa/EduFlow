@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus, Minus, Palette } from 'lucide-react';
+import { X, Plus, Minus, Palette, BookOpen } from 'lucide-react';
 import { createStudy, updateStudy } from '@/hooks/useStudies';
 import { useModalA11y } from '@/hooks/useModalA11y';
 import type { Study, StudyDomain } from '@/types';
@@ -14,6 +14,73 @@ interface StudyFormDialogProps {
 
 function makeEmptyDomain(order: number): { id: string; abbreviation: string; name: string; order: number } {
     return { id: `d${order + 1}`, abbreviation: '', name: '', order };
+}
+
+// ── Certification Templates ─────────────────────
+
+interface StudyTemplate {
+    abbreviation: string;
+    name: string;
+    accentColor: string;
+    domains: Array<{ abbreviation: string; name: string }>;
+}
+
+const CERT_TEMPLATES: StudyTemplate[] = [
+    {
+        abbreviation: 'CISSP',
+        name: 'Certified Information Systems Security Professional',
+        accentColor: '#3b82f6',
+        domains: [
+            { abbreviation: 'SRM', name: 'Security and Risk Management' },
+            { abbreviation: 'AS', name: 'Asset Security' },
+            { abbreviation: 'SAE', name: 'Security Architecture and Engineering' },
+            { abbreviation: 'CNS', name: 'Communication and Network Security' },
+            { abbreviation: 'IAM', name: 'Identity and Access Management' },
+            { abbreviation: 'SAT', name: 'Security Assessment and Testing' },
+            { abbreviation: 'SO', name: 'Security Operations' },
+            { abbreviation: 'SDS', name: 'Software Development Security' },
+        ],
+    },
+    {
+        abbreviation: 'CC',
+        name: 'Certified in Cybersecurity',
+        accentColor: '#10b981',
+        domains: [
+            { abbreviation: 'SP', name: 'Security Principles' },
+            { abbreviation: 'BC', name: 'Business Continuity, Disaster Recovery & Incident Response' },
+            { abbreviation: 'AC', name: 'Access Controls Concepts' },
+            { abbreviation: 'NS', name: 'Network Security' },
+            { abbreviation: 'SO', name: 'Security Operations' },
+        ],
+    },
+    {
+        abbreviation: 'SSCP',
+        name: 'Systems Security Certified Practitioner',
+        accentColor: '#8b5cf6',
+        domains: [
+            { abbreviation: 'SOA', name: 'Security Operations and Administration' },
+            { abbreviation: 'AC', name: 'Access Controls' },
+            { abbreviation: 'RIM', name: 'Risk Identification, Monitoring and Analysis' },
+            { abbreviation: 'IRR', name: 'Incident Response and Recovery' },
+            { abbreviation: 'CRY', name: 'Cryptography' },
+            { abbreviation: 'NCS', name: 'Network and Communications Security' },
+            { abbreviation: 'SAS', name: 'Systems and Application Security' },
+        ],
+    },
+];
+
+function applyTemplate(template: StudyTemplate) {
+    return {
+        abbreviation: template.abbreviation,
+        name: template.name,
+        accentColor: template.accentColor,
+        domains: template.domains.map((d, i) => ({
+            id: `d${i + 1}`,
+            abbreviation: d.abbreviation,
+            name: d.name,
+            order: i,
+        })),
+    };
 }
 
 export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProps) {
@@ -105,6 +172,37 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* Template picker (create only) */}
+                    {!isEditing && (
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                                <BookOpen className="h-3 w-3" /> Start from template
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {CERT_TEMPLATES.map((tpl) => (
+                                    <button
+                                        key={tpl.abbreviation}
+                                        type="button"
+                                        onClick={() => {
+                                            const applied = applyTemplate(tpl);
+                                            setAbbreviation(applied.abbreviation);
+                                            setName(applied.name);
+                                            setAccentColor(applied.accentColor);
+                                            setDomains(applied.domains);
+                                        }}
+                                        className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                                            abbreviation === tpl.abbreviation
+                                                ? 'border-primary/30 bg-primary/10 text-primary'
+                                                : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                                        }`}
+                                    >
+                                        {tpl.abbreviation}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Abbreviation + Name */}
                     <div className="grid grid-cols-[100px_1fr] gap-3">
                         <div>

@@ -2,18 +2,19 @@
 
 import { Suspense } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { Spinner } from '@/components/ui/Spinner';
+import { SkeletonDashboard } from '@/components/ui/Skeleton';
 import { useStudies } from '@/hooks/useStudies';
 import { TrendingUp, Target, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
+import Link from 'next/link';
 
 interface AnalyticsData {
     totalExams: number;
     avgScore: number;
     passRate: number;
-    scoreTrend: Array<{ score: number; studyId: string; date: string }>;
+    scoreTrend: Array<{ examId?: string; score: number; studyId: string; date: string }>;
     studyBreakdown: Record<string, { exams: number; avgScore: number }>;
     domainStats: Array<{ domain: string; percentage: number; correct: number; total: number }>;
     readiness: number;
@@ -21,7 +22,7 @@ interface AnalyticsData {
 
 export default function AnalyticsPage() {
     return (
-        <Suspense fallback={<Shell><div className="flex items-center justify-center py-20"><Spinner size={24} /></div></Shell>}>
+        <Suspense fallback={<Shell><SkeletonDashboard /></Shell>}>
             <AnalyticsContent />
         </Suspense>
     );
@@ -79,15 +80,19 @@ function AnalyticsContent() {
                 </div>
 
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Spinner size={24} />
-                    </div>
+                    <SkeletonDashboard />
                 ) : !analytics || analytics.totalExams === 0 ? (
                     <div className="flex flex-col items-center gap-4 py-20 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50">
                             <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
                         </div>
                         <p className="text-muted-foreground">Complete exams to see analytics</p>
+                        <Link
+                            href="/exams"
+                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:shadow-lg hover:shadow-primary/30"
+                        >
+                            Start an Exam
+                        </Link>
                     </div>
                 ) : (
                     <>
@@ -220,25 +225,35 @@ function AnalyticsContent() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                    {[...scoreTrend].reverse().map((entry, i) => (
-                                        <tr key={i} className="transition-colors hover:bg-accent/20">
-                                            <td className="px-6 py-3.5 text-sm text-muted-foreground">
-                                                {entry.date}
-                                            </td>
-                                            <td className="px-6 py-3.5">
-                                                <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                                    {studyNameMap.get(entry.studyId) || entry.studyId}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3.5 text-right">
-                                                <span
-                                                    className={`font-mono text-sm font-semibold ${entry.score >= 70 ? 'text-emerald-400' : 'text-red-400'}`}
-                                                >
-                                                    {entry.score}%
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {[...scoreTrend].reverse().map((entry, i) => {
+                                        const row = (
+                                            <tr key={i} className={`transition-colors hover:bg-accent/20 ${entry.examId ? 'cursor-pointer' : ''}`}>
+                                                <td className="px-6 py-3.5 text-sm text-muted-foreground">
+                                                    {entry.date}
+                                                </td>
+                                                <td className="px-6 py-3.5">
+                                                    <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                                                        {studyNameMap.get(entry.studyId) || entry.studyId}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3.5 text-right">
+                                                    <span
+                                                        className={`font-mono text-sm font-semibold ${entry.score >= 70 ? 'text-emerald-400' : 'text-red-400'}`}
+                                                    >
+                                                        {entry.score}%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                        if (entry.examId) {
+                                            return (
+                                                <Link key={i} href={`/exams/${entry.examId}/review`} className="contents">
+                                                    {row}
+                                                </Link>
+                                            );
+                                        }
+                                        return row;
+                                    })}
                                 </tbody>
                             </table>
                         </div>

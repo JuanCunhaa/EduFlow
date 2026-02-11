@@ -74,17 +74,19 @@ const QuestionBody = memo(function QuestionBody({
     question,
     currentAnswer,
     onAnswer,
+    domainMap = {},
 }: {
     question: SessionQuestion;
     currentAnswer: number | null;
     onAnswer: (questionId: string, optionIndex: number) => void;
+    domainMap?: Record<string, string>;
 }) {
     return (
         <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 animate-fade-in">
             <div className="mb-3 flex items-center gap-2">
                 {question.domainIds.map((did) => (
                     <span key={did} className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                        {did}
+                        {domainMap[did] || did}
                     </span>
                 ))}
             </div>
@@ -126,6 +128,8 @@ interface ExamSessionProps {
     onSubmit: () => void;
     timeLimitMinutes: number;
     initialTimeRemaining?: number;
+    /** Map of domainId → display name */
+    domainMap?: Record<string, string>;
 }
 
 export function ExamSession({
@@ -135,6 +139,7 @@ export function ExamSession({
     onSubmit,
     timeLimitMinutes,
     initialTimeRemaining,
+    domainMap = {},
 }: ExamSessionProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
@@ -255,6 +260,7 @@ export function ExamSession({
                 question={currentQuestion}
                 currentAnswer={currentAnswer}
                 onAnswer={onAnswer}
+                domainMap={domainMap}
             />
 
             {/* Navigation */}

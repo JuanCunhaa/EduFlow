@@ -140,7 +140,7 @@ export async function awardBadge(uid: string, badge: BadgeId): Promise<void> {
 // ── Daily Challenge ──────────────────────────────
 
 export interface DailyChallengeResult {
-    questions: Array<Omit<Question, 'correctOptionIndex' | 'explanation'>>;
+    questions: Array<Omit<Question, 'explanation'>>;
     date: string;
 }
 
@@ -182,8 +182,8 @@ export async function getDailyChallenge(
     const shuffled = pool.sort(() => secureRandom() - 0.5);
     const selected = shuffled.slice(0, DAILY_CHALLENGE_COUNT);
 
-    // Strip sensitive fields
-    const sanitized = selected.map(({ correctOptionIndex: _, explanation: __, ...rest }) => rest);
+    // Strip explanation but keep correctOptionIndex for client-side feedback
+    const sanitized = selected.map(({ explanation: _, ...rest }) => rest);
 
     const result: DailyChallengeResult = { questions: sanitized, date: today };
 

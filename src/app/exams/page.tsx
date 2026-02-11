@@ -298,6 +298,8 @@ function ExamsContent() {
         try {
             const result = await submitExam(state.activeExam.id, state.activeExam.answers);
             clearPersistedExam();
+
+            const badges = result.newBadges || [];
             dispatch({
                 type: 'EXAM_SUBMITTED',
                 results: {
@@ -307,9 +309,20 @@ function ExamsContent() {
                     totalQuestions: result.totalQuestions,
                     domainScores: result.domainScores,
                     studyName: state.activeExam.studyName,
-                    newBadges: result.newBadges || [],
+                    newBadges: badges,
                 },
             });
+
+            // Celebrate new badges with toast
+            if (badges.length > 0) {
+                const BADGE_EMOJI: Record<string, string> = {
+                    first_exam: '🎓', streak_3: '🔥', streak_7: '⚡', streak_30: '💎',
+                    perfect_score: '🏆', centurion: '💯', domain_master: '🎯',
+                };
+                for (const b of badges) {
+                    addToast(`${BADGE_EMOJI[b] || '🏅'} Badge unlocked: ${b.replace(/_/g, ' ')}!`, 'success');
+                }
+            }
         } catch (error) {
             dispatch({ type: 'ERROR', message: error instanceof Error ? error.message : 'Failed to submit' });
             addToast(error instanceof Error ? error.message : 'Failed to submit exam', 'error');
@@ -329,6 +342,15 @@ function ExamsContent() {
     }
 
     if ((state.phase === 'session' || state.phase === 'submitting') && state.activeExam) {
+        // Build domain map from the active study
+        const activeStudy = studies.find(s => s.id === state.activeExam!.studyId);
+        const domainMap: Record<string, string> = {};
+        if (activeStudy) {
+            for (const d of activeStudy.domains) {
+                domainMap[d.id] = d.abbreviation;
+            }
+        }
+
         return (
             <ExamErrorBoundary examId={state.activeExam.id}>
                 <ExamSession
@@ -338,6 +360,7 @@ function ExamsContent() {
                     answers={state.activeExam.answers}
                     onAnswer={handleAnswer}
                     onSubmit={handleSubmit}
+                    domainMap={domainMap}
                 />
             </ExamErrorBoundary>
         );

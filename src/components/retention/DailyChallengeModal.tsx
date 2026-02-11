@@ -12,6 +12,7 @@ interface ChallengeQuestion {
     options: Array<{ label: string; text: string }>;
     domainIds: string[];
     difficulty: string;
+    correctOptionIndex?: number;
 }
 
 interface DailyChallengeData {
@@ -93,9 +94,17 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                             <div className="text-4xl">🎯</div>
                             <div>
                                 <h3 className="text-lg font-bold text-foreground">Challenge Complete!</h3>
-                                <p className="mt-1 text-sm text-muted-foreground">
-                                    You answered {answeredCount} of {totalQuestions} questions
-                                </p>
+                                {(() => {
+                                    const correctCount = questions.reduce((sum, q) => {
+                                        if (q.correctOptionIndex !== undefined && answers[q.id] === q.correctOptionIndex) return sum + 1;
+                                        return sum;
+                                    }, 0);
+                                    return (
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            You got <strong className="text-foreground">{correctCount}</strong> of {totalQuestions} correct
+                                        </p>
+                                    );
+                                })()}
                             </div>
                             <button
                                 onClick={handleClose}
@@ -129,26 +138,37 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                                 {currentQ.options.map((opt, oi) => {
                                     const selected = answers[currentQ.id] === oi;
                                     const answered = answers[currentQ.id] !== undefined;
+                                    const isCorrect = currentQ.correctOptionIndex === oi;
+                                    const showCorrect = answered && isCorrect;
+                                    const showWrong = answered && selected && !isCorrect;
                                     return (
                                         <button
                                             key={oi}
                                             onClick={() => selectAnswer(oi)}
                                             disabled={answered}
                                             className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-all ${
-                                                selected
-                                                    ? 'border-primary/40 bg-primary/5'
-                                                    : answered
-                                                        ? 'border-border opacity-50'
-                                                        : 'border-border hover:border-primary/20 hover:bg-accent/20'
+                                                showCorrect
+                                                    ? 'border-emerald-500/40 bg-emerald-500/10'
+                                                    : showWrong
+                                                        ? 'border-red-500/40 bg-red-500/10'
+                                                        : selected
+                                                            ? 'border-primary/40 bg-primary/5'
+                                                            : answered
+                                                                ? 'border-border opacity-50'
+                                                                : 'border-border hover:border-primary/20 hover:bg-accent/20'
                                             }`}
                                         >
                                             <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                                                selected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
+                                                showCorrect ? 'bg-emerald-500/20 text-emerald-400'
+                                                : showWrong ? 'bg-red-500/20 text-red-400'
+                                                : selected ? 'bg-primary/20 text-primary'
+                                                : 'bg-muted text-muted-foreground'
                                             }`}>
                                                 {opt.label}
                                             </span>
                                             <span className="text-sm text-foreground">{opt.text}</span>
-                                            {selected && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-primary" />}
+                                            {showCorrect && <CheckCircle2 className="ml-auto h-4 w-4 shrink-0 text-emerald-400" />}
+                                            {showWrong && <XCircle className="ml-auto h-4 w-4 shrink-0 text-red-400" />}
                                         </button>
                                     );
                                 })}
