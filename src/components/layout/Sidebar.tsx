@@ -71,7 +71,7 @@ export function Sidebar() {
                         </div>
                         {!collapsed && (
                             <span className="text-sm font-bold tracking-tight text-foreground">
-                                ISC2 Training
+                                ExamFlow
                             </span>
                         )}
                     </div>

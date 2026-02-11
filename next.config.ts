@@ -1,13 +1,15 @@
 import type { NextConfig } from 'next';
 
+const isDev = process.env.NODE_ENV !== 'production';
+
 const securityHeaders = [
   {
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
       // 'unsafe-inline' is required — Next.js injects inline <script> tags for hydration.
-      // 'unsafe-eval' is needed in dev mode for Turbopack HMR; safe to remove in production.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com",
+      // 'unsafe-eval' is ONLY included in dev mode for Turbopack HMR.
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''} https://apis.google.com`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https:",
       "font-src 'self' https://fonts.gstatic.com",
@@ -21,7 +23,11 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+  // COOP intentionally omitted — Firebase Auth signInWithPopup requires
+  // cross-origin access to poll window.closed on the Google sign-in popup.
+  // Setting any COOP value (even 'same-origin-allow-popups') blocks this call
+  // in some browsers due to the popup origin (accounts.google.com) returning
+  // its own stricter COOP header.
 ];
 
 const nextConfig: NextConfig = {

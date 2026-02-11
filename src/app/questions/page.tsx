@@ -5,6 +5,7 @@ import { Shell } from '@/components/layout/Shell';
 import { QuestionTable } from '@/components/questions/QuestionTable';
 import { QuestionForm } from '@/components/questions/QuestionForm';
 import { ImportDialog } from '@/components/questions/ImportDialog';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
     useQuestions,
     createQuestion,
@@ -12,20 +13,26 @@ import {
     deleteQuestion,
     importQuestions,
 } from '@/hooks/useQuestions';
+import { useToast } from '@/components/ui/Toast';
 import type { Question, Certification, Difficulty } from '@/types';
 import type { CreateQuestionInput } from '@/lib/validators';
-import { Plus, Upload } from 'lucide-react';
+import { Plus, Upload, Search } from 'lucide-react';
 
 export default function QuestionsPage() {
     const [certification, setCertification] = useState<Certification | ''>('');
     const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
+    const [search, setSearch] = useState('');
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [showImport, setShowImport] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const { addToast } = useToast();
 
     const { questions, isLoading, refresh } = useQuestions({
         certification: certification || undefined,
         difficulty: difficulty === 'all' ? undefined : difficulty,
+        search: search || undefined,
     });
 
     async function handleCreate(data: CreateQuestionInput) {
@@ -39,10 +46,19 @@ export default function QuestionsPage() {
         refresh();
     }
 
-    async function handleDelete(questionId: string) {
-        if (!confirm('Delete this question?')) return;
-        await deleteQuestion(questionId);
-        refresh();
+    async function handleDeleteConfirm() {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
+        try {
+            await deleteQuestion(deleteTarget);
+            refresh();
+            addToast('Question deleted', 'success');
+        } catch (error) {
+            addToast(error instanceof Error ? error.message : 'Failed to delete', 'error');
+        } finally {
+            setIsDeleting(false);
+            setDeleteTarget(null);
+        }
     }
 
     async function handleImport(jsonText: string) {
@@ -86,12 +102,24 @@ export default function QuestionsPage() {
                     </div>
                 </div>
 
+                {/* Search bar */}
+                <div className="relative max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                        type="text"
+                        placeholder="Search questions..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full rounded-lg border border-border bg-card pl-9 pr-3 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 focus:ring-primary/30 focus:border-primary/30 placeholder:text-muted-foreground"
+                    />
+                </div>
+
                 {/* Table */}
                 <QuestionTable
                     questions={questions}
                     isLoading={isLoading}
                     onEdit={(q) => { setEditingQuestion(q); setShowForm(true); }}
-                    onDelete={handleDelete}
+                    onDelete={(id) => setDeleteTarget(id)}
                     certification={certification}
                     onCertificationChange={setCertification}
                     difficulty={difficulty}
@@ -114,6 +142,18 @@ export default function QuestionsPage() {
                     onClose={() => setShowImport(false)}
                 />
             )}
+
+            <ConfirmDialog
+                open={deleteTarget !== null}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Question"
+                confirmLabel="Delete"
+                variant="danger"
+                loading={isDeleting}
+            >
+                <p>Are you sure you want to delete this question? This action cannot be undone.</p>
+            </ConfirmDialog>
         </Shell>
     );
 }

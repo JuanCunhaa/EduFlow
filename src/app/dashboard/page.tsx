@@ -62,7 +62,7 @@ function getTextColor(percentage: number): string {
 }
 
 export default function DashboardPage() {
-    const { exams, isLoading } = useExams(10);
+    const { exams, isLoading } = useExams({ limit: 10 });
 
     const { totalExams, avgScore, passRate, recentExams, domainList } = useMemo(() => {
         const completed = exams.filter((e) => e.status === 'completed');

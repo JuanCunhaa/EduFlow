@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthChange, signInWithGoogle, signOut } from '@/lib/firebase/auth';
+import { onAuthChange, signInWithGoogle, signOut, handleRedirectResult } from '@/lib/firebase/auth';
 
 interface AuthContextValue {
     user: User | null;
@@ -22,13 +22,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(firebaseUser);
             setLoading(false);
         });
+        // Check for redirect result (fallback for popup-blocked)
+        handleRedirectResult().catch(() => {});
         return unsubscribe;
     }, []);
 
     const handleSignIn = useCallback(async () => {
         try {
             await signInWithGoogle();
-        } catch (err) {
+        } catch (err: unknown) {
+            const code = (err as { code?: string })?.code;
+            // Silently ignore cancelled-popup — user closed it or a duplicate was suppressed
+            if (code === 'auth/cancelled-popup-request' || code === 'auth/popup-closed-by-user') {
+                return;
+            }
+            // popup-blocked is handled internally via redirect fallback
+            if (code === 'auth/popup-blocked') {
+                return;
+            }
             console.error('Sign-in failed:', err);
             throw err;
         }

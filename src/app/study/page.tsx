@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef } from 'react';
 import { Shell } from '@/components/layout/Shell';
+import { Spinner } from '@/components/ui/Spinner';
 import { useQuestions } from '@/hooks/useQuestions';
 import type { Certification, Difficulty, Question } from '@/types';
 import { Eye, EyeOff, ChevronLeft, ChevronRight, Shuffle, BookOpen } from 'lucide-react';
@@ -101,7 +102,7 @@ export default function StudyPage() {
                 {/* Card */}
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
+                        <Spinner size={24} />
                     </div>
                 ) : orderedQuestions.length === 0 ? (
                     <div className="flex flex-col items-center gap-4 py-20 text-center">

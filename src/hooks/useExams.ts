@@ -2,9 +2,19 @@ import useSWR from 'swr';
 import type { Exam, ExamConfig } from '@/types';
 import { fetcher } from '@/lib/fetcher';
 
-export function useExams(limit = 20) {
+interface UseExamsOptions {
+    limit?: number;
+    status?: string;
+}
+
+export function useExams(options: UseExamsOptions = {}) {
+    const { limit = 20, status } = options;
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (status) params.set('status', status);
+    const url = `/api/exams?${params}`;
+
     const { data, error, isLoading, mutate } = useSWR<Exam[]>(
-        `/api/exams?limit=${limit}`,
+        url,
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 30_000, keepPreviousData: true }
     );
@@ -26,6 +36,22 @@ export function useExam(examId: string | null) {
 
     return {
         exam: data || null,
+        isLoading,
+        error,
+        refresh: () => mutate(),
+    };
+}
+
+/** Check for an in-progress exam (resume flow) */
+export function useInProgressExam() {
+    const { data, error, isLoading, mutate } = useSWR(
+        '/api/exams/in-progress',
+        fetcher,
+        { revalidateOnFocus: false, dedupingInterval: 60_000 }
+    );
+
+    return {
+        inProgressExam: data || null,
         isLoading,
         error,
         refresh: () => mutate(),
@@ -98,6 +124,32 @@ export async function submitExam(
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Failed to submit exam');
+    }
+
+    const json = await res.json();
+    return json.data;
+}
+
+/** Abandon an in-progress exam */
+export async function abandonExam(examId: string): Promise<void> {
+    const res = await fetch(`/api/exams/${examId}/abandon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to abandon exam');
+    }
+}
+
+/** Fetch post-exam review data */
+export async function getExamReview(examId: string) {
+    const res = await fetch(`/api/exams/${examId}/review`);
+
+    if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to fetch exam review');
     }
 
     const json = await res.json();

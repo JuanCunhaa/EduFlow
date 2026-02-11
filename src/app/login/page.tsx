@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Shield } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,6 +10,7 @@ function LoginContent() {
     const { user, loading, signIn } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [signingIn, setSigningIn] = useState(false);
 
     useEffect(() => {
         if (!loading && user) {
@@ -42,7 +43,7 @@ function LoginContent() {
                         <Shield className="h-8 w-8 text-primary" />
                     </div>
                     <div className="text-center">
-                        <h1 className="text-2xl font-bold tracking-tight text-foreground">ISC2 Training</h1>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">ExamFlow</h1>
                         <p className="mt-1.5 text-sm text-muted-foreground">
                             Cybersecurity certification practice platform
                         </p>
@@ -52,8 +53,19 @@ function LoginContent() {
                 {/* Sign In Card */}
                 <div className="w-full rounded-2xl border border-border glass-panel p-8">
                     <button
-                        onClick={signIn}
-                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
+                        onClick={async () => {
+                            if (signingIn) return;
+                            setSigningIn(true);
+                            try {
+                                await signIn();
+                            } catch {
+                                // errors are handled inside useAuth
+                            } finally {
+                                setSigningIn(false);
+                            }
+                        }}
+                        disabled={signingIn}
+                        className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-60 disabled:pointer-events-none"
                     >
                         <svg className="h-4 w-4" viewBox="0 0 24 24">
                             <path
@@ -73,7 +85,7 @@ function LoginContent() {
                                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                             />
                         </svg>
-                        Sign in with Google
+                        {signingIn ? 'Signing in…' : 'Sign in with Google'}
                     </button>
                 </div>
 

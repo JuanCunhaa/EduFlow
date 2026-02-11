@@ -7,29 +7,64 @@ interface UseQuestionsOptions {
     certification?: Certification;
     domainNumber?: number;
     difficulty?: Difficulty | 'all';
+    search?: string;
+    cursor?: string;
+    limit?: number;
 }
 
-export function useQuestions(options: UseQuestionsOptions = {}) {
+interface UseQuestionsResult {
+    questions: Question[];
+    isLoading: boolean;
+    error: Error | undefined;
+    nextCursor: string | null;
+    refresh: () => void;
+}
+
+function buildUrl(options: UseQuestionsOptions): string {
     const params = new URLSearchParams();
     if (options.certification) params.set('certification', options.certification);
     if (options.domainNumber) params.set('domainNumber', String(options.domainNumber));
     if (options.difficulty && options.difficulty !== 'all') params.set('difficulty', options.difficulty);
+    if (options.search) params.set('search', options.search);
+    if (options.cursor) params.set('cursor', options.cursor);
+    if (options.limit) params.set('limit', String(options.limit));
 
     const queryString = params.toString();
-    const url = `/api/questions${queryString ? `?${queryString}` : ''}`;
+    return `/api/questions${queryString ? `?${queryString}` : ''}`;
+}
 
-    const { data, error, isLoading } = useSWR<Question[]>(url, fetcher, {
+/** Custom fetcher that returns { data, nextCursor } shape */
+async function questionsFetcher(url: string): Promise<{ data: Question[]; nextCursor: string | null }> {
+    const res = await fetch(url);
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Request failed' }));
+        throw new Error(err.error || 'Failed to fetch questions');
+    }
+    return res.json();
+}
+
+export function useQuestions(options: UseQuestionsOptions = {}): UseQuestionsResult {
+    const url = buildUrl(options);
+
+    const { data, error, isLoading } = useSWR(url, questionsFetcher, {
         revalidateOnFocus: false,
         dedupingInterval: 60_000,
         keepPreviousData: true,
     });
 
     return {
-        questions: data || [],
+        questions: data?.data || [],
+        nextCursor: data?.nextCursor ?? null,
         isLoading,
         error,
         refresh: () => mutate(url),
     };
+}
+
+/** Invalidate all question-list caches (used after mutations) */
+function invalidateQuestions() {
+    // Invalidate all SWR keys that start with /api/questions
+    mutate((key: string) => typeof key === 'string' && key.startsWith('/api/questions'));
 }
 
 export async function createQuestion(data: CreateQuestionInput): Promise<string> {
@@ -43,6 +78,7 @@ export async function createQuestion(data: CreateQuestionInput): Promise<string>
         throw new Error(err.error || 'Failed to create question');
     }
     const json = await res.json();
+    invalidateQuestions();
     return json.data.id;
 }
 
@@ -56,14 +92,19 @@ export async function updateQuestion(id: string, data: UpdateQuestionInput): Pro
         const err = await res.json();
         throw new Error(err.error || 'Failed to update question');
     }
+    invalidateQuestions();
 }
 
 export async function deleteQuestion(id: string): Promise<void> {
-    const res = await fetch(`/api/questions/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/questions/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+    });
     if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Failed to delete question');
     }
+    invalidateQuestions();
 }
 
 export async function importQuestions(
@@ -79,5 +120,6 @@ export async function importQuestions(
         throw new Error(err.error || 'Failed to import questions');
     }
     const json = await res.json();
+    invalidateQuestions();
     return json.data;
 }

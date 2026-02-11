@@ -1,10 +1,20 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Shell } from '@/components/layout/Shell';
-import { useExams } from '@/hooks/useExams';
-import { formatDate, computeDomainStats } from '@/lib/format';
+import { Spinner } from '@/components/ui/Spinner';
 import { TrendingUp, Target, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
+
+interface AnalyticsData {
+    totalExams: number;
+    avgScore: number;
+    passRate: number;
+    scoreTrend: Array<{ score: number; certification: string; date: string }>;
+    certBreakdown: Record<string, { exams: number; avgScore: number }>;
+    domainStats: Array<{ domain: string; percentage: number; correct: number; total: number }>;
+    readiness: number;
+}
 
 function getBarColor(pct: number): string {
     if (pct >= 70) return 'gradient-bar-success';
@@ -25,54 +35,19 @@ function getBarBgColor(score: number): string {
 }
 
 export default function AnalyticsPage() {
-    const { exams, isLoading } = useExams(50);
+    const { data: analytics, isLoading } = useSWR<AnalyticsData>(
+        '/api/analytics',
+        fetcher,
+        { revalidateOnFocus: false, dedupingInterval: 30_000 }
+    );
 
-    const { completed, scoreTrend, lastScore, scoreDelta, certBreakdown, domainList, readiness } = useMemo(() => {
-        const comp = exams.filter((e) => e.status === 'completed');
-
-        // Score trend (chronological order)
-        const trend = [...comp].reverse().map((e, i) => ({
-            index: i + 1,
-            score: e.score || 0,
-            certification: e.certification,
-            date: formatDate(e.completedAt),
-        }));
-
-        const last = trend[trend.length - 1]?.score || 0;
-        const prev = trend[trend.length - 2]?.score || 0;
-        const delta = last - prev;
-
-        // Certification breakdown
-        const certs: Record<string, { exams: number; avgScore: number; scores: number[] }> = {};
-        for (const exam of comp) {
-            if (!certs[exam.certification]) {
-                certs[exam.certification] = { exams: 0, avgScore: 0, scores: [] };
-            }
-            certs[exam.certification].exams++;
-            certs[exam.certification].scores.push(exam.score || 0);
-        }
-        for (const cert of Object.values(certs)) {
-            cert.avgScore = Math.round(cert.scores.reduce((a, b) => a + b, 0) / cert.scores.length);
-        }
-
-        // Domain aggregates via shared utility
-        const domains = computeDomainStats(comp);
-
-        // Readiness score
-        const ready = domains.length > 0
-            ? Math.round(domains.reduce((sum, d) => sum + d.percentage, 0) / domains.length)
-            : 0;
-
-        return {
-            completed: comp,
-            scoreTrend: trend,
-            lastScore: last,
-            scoreDelta: delta,
-            certBreakdown: certs,
-            domainList: domains,
-            readiness: ready,
-        };
-    }, [exams]);
+    const scoreTrend = analytics?.scoreTrend || [];
+    const lastScore = scoreTrend[scoreTrend.length - 1]?.score || 0;
+    const prevScore = scoreTrend[scoreTrend.length - 2]?.score || 0;
+    const scoreDelta = lastScore - prevScore;
+    const readiness = analytics?.readiness || 0;
+    const certBreakdown = analytics?.certBreakdown || {};
+    const domainList = analytics?.domainStats || [];
 
     return (
         <Shell>
@@ -86,9 +61,9 @@ export default function AnalyticsPage() {
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-primary" />
+                        <Spinner size={24} />
                     </div>
-                ) : completed.length === 0 ? (
+                ) : !analytics || analytics.totalExams === 0 ? (
                     <div className="flex flex-col items-center gap-4 py-20 text-center">
                         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50">
                             <TrendingUp className="h-8 w-8 text-muted-foreground/30" />
@@ -222,29 +197,25 @@ export default function AnalyticsPage() {
                                     <tr className="border-t border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                         <th className="px-6 py-3">Date</th>
                                         <th className="px-6 py-3">Cert</th>
-                                        <th className="px-6 py-3">Questions</th>
                                         <th className="px-6 py-3 text-right">Score</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                    {completed.map((exam) => (
-                                        <tr key={exam.id} className="transition-colors hover:bg-accent/20">
+                                    {[...scoreTrend].reverse().map((entry, i) => (
+                                        <tr key={i} className="transition-colors hover:bg-accent/20">
                                             <td className="px-6 py-3.5 text-sm text-muted-foreground">
-                                                {formatDate(exam.completedAt)}
+                                                {entry.date}
                                             </td>
                                             <td className="px-6 py-3.5">
                                                 <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                                    {exam.certification}
+                                                    {entry.certification}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-3.5 text-sm text-muted-foreground">
-                                                {exam.config.questionCount}
                                             </td>
                                             <td className="px-6 py-3.5 text-right">
                                                 <span
-                                                    className={`font-mono text-sm font-semibold ${(exam.score || 0) >= 70 ? 'text-emerald-400' : 'text-red-400'}`}
+                                                    className={`font-mono text-sm font-semibold ${entry.score >= 70 ? 'text-emerald-400' : 'text-red-400'}`}
                                                 >
-                                                    {exam.score}%
+                                                    {entry.score}%
                                                 </span>
                                             </td>
                                         </tr>

@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ISC2 Training — Cybersecurity Certification Practice',
+  title: 'ExamFlow — Exams Generator',
   description:
     'Premium practice exam platform for CISSP, CC, SSCP, CCSP, and CGRC certifications.',
 };

@@ -1,54 +1,23 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/firebase/server-auth';
-import { serverTimestamp } from '@/lib/firebase/admin-firestore';
-import { getAdminDb } from '@/lib/firebase/admin';
+import { withAuth } from '@/lib/api-middleware';
 import { bulkImportSchema } from '@/lib/validators';
+import { importQuestions } from '@/services/question-service';
 
 /**
  * POST /api/questions/import
- * Bulk import questions into the user's personal bank.
- * Uses Firestore WriteBatch for atomic, single-round-trip writes (max 500).
- * Body: { questions: CreateQuestionInput[] }
+ * Bulk import questions into the user's personal bank (max 500).
  */
-export async function POST(request: Request) {
-    try {
-        const user = await requireAuth();
+export const POST = withAuth(async (request, { user }) => {
+    const body = await request.json();
+    const parsed = bulkImportSchema.safeParse(body);
 
-        const body = await request.json();
-        const parsed = bulkImportSchema.safeParse(body);
-
-        if (!parsed.success) {
-            return NextResponse.json(
-                { error: 'Validation failed', details: parsed.error.flatten() },
-                { status: 400 }
-            );
-        }
-
-        const now = serverTimestamp();
-        const db = getAdminDb();
-        const batch = db.batch();
-        const ids: string[] = [];
-        const questionsCol = db.collection(`users/${user.uid}/questions`);
-
-        for (const question of parsed.data.questions) {
-            const ref = questionsCol.doc();
-            batch.set(ref, {
-                ...question,
-                createdAt: now,
-                updatedAt: now,
-            });
-            ids.push(ref.id);
-        }
-
-        await batch.commit();
-
+    if (!parsed.success) {
         return NextResponse.json(
-            { data: { imported: ids.length, ids } },
-            { status: 201 }
+            { error: 'Validation failed', details: parsed.error.flatten() },
+            { status: 400 }
         );
-    } catch (error) {
-        if (error instanceof Response) return error;
-        console.error('POST /api/questions/import error:', error);
-        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
-}
+
+    const result = await importQuestions(user.uid, parsed.data.questions);
+    return { data: result };
+});
