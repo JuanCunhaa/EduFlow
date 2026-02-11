@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-    LayoutDashboard,
     BookOpen,
     ClipboardList,
     BarChart3,
@@ -18,11 +17,10 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/exams', label: 'Practice Exam', icon: ClipboardList },
-    { href: '/study', label: 'Study Mode', icon: BookOpen },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/dashboard', label: 'Studies', icon: BookOpen },
+    { href: '/exams', label: 'Practice Exams', icon: ClipboardList },
     { href: '/questions', label: 'Question Bank', icon: Database },
+    { href: '/analytics', label: 'Progress', icon: BarChart3 },
 ];
 
 export function Sidebar() {

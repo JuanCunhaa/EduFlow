@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Shell } from '@/components/layout/Shell';
+import { Spinner } from '@/components/ui/Spinner';
 import { QuestionTable } from '@/components/questions/QuestionTable';
 import { QuestionForm } from '@/components/questions/QuestionForm';
 import { ImportDialog } from '@/components/questions/ImportDialog';
@@ -20,7 +22,17 @@ import type { CreateQuestionInput } from '@/lib/validators';
 import { Plus, Upload, Search } from 'lucide-react';
 
 export default function QuestionsPage() {
+    return (
+        <Suspense fallback={<Shell><div className="flex items-center justify-center py-20"><Spinner size={24} /></div></Shell>}>
+            <QuestionsContent />
+        </Suspense>
+    );
+}
+
+function QuestionsContent() {
     const { studies } = useStudies();
+    const searchParams = useSearchParams();
+    const studyIdParam = searchParams.get('studyId');
     const [activeStudy, setActiveStudy] = useState<Study | null>(null);
     const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
     const [search, setSearch] = useState('');
@@ -30,6 +42,14 @@ export default function QuestionsPage() {
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const { addToast } = useToast();
+
+    // Pre-select study from URL param
+    useEffect(() => {
+        if (studyIdParam && studies.length > 0 && !activeStudy) {
+            const match = studies.find(s => s.id === studyIdParam);
+            if (match) setActiveStudy(match);
+        }
+    }, [studyIdParam, studies, activeStudy]);
 
     // Auto-select first study if none selected
     const currentStudy = activeStudy || studies[0] || null;

@@ -10,6 +10,7 @@ import {
     serverTimestamp,
 } from '@/lib/firebase/admin-firestore';
 import { selectQuestions, sanitizeQuestionsForExam, scoreExam, getMissedQuestionIds } from '@/lib/exam-engine';
+import type { StrategyPerformanceData } from '@/lib/exam-engine';
 import { rateLimit } from '@/lib/rate-limit';
 import {
     ExamNotFoundError,
@@ -20,6 +21,10 @@ import {
     RateLimitError,
 } from '@/lib/errors';
 import { fetchQuestionPool } from '@/services/question-service';
+import {
+    getPerformanceSummary,
+    buildPerformanceSummaryUpdate,
+} from '@/services/performance-service';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Exam, Question, ExamConfig, DomainScore, ExamMode } from '@/types';
 
@@ -137,37 +142,51 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
         throw new NoQuestionsAvailableError('No questions available for this study');
     }
 
-    // Build performance data for smart modes
-    let performanceData: { domainScores?: Record<string, DomainScore>; missedQuestionIds?: string[] } | undefined;
+    // Build performance data for smart modes (single-doc read from PerformanceSummary)
+    let performanceData: StrategyPerformanceData | undefined;
 
-    if (config.mode === 'weak_domains' || config.mode === 'missed_topics') {
-        const recentExams = await listExams({ uid, studyId: config.studyId, limit: 20, status: 'completed' });
+    if (config.mode === 'weak_domains' || config.mode === 'recent_misses' || config.mode === 'real_mix') {
+        const summary = await getPerformanceSummary(uid, config.studyId);
 
-        if (config.mode === 'weak_domains') {
-            // Aggregate domain scores from recent exams
-            const aggDomainScores: Record<string, DomainScore> = {};
-            for (const exam of recentExams) {
-                if (exam.domainScores) {
-                    for (const [domainId, ds] of Object.entries(exam.domainScores)) {
-                        if (!aggDomainScores[domainId]) {
-                            aggDomainScores[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0, percentage: 0 };
+        if (summary) {
+            performanceData = { performanceSummary: summary };
+
+            // For weak_domains, also build legacy domainScores for backward compat
+            if (config.mode === 'weak_domains') {
+                const domainScores: Record<string, DomainScore> = {};
+                for (const [domainId, acc] of Object.entries(summary.domainAccuracy)) {
+                    domainScores[domainId] = {
+                        domainId,
+                        domain: domainId,
+                        correct: acc.correct,
+                        total: acc.total,
+                        percentage: acc.total > 0 ? Math.round((acc.correct / acc.total) * 100) : 0,
+                    };
+                }
+                performanceData.domainScores = domainScores;
+            }
+        } else {
+            // No performance summary yet — fall back to aggregating from recent exams
+            const recentExams = await listExams({ uid, studyId: config.studyId, limit: 20, status: 'completed' });
+
+            if (config.mode === 'weak_domains') {
+                const aggDomainScores: Record<string, DomainScore> = {};
+                for (const exam of recentExams) {
+                    if (exam.domainScores) {
+                        for (const [domainId, ds] of Object.entries(exam.domainScores)) {
+                            if (!aggDomainScores[domainId]) {
+                                aggDomainScores[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0, percentage: 0 };
+                            }
+                            aggDomainScores[domainId].correct += ds.correct;
+                            aggDomainScores[domainId].total += ds.total;
                         }
-                        aggDomainScores[domainId].correct += ds.correct;
-                        aggDomainScores[domainId].total += ds.total;
                     }
                 }
+                for (const ds of Object.values(aggDomainScores)) {
+                    ds.percentage = ds.total > 0 ? Math.round((ds.correct / ds.total) * 100) : 0;
+                }
+                performanceData = { domainScores: aggDomainScores };
             }
-            // Recalculate percentages
-            for (const ds of Object.values(aggDomainScores)) {
-                ds.percentage = ds.total > 0 ? Math.round((ds.correct / ds.total) * 100) : 0;
-            }
-            performanceData = { domainScores: aggDomainScores };
-        }
-
-        if (config.mode === 'missed_topics') {
-            performanceData = {
-                missedQuestionIds: getMissedQuestionIds(recentExams, allQuestions),
-            };
         }
     }
 
@@ -336,7 +355,7 @@ export async function submitExam(
     const timeSpentSeconds = Math.floor(Date.now() / 1000) - startSeconds;
     const now = serverTimestamp();
 
-    // Atomic batch write: exam update + user profile + exam history + study counter
+    // Atomic batch write: exam update + user profile + exam history + study counter + performance summary
     const batch = db.batch();
 
     batch.update(db.doc(`${examsPath(uid)}/${examId}`), {
@@ -367,6 +386,19 @@ export async function submitExam(
     // Increment exam count on study
     const studyRef = db.doc(`users/${uid}/studies/${exam.studyId}`);
     batch.update(studyRef, { examCount: FieldValue.increment(1) });
+
+    // Update performance summary (single-doc denormalized analytics)
+    if (storedCorrectAnswers && storedDomains) {
+        const existingSummary = await getPerformanceSummary(uid, exam.studyId);
+        const summaryUpdate = buildPerformanceSummaryUpdate(uid, {
+            studyId: exam.studyId,
+            questionIds: exam.questionIds,
+            answers: finalAnswers,
+            correctAnswers: storedCorrectAnswers,
+            questionDomains: storedDomains,
+        }, existingSummary);
+        batch.set(db.doc(summaryUpdate.path), summaryUpdate.data);
+    }
 
     await batch.commit();
 

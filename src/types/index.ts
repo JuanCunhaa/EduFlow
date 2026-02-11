@@ -9,7 +9,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export type ExamStatus = 'in_progress' | 'completed' | 'abandoned';
 
-export type ExamMode = 'practice' | 'weak_domains' | 'missed_topics' | 'real_mix' | 'domain_focus';
+export type ExamMode = 'practice' | 'weak_domains' | 'recent_misses' | 'real_mix' | 'domain_focus';
 
 // === Study ===
 
@@ -159,6 +159,40 @@ export type BadgeId =
     | 'perfect_score'
     | 'centurion'
     | 'domain_master';
+
+// === API ===
+
+// === Performance Summary (Firestore: users/{uid}/performanceSummary/{studyId}) ===
+
+/** Per-question attempt record stored in the performance summary */
+export interface QuestionAttemptRecord {
+    /** Number of times attempted */
+    attempts: number;
+    /** Number of times answered correctly */
+    correct: number;
+    /** Epoch ms of last attempt */
+    lastAttemptAt: number;
+    /** Was the last attempt correct? */
+    lastCorrect: boolean;
+}
+
+/**
+ * Denormalized performance summary per study.
+ * Single-doc read provides all data needed for smart exam strategies.
+ * Updated atomically on exam submission.
+ */
+export interface PerformanceSummary {
+    studyId: string;
+    /** Per-domain aggregate: { [domainId]: { correct, total } } */
+    domainAccuracy: Record<string, { correct: number; total: number }>;
+    /** Per-question attempt history (only keeps last-seen data, not full history) */
+    questionAttempts: Record<string, QuestionAttemptRecord>;
+    /** Question IDs from the last N completed exams (flat set for repeat avoidance) */
+    recentExamQuestionIds: string[];
+    /** How many past exams contributed to recentExamQuestionIds */
+    recentExamWindow: number;
+    updatedAt: number; // epoch ms
+}
 
 // === API ===
 

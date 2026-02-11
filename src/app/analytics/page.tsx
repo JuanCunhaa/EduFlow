@@ -1,8 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { Spinner } from '@/components/ui/Spinner';
+import { useStudies } from '@/hooks/useStudies';
 import { TrendingUp, Target, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
 
@@ -10,10 +13,18 @@ interface AnalyticsData {
     totalExams: number;
     avgScore: number;
     passRate: number;
-    scoreTrend: Array<{ score: number; certification: string; date: string }>;
-    certBreakdown: Record<string, { exams: number; avgScore: number }>;
+    scoreTrend: Array<{ score: number; studyId: string; date: string }>;
+    studyBreakdown: Record<string, { exams: number; avgScore: number }>;
     domainStats: Array<{ domain: string; percentage: number; correct: number; total: number }>;
     readiness: number;
+}
+
+export default function AnalyticsPage() {
+    return (
+        <Suspense fallback={<Shell><div className="flex items-center justify-center py-20"><Spinner size={24} /></div></Shell>}>
+            <AnalyticsContent />
+        </Suspense>
+    );
 }
 
 function getBarColor(pct: number): string {
@@ -34,26 +45,34 @@ function getBarBgColor(score: number): string {
     return 'gradient-bar-danger';
 }
 
-export default function AnalyticsPage() {
+function AnalyticsContent() {
+    const searchParams = useSearchParams();
+    const studyIdParam = searchParams.get('studyId') || undefined;
+    const analyticsUrl = studyIdParam ? `/api/analytics?studyId=${studyIdParam}` : '/api/analytics';
+
     const { data: analytics, isLoading } = useSWR<AnalyticsData>(
-        '/api/analytics',
+        analyticsUrl,
         fetcher,
         { revalidateOnFocus: false, dedupingInterval: 30_000 }
     );
+    const { studies } = useStudies();
+
+    // Map studyId → abbreviation for display
+    const studyNameMap = new Map(studies.map(s => [s.id, s.abbreviation]));
 
     const scoreTrend = analytics?.scoreTrend || [];
     const lastScore = scoreTrend[scoreTrend.length - 1]?.score || 0;
     const prevScore = scoreTrend[scoreTrend.length - 2]?.score || 0;
     const scoreDelta = lastScore - prevScore;
     const readiness = analytics?.readiness || 0;
-    const certBreakdown = analytics?.certBreakdown || {};
+    const studyBreakdown = analytics?.studyBreakdown || {};
     const domainList = analytics?.domainStats || [];
 
     return (
         <Shell>
             <div className="space-y-8 animate-fade-in">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Analytics</h1>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Progress</h1>
                     <p className="mt-1.5 text-sm text-muted-foreground">
                         Track your exam performance and readiness
                     </p>
@@ -142,15 +161,15 @@ export default function AnalyticsPage() {
                             </div>
                         </div>
 
-                        {/* Certification breakdown */}
+                        {/* Study breakdown */}
                         <div className="card-premium p-6">
-                            <h3 className="mb-5 text-sm font-bold text-foreground">By Certification</h3>
+                            <h3 className="mb-5 text-sm font-bold text-foreground">By Study</h3>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                {Object.entries(certBreakdown).map(([cert, data]) => (
-                                    <div key={cert} className="rounded-xl border border-border bg-accent/20 p-5 transition-all duration-200 hover:bg-accent/40">
+                                {Object.entries(studyBreakdown).map(([sid, data]) => (
+                                    <div key={sid} className="rounded-xl border border-border bg-accent/20 p-5 transition-all duration-200 hover:bg-accent/40">
                                         <div className="flex items-center justify-between">
                                             <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                                {cert}
+                                                {studyNameMap.get(sid) || sid}
                                             </span>
                                             <span className="text-xs text-muted-foreground">{data.exams} exams</span>
                                         </div>
@@ -196,7 +215,7 @@ export default function AnalyticsPage() {
                                 <thead>
                                     <tr className="border-t border-border text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                         <th className="px-6 py-3">Date</th>
-                                        <th className="px-6 py-3">Cert</th>
+                                        <th className="px-6 py-3">Study</th>
                                         <th className="px-6 py-3 text-right">Score</th>
                                     </tr>
                                 </thead>
@@ -208,7 +227,7 @@ export default function AnalyticsPage() {
                                             </td>
                                             <td className="px-6 py-3.5">
                                                 <span className="rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
-                                                    {entry.certification}
+                                                    {studyNameMap.get(entry.studyId) || entry.studyId}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-3.5 text-right">

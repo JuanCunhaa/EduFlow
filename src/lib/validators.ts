@@ -16,7 +16,7 @@ const safeString = (minLen: number) =>
 /** @deprecated Use studyId reference instead */
 export const certificationSchema = z.enum(['CISSP', 'CC', 'SSCP', 'CCSP', 'CGRC']);
 export const difficultySchema = z.enum(['easy', 'medium', 'hard']);
-export const examModeSchema = z.enum(['practice', 'weak_domains', 'missed_topics', 'real_mix', 'domain_focus']);
+export const examModeSchema = z.enum(['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus']);
 
 // === Study ===
 

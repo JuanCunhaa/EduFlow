@@ -1,6 +1,7 @@
 'use client';
 
-import { useReducer, useCallback, useEffect, useRef } from 'react';
+import { useReducer, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Shell } from '@/components/layout/Shell';
 import { ExamConfigForm } from '@/components/exams/ExamConfigForm';
 import { ExamSession } from '@/components/exams/ExamSession';
@@ -32,6 +33,7 @@ interface ActiveExam {
 }
 
 interface ExamResultData {
+    examId: string;
     score: number;
     correctAnswers: number;
     totalQuestions: number;
@@ -179,6 +181,14 @@ function clearPersistedExam() {
 // ── Component ────────────────────────────────────
 
 export default function ExamsPage() {
+    return (
+        <Suspense fallback={<Shell><div className="flex items-center justify-center min-h-[40vh]"><Spinner size={28} /></div></Shell>}>
+            <ExamsContent />
+        </Suspense>
+    );
+}
+
+function ExamsContent() {
     const [state, dispatch] = useReducer(examReducer, {
         phase: 'config',
         activeExam: null,
@@ -187,6 +197,8 @@ export default function ExamsPage() {
     });
     const { addToast } = useToast();
     const { studies } = useStudies();
+    const searchParams = useSearchParams();
+    const preselectedStudyId = searchParams.get('studyId') || undefined;
     const enqueueSave = useAnswerRetryQueue();
 
     // Recover exam session on mount (F5 recovery + server resume)
@@ -284,6 +296,7 @@ export default function ExamsPage() {
             dispatch({
                 type: 'EXAM_SUBMITTED',
                 results: {
+                    examId: state.activeExam.id,
                     score: result.score,
                     correctAnswers: result.correctAnswers,
                     totalQuestions: result.totalQuestions,
@@ -335,6 +348,7 @@ export default function ExamsPage() {
                     </div>
                     <ExamConfigForm
                         studies={studies}
+                        activeStudyId={preselectedStudyId}
                         onStart={handleStartExam}
                         isLoading={state.phase === 'creating'}
                     />
@@ -343,6 +357,7 @@ export default function ExamsPage() {
 
             {state.phase === 'results' && state.results && (
                 <ExamResults
+                    examId={state.results.examId}
                     score={state.results.score}
                     correctAnswers={state.results.correctAnswers}
                     totalQuestions={state.results.totalQuestions}

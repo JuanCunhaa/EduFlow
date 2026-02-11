@@ -1,9 +1,10 @@
 'use client';
 
-import { CheckCircle2, XCircle, TrendingUp, BarChart3 } from 'lucide-react';
-
+import { CheckCircle2, XCircle, TrendingUp, BarChart3, FileSearch } from 'lucide-react';
+import Link from 'next/link';
 
 interface ExamResultsProps {
+    examId: string;
     score: number;
     correctAnswers: number;
     totalQuestions: number;
@@ -27,6 +28,7 @@ function getTextColor(pct: number, threshold: number): string {
 }
 
 export function ExamResults({
+    examId,
     score,
     correctAnswers,
     totalQuestions,
@@ -140,6 +142,13 @@ export function ExamResults({
                 >
                     Back to Exams
                 </button>
+                <Link
+                    href={`/exams/${examId}/review`}
+                    className="flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"
+                >
+                    <FileSearch className="h-4 w-4" />
+                    Review Answers
+                </Link>
                 <button
                     onClick={onRetry}
                     className="rounded-xl bg-gradient-to-r from-primary to-primary/80 px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"

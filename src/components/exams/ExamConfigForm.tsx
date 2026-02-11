@@ -25,8 +25,8 @@ const QUESTION_COUNTS = [10, 25, 50, 100, 150];
 const EXAM_MODES: { value: ExamMode; label: string; description: string }[] = [
     { value: 'practice', label: 'Practice', description: 'Random selection across all domains' },
     { value: 'weak_domains', label: 'Weak Domains', description: 'Focus on domains you struggle with' },
-    { value: 'missed_topics', label: 'Missed Topics', description: 'Questions you previously got wrong' },
-    { value: 'real_mix', label: 'Real Mix', description: 'Simulates a real exam distribution' },
+    { value: 'recent_misses', label: 'Recent Misses', description: 'Questions you recently got wrong (time-decay weighted)' },
+    { value: 'real_mix', label: 'Real Mix', description: 'Simulates a real exam: balanced domains, mixed difficulty, no repeats' },
     { value: 'domain_focus', label: 'Domain Focus', description: 'Deep-dive into selected domains' },
 ];
 

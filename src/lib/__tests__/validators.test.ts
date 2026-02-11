@@ -35,7 +35,7 @@ describe('difficultySchema', () => {
 });
 
 describe('examModeSchema', () => {
-    it.each(['practice', 'weak_domains', 'missed_topics', 'real_mix', 'domain_focus'])(
+    it.each(['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus'])(
         'accepts: %s',
         (mode: string) => {
             expect(examModeSchema.parse(mode)).toBe(mode);
