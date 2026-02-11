@@ -20,7 +20,7 @@ import {
     NoQuestionsAvailableError,
     RateLimitError,
 } from '@/lib/errors';
-import { fetchQuestionPool } from '@/services/question-service';
+import { fetchQuestionPool, fetchQuestionsByIds } from '@/services/question-service';
 import {
     getPerformanceSummary,
     buildPerformanceSummaryUpdate,
@@ -77,6 +77,8 @@ export interface ListExamsOptions {
     studyId?: string;
     limit?: number;
     status?: string;
+    /** When true, returns full documents (needed for analytics aggregation). Default: false = lightweight list. */
+    fullDocs?: boolean;
 }
 
 export async function listExams(options: ListExamsOptions): Promise<Exam[]> {
@@ -90,6 +92,11 @@ export async function listExams(options: ListExamsOptions): Promise<Exam[]> {
     if (status) q = q.where('status', '==', status);
 
     q = q.orderBy('startedAt', 'desc').limit(limitCount);
+
+    // Lightweight projection for list views — skip answers, questionIds, internal scoring maps
+    if (!options.fullDocs) {
+        q = q.select('studyId', 'status', 'score', 'startedAt', 'completedAt', 'config', 'domainScores', 'timeSpentSeconds', 'userId');
+    }
 
     const snap = await q.get();
     return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Exam);
@@ -207,6 +214,10 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
         throw new NoQuestionsAvailableError('No questions match your filters');
     }
 
+    // Fetch full question documents only for selected questions (two-phase: pool had minimal fields)
+    const fullQuestions = await fetchQuestionsByIds(uid, selected.map(q => q.id));
+    const fullMap = new Map(fullQuestions.map(q => [q.id, q]));
+
     // Initialize empty answers
     const answers: Record<string, null> = {};
     for (const q of selected) {
@@ -214,6 +225,7 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
     }
 
     // Store correctOptionIndex + domainIds per question for zero-read scoring
+    // (these come from the lightweight pool — already available)
     const questionCorrectAnswers: Record<string, number> = {};
     const questionDomains: Record<string, string> = {};
     for (const q of selected) {
@@ -257,7 +269,7 @@ export async function createExam(uid: string, config: CreateExamInput): Promise<
             difficulty: config.difficulty,
             mode: config.mode,
         },
-        questions: sanitizeQuestionsForExam(selected),
+        questions: sanitizeQuestionsForExam(fullQuestions),
     };
 }
 
@@ -318,12 +330,11 @@ export async function submitExam(
         }
     }
 
-    // Use stored correct answers for zero-read scoring
+    // Use stored correct answers from the already-fetched exam doc (avoids double-read)
     const db = getAdminDb();
-    const examDoc = await db.doc(`${examsPath(uid)}/${examId}`).get();
-    const examData = examDoc.data()!;
-    const storedCorrectAnswers = examData.questionCorrectAnswers as Record<string, number> | undefined;
-    const storedDomains = examData.questionDomains as Record<string, string> | undefined;
+    const examRaw = exam as unknown as Record<string, unknown>;
+    const storedCorrectAnswers = examRaw.questionCorrectAnswers as Record<string, number> | undefined;
+    const storedDomains = examRaw.questionDomains as Record<string, string> | undefined;
 
     let score: number;
     let domainScores: Record<string, DomainScore>;
@@ -405,8 +416,8 @@ export async function submitExam(
 
     const correctAnswers = Math.round((score / 100) * totalQuestions);
 
-    // Post-commit: stats, badges, averageScore (fire-and-forget, non-blocking)
-    await recalculateAverageScore(uid);
+    // Post-commit: stats, badges, averageScore (all fire-and-forget, non-blocking)
+    recalculateAverageScore(uid).catch(() => {});
 
     recordActivity(uid, totalQuestions, correctAnswers, true).catch(() => {});
 
@@ -582,28 +593,53 @@ export async function getAnalytics(uid: string, studyId?: string): Promise<Analy
         };
     }
 
-    // Domain aggregates
-    const domainAgg: Record<string, { domainId: string; domain: string; correct: number; total: number }> = {};
-    for (const exam of exams) {
-        if (exam.domainScores) {
-            for (const [domainId, ds] of Object.entries(exam.domainScores)) {
-                if (!domainAgg[domainId]) {
-                    domainAgg[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0 };
+    // Domain stats — prefer PerformanceSummary (single-doc read) over re-aggregation
+    let domainStats: AnalyticsData['domainStats'] = [];
+    const studyIdsForSummary = studyId ? [studyId] : Object.keys(studies);
+
+    if (studyIdsForSummary.length > 0) {
+        const domainAgg: Record<string, { domainId: string; domain: string; correct: number; total: number }> = {};
+        let usedSummary = false;
+
+        for (const sid of studyIdsForSummary) {
+            const summary = await getPerformanceSummary(uid, sid);
+            if (summary) {
+                usedSummary = true;
+                for (const [domainId, acc] of Object.entries(summary.domainAccuracy)) {
+                    if (!domainAgg[domainId]) {
+                        domainAgg[domainId] = { domainId, domain: domainId, correct: 0, total: 0 };
+                    }
+                    domainAgg[domainId].correct += acc.correct;
+                    domainAgg[domainId].total += acc.total;
                 }
-                domainAgg[domainId].correct += ds.correct;
-                domainAgg[domainId].total += ds.total;
             }
         }
+
+        // Fallback: aggregate from exam domainScores if no summaries found
+        if (!usedSummary) {
+            for (const exam of exams) {
+                if (exam.domainScores) {
+                    for (const [domainId, ds] of Object.entries(exam.domainScores)) {
+                        if (!domainAgg[domainId]) {
+                            domainAgg[domainId] = { domainId, domain: ds.domain, correct: 0, total: 0 };
+                        }
+                        domainAgg[domainId].correct += ds.correct;
+                        domainAgg[domainId].total += ds.total;
+                    }
+                }
+            }
+        }
+
+        domainStats = Object.entries(domainAgg)
+            .map(([, { domainId, domain, correct, total }]) => ({
+                domainId,
+                domain,
+                percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
+                correct,
+                total,
+            }))
+            .sort((a, b) => a.percentage - b.percentage);
     }
-    const domainStats = Object.entries(domainAgg)
-        .map(([, { domainId, domain, correct, total }]) => ({
-            domainId,
-            domain,
-            percentage: total > 0 ? Math.round((correct / total) * 100) : 0,
-            correct,
-            total,
-        }))
-        .sort((a, b) => a.percentage - b.percentage);
 
     const readiness = domainStats.length > 0
         ? Math.round(domainStats.reduce((sum, d) => sum + d.percentage, 0) / domainStats.length)

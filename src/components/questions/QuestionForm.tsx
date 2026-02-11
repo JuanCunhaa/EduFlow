@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Question, Difficulty, StudyDomain } from '@/types';
 import type { CreateQuestionInput } from '@/lib/validators';
 import { X, Plus, Minus } from 'lucide-react';
+import { useModalA11y } from '@/hooks/useModalA11y';
 
 interface QuestionFormProps {
     question?: Question | null;
@@ -31,6 +32,7 @@ function makeEmptyForm(studyId: string): CreateQuestionInput {
 }
 
 export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: QuestionFormProps) {
+    const modalRef = useModalA11y(onClose);
     const [form, setForm] = useState<CreateQuestionInput>(() => makeEmptyForm(studyId));
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -113,8 +115,8 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+            <div ref={modalRef} className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-foreground">
@@ -122,7 +124,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                     </h2>
                     <button
                         onClick={onClose}
-                        className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                        className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground"
                     >
                         <X className="h-5 w-5" />
                     </button>
@@ -130,7 +132,7 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Row: Domain(s) + Difficulty */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Domains multi-select */}
                         <div>
                             <label className="mb-1 block text-xs font-medium text-muted-foreground">Domains</label>
@@ -155,8 +157,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Difficulty</label>
+                            <label htmlFor="q-difficulty" className="mb-1 block text-xs font-medium text-muted-foreground">Difficulty</label>
                             <select
+                                id="q-difficulty"
                                 value={form.difficulty}
                                 onChange={(e) => updateField('difficulty', e.target.value as Difficulty)}
                                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-1 focus:ring-ring"
@@ -168,8 +171,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
 
                     {/* Question Text */}
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Question</label>
+                        <label htmlFor="q-text" className="mb-1 block text-xs font-medium text-muted-foreground">Question</label>
                         <textarea
+                            id="q-text"
                             value={form.text}
                             onChange={(e) => updateField('text', e.target.value)}
                             rows={3}
@@ -231,8 +235,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
 
                     {/* Explanation */}
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Explanation</label>
+                        <label htmlFor="q-explanation" className="mb-1 block text-xs font-medium text-muted-foreground">Explanation</label>
                         <textarea
+                            id="q-explanation"
                             value={form.explanation.short}
                             onChange={(e) => updateField('explanation', { ...form.explanation, short: e.target.value })}
                             rows={3}
@@ -274,8 +279,9 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
 
                     {/* Tags */}
                     <div>
-                        <label className="mb-1 block text-xs font-medium text-muted-foreground">Tags (comma-separated)</label>
+                        <label htmlFor="q-tags" className="mb-1 block text-xs font-medium text-muted-foreground">Tags (comma-separated)</label>
                         <input
+                            id="q-tags"
                             type="text"
                             value={form.tags.join(', ')}
                             onChange={(e) => updateField('tags', e.target.value.split(',').map((t) => t.trim()).filter(Boolean))}

@@ -119,17 +119,17 @@ export function QuestionTable({
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                        <div className="flex justify-end gap-1 opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100">
                                             <button
                                                 onClick={() => onEdit(q)}
-                                                className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                                                className="rounded-md p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                                                 aria-label="Edit question"
                                             >
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>
                                             <button
                                                 onClick={() => onDelete(q.id)}
-                                                className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                                className="rounded-md p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                                 aria-label="Delete question"
                                             >
                                                 <Trash2 className="h-3.5 w-3.5" />

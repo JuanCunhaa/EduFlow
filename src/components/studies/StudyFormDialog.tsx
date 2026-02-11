@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { createStudy, updateStudy } from '@/hooks/useStudies';
+import { useModalA11y } from '@/hooks/useModalA11y';
 import type { Study, StudyDomain } from '@/types';
 
 interface StudyFormDialogProps {
@@ -17,6 +18,7 @@ function makeEmptyDomain(order: number): { id: string; abbreviation: string; nam
 
 export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProps) {
     const isEditing = !!study;
+    const modalRef = useModalA11y(onClose);
 
     const [abbreviation, setAbbreviation] = useState(study?.abbreviation || '');
     const [name, setName] = useState(study?.name || '');
@@ -88,13 +90,13 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl animate-slide-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+            <div ref={modalRef} className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl animate-slide-up">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-foreground">
                         {isEditing ? 'Edit Study' : 'New Study'}
                     </h2>
-                    <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:text-foreground">
+                    <button onClick={onClose} className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
@@ -103,8 +105,9 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                     {/* Abbreviation + Name */}
                     <div className="grid grid-cols-[100px_1fr] gap-3">
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Code</label>
+                            <label htmlFor="study-code" className="mb-1 block text-xs font-medium text-muted-foreground">Code</label>
                             <input
+                                id="study-code"
                                 type="text"
                                 value={abbreviation}
                                 onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
@@ -114,8 +117,9 @@ export function StudyFormDialog({ study, onClose, onSaved }: StudyFormDialogProp
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-muted-foreground">Full Name</label>
+                            <label htmlFor="study-name" className="mb-1 block text-xs font-medium text-muted-foreground">Full Name</label>
                             <input
+                                id="study-name"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}

@@ -36,7 +36,7 @@ export const GET = withAuth(async (request, { user }) => {
         difficulty: searchParams.get('difficulty') || undefined,
         search: searchParams.get('search') || undefined,
         cursor: searchParams.get('cursor') || undefined,
-        limit: Number.parseInt(searchParams.get('limit') || '100', 10) || 100,
+        limit: Number.parseInt(searchParams.get('limit') || '50', 10) || 50,
     });
 
     // Strip sensitive fields from list responses (content protection)

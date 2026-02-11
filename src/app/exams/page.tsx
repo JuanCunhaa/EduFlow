@@ -3,10 +3,12 @@
 import { useReducer, useCallback, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Shell } from '@/components/layout/Shell';
-import { ExamConfigForm } from '@/components/exams/ExamConfigForm';
 import { ExamSession } from '@/components/exams/ExamSession';
 import { ExamResults } from '@/components/exams/ExamResults';
 import { ExamErrorBoundary } from '@/components/exams/ExamErrorBoundary';
+import dynamic from 'next/dynamic';
+
+const ExamConfigForm = dynamic(() => import('@/components/exams/ExamConfigForm').then(m => ({ default: m.ExamConfigForm })), { ssr: false });
 import { createExam, saveAnswer, submitExam } from '@/hooks/useExams';
 import { useStudies } from '@/hooks/useStudies';
 import { useToast } from '@/components/ui/Toast';

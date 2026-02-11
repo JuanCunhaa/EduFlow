@@ -19,20 +19,49 @@ export function Header() {
     const { theme, setTheme, resolvedTheme } = useTheme();
     const router = useRouter();
     const [showThemeMenu, setShowThemeMenu] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Close dropdown on outside click
+    // Close dropdown on outside click + keyboard navigation
     useEffect(() => {
+        if (!showThemeMenu) return;
+
         function handleClickOutside(e: MouseEvent) {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setShowThemeMenu(false);
             }
         }
-        if (showThemeMenu) {
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
+
+        function handleKeyDown(e: KeyboardEvent) {
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    setHighlightedIndex(prev => Math.min(prev + 1, THEME_OPTIONS.length - 1));
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    setHighlightedIndex(prev => Math.max(prev - 1, 0));
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (highlightedIndex >= 0) {
+                        setTheme(THEME_OPTIONS[highlightedIndex].value);
+                        setShowThemeMenu(false);
+                    }
+                    break;
+                case 'Escape':
+                    setShowThemeMenu(false);
+                    break;
+            }
         }
-    }, [showThemeMenu]);
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showThemeMenu, highlightedIndex, setTheme]);
 
     async function handleLogOut() {
         try {
@@ -51,22 +80,28 @@ export function Header() {
                 {/* Theme toggle */}
                 <div className="relative" ref={menuRef}>
                     <button
-                        onClick={() => setShowThemeMenu(!showThemeMenu)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"
+                        onClick={() => { setShowThemeMenu(!showThemeMenu); setHighlightedIndex(-1); }}
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"
                         aria-label="Toggle theme"
+                        aria-expanded={showThemeMenu}
+                        aria-haspopup="listbox"
                     >
                         <ActiveIcon className="h-4 w-4" />
                     </button>
 
                     {showThemeMenu && (
-                        <div className="absolute right-0 top-full mt-2 w-36 rounded-xl border border-border glass-panel p-1.5 shadow-xl animate-slide-up">
-                            {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
+                        <div className="absolute right-0 top-full mt-2 w-36 rounded-xl border border-border glass-panel p-1.5 shadow-xl animate-slide-up" role="listbox" aria-label="Theme">
+                            {THEME_OPTIONS.map(({ value, label, icon: Icon }, index) => (
                                 <button
                                     key={value}
                                     onClick={() => { setTheme(value); setShowThemeMenu(false); }}
-                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-200 ${theme === value
-                                        ? 'bg-primary/10 text-primary font-medium'
-                                        : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
+                                    role="option"
+                                    aria-selected={theme === value}
+                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 min-h-[44px] text-sm transition-all duration-200 ${index === highlightedIndex
+                                        ? 'bg-accent/50 text-foreground'
+                                        : theme === value
+                                            ? 'bg-primary/10 text-primary font-medium'
+                                            : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
                                         }`}
                                 >
                                     <Icon className="h-3.5 w-3.5" />
@@ -105,7 +140,7 @@ export function Header() {
                 {/* Logout */}
                 <button
                     onClick={handleLogOut}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
+                    className="flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive"
                     aria-label="Sign out"
                 >
                     <LogOut className="h-4 w-4" />

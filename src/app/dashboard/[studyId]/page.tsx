@@ -7,9 +7,11 @@ import { useExams } from '@/hooks/useExams';
 import { useStats } from '@/hooks/useStats';
 import { Spinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { StudyFormDialog } from '@/components/studies/StudyFormDialog';
-import { BadgeGallery } from '@/components/retention/BadgeGallery';
-import { DailyChallengeModal } from '@/components/retention/DailyChallengeModal';
+import dynamic from 'next/dynamic';
+
+const StudyFormDialog = dynamic(() => import('@/components/studies/StudyFormDialog').then(m => ({ default: m.StudyFormDialog })), { ssr: false });
+const BadgeGallery = dynamic(() => import('@/components/retention/BadgeGallery').then(m => ({ default: m.BadgeGallery })), { ssr: false });
+const DailyChallengeModal = dynamic(() => import('@/components/retention/DailyChallengeModal').then(m => ({ default: m.DailyChallengeModal })), { ssr: false });
 import { formatTimeAgo } from '@/lib/format';
 import {
     ArrowLeft,

@@ -5,9 +5,11 @@ import { useSearchParams } from 'next/navigation';
 import { Shell } from '@/components/layout/Shell';
 import { Spinner } from '@/components/ui/Spinner';
 import { QuestionTable } from '@/components/questions/QuestionTable';
-import { QuestionForm } from '@/components/questions/QuestionForm';
-import { ImportDialog } from '@/components/questions/ImportDialog';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import dynamic from 'next/dynamic';
+
+const QuestionForm = dynamic(() => import('@/components/questions/QuestionForm').then(m => ({ default: m.QuestionForm })), { ssr: false });
+const ImportDialog = dynamic(() => import('@/components/questions/ImportDialog').then(m => ({ default: m.ImportDialog })), { ssr: false });
 import {
     useQuestions,
     createQuestion,

@@ -190,7 +190,7 @@ function AnalyticsContent() {
                                 {domainList.map(({ domain, percentage, correct, total }) => (
                                     <div key={domain} className="space-y-1.5">
                                         <div className="flex items-center justify-between text-sm">
-                                            <span className="text-muted-foreground truncate max-w-[250px]">{domain}</span>
+                                            <span className="text-muted-foreground truncate max-w-[40vw] sm:max-w-[250px]">{domain}</span>
                                             <span className={`font-mono font-semibold ${getTextColor(percentage)}`}>
                                                 {correct}/{total} ({percentage}%)
                                             </span>

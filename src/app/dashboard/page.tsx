@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { StudyFormDialog } from '@/components/studies/StudyFormDialog';
+import dynamic from 'next/dynamic';
+
+const StudyFormDialog = dynamic(() => import('@/components/studies/StudyFormDialog').then(m => ({ default: m.StudyFormDialog })), { ssr: false });
 
 function StudyCard({ study }: { study: Study }) {
     const domainCount = study.domains.length;

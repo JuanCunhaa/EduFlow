@@ -180,8 +180,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 12px var(--glow), 0 0 24px var(--glow); }
-  50% { box-shadow: 0 0 20px var(--glow), 0 0 40px var(--glow); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
 /* ── Utility classes ─────────────────────────── */
@@ -215,9 +215,10 @@
   /* Glass morphism panel */
   .glass-panel {
     background: oklch(from var(--card) l c h / 60%);
-    backdrop-filter: blur(20px) saturate(1.2);
-    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
     border: 1px solid oklch(1 0 0 / 8%);
+    will-change: transform;
   }
 
   /* Gradient text */
@@ -264,7 +265,18 @@
     height: 600px;
     border-radius: 50%;
     background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
-    filter: blur(80px);
+    filter: blur(40px);
     opacity: 0.6;
+  }
+}
+
+/* ── Accessibility ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

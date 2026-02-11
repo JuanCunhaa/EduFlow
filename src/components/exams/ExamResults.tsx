@@ -135,7 +135,7 @@ export function ExamResults({
             )}
 
             {/* Actions */}
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center sm:items-center">
                 <button
                     onClick={onBackToExams}
                     className="rounded-xl border border-border px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-accent/30 hover:text-foreground"

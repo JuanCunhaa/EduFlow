@@ -9,7 +9,9 @@ import { NextResponse } from 'next/server';
  */
 export const GET = withAuth(async (_request, { user }) => {
     const stats = await getStats(user.uid);
-    return { data: stats };
+    const res = NextResponse.json({ data: stats });
+    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
+    return res;
 });
 
 /**

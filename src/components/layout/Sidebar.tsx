@@ -33,6 +33,14 @@ export function Sidebar() {
         setMobileOpen(false);
     }, [pathname]);
 
+    // Lock body scroll when mobile sidebar is open
+    useEffect(() => {
+        if (mobileOpen) {
+            document.body.style.overflow = 'hidden';
+            return () => { document.body.style.overflow = ''; };
+        }
+    }, [mobileOpen]);
+
     return (
         <>
             {/* Mobile hamburger button */}

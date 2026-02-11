@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { X, CheckCircle2, XCircle, ChevronRight, Loader2 } from 'lucide-react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
+import { useModalA11y } from '@/hooks/useModalA11y';
 
 interface ChallengeQuestion {
     id: string;
@@ -59,9 +60,11 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
         else onClose();
     }, [submitted, onCompleted, onClose]);
 
+    const modalRef = useModalA11y(handleClose);
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card shadow-2xl animate-slide-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+            <div ref={modalRef} className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card shadow-2xl animate-slide-up">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border px-6 py-4">
                     <div>
@@ -70,7 +73,7 @@ export function DailyChallengeModal({ studyId, onClose, onCompleted }: DailyChal
                             {data?.date || 'Loading...'} — {totalQuestions} questions from your weak domains
                         </p>
                     </div>
-                    <button onClick={handleClose} className="rounded-md p-1 text-muted-foreground hover:text-foreground">
+                    <button onClick={handleClose} className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>

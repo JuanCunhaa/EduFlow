@@ -9,7 +9,9 @@ import { getExamForClient, saveAnswer } from '@/services/exam-service';
  */
 export const GET = withAuth(async (_request, { user, params }) => {
     const exam = await getExamForClient(user.uid, params.examId);
-    return { data: exam };
+    const res = NextResponse.json({ data: exam });
+    res.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=60');
+    return res;
 });
 
 /**

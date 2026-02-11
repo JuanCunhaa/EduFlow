@@ -210,8 +210,25 @@ export async function fetchQuestionPool(options: FetchQuestionPoolOptions): Prom
         q = q.where('domainIds', 'array-contains-any', domainIds.slice(0, 10));
     }
 
+    // Lightweight projection — only fields needed for selection engine + scoring
+    q = q.select('studyId', 'domainIds', 'difficulty', 'correctOptionIndex');
+
     const snap = await q.limit(fetchLimit).get();
     return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Question);
+}
+
+/**
+ * Fetch full Question documents by ID — used after selection to get text, options, etc.
+ */
+export async function fetchQuestionsByIds(uid: string, questionIds: string[]): Promise<Question[]> {
+    if (questionIds.length === 0) return [];
+    const db = getAdminDb();
+    const col = db.collection(questionsPath(uid));
+    const refs = questionIds.map(id => col.doc(id));
+    const snaps = await db.getAll(...refs);
+    return snaps
+        .filter(s => s.exists)
+        .map(s => ({ id: s.id, ...s.data() }) as Question);
 }
 
 /**

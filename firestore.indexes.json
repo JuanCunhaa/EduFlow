@@ -91,6 +91,20 @@
                     "order": "DESCENDING"
                 }
             ]
+        },
+        {
+            "collectionGroup": "exams",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "status",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "questionIds",
+                    "arrayConfig": "CONTAINS"
+                }
+            ]
         }
     ],
     "fieldOverrides": []

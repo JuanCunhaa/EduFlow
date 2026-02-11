@@ -144,6 +144,7 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                         value={timeLimitMinutes}
                         onChange={(e) => setTimeLimitMinutes(Number.parseInt(e.target.value, 10))}
                         className="flex-1 accent-primary"
+                        aria-label="Time limit in minutes"
                     />
                     <span className="min-w-[4rem] text-right font-mono text-sm font-semibold text-foreground">
                         {timeLimitMinutes} min

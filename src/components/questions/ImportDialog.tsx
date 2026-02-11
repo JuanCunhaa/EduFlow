@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X, Upload, FileJson } from 'lucide-react';
+import { useModalA11y } from '@/hooks/useModalA11y';
 
 interface ImportDialogProps {
     onImport: (jsonText: string) => Promise<void>;
@@ -34,6 +35,7 @@ const SAMPLE_JSON = `[
 ]`;
 
 export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
+    const modalRef = useModalA11y(onClose);
     const [jsonText, setJsonText] = useState('');
     const [importing, setImporting] = useState(false);
     const [error, setError] = useState('');
@@ -77,11 +79,11 @@ export function ImportDialog({ onImport, onClose }: ImportDialogProps) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+            <div ref={modalRef} className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-2xl">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground">Import Questions</h2>
-                    <button onClick={onClose} className="rounded-md p-1 text-muted-foreground hover:text-foreground">
+                    <button onClick={onClose} className="rounded-md p-1 min-w-[44px] min-h-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
