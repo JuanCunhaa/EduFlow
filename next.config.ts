@@ -15,7 +15,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: https:",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com",
+      "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com",
       "frame-src https://accounts.google.com https://*.firebaseapp.com",
     ].join('; '),
   },
@@ -25,10 +25,11 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-  // COOP: safe to use same-origin now that we use signInWithRedirect
-  // instead of signInWithPopup (redirect flow doesn't need cross-origin
-  // window access).
-  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  // COOP: same-origin-allow-popups is required for signInWithPopup.
+  // 'same-origin' would sever the connection between our window and the
+  // Google OAuth popup, preventing the Firebase SDK from receiving the
+  // auth credential back.
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
 ];
 
 const nextConfig: NextConfig = {
