@@ -2,7 +2,6 @@ import {
     GoogleAuthProvider,
     onAuthStateChanged,
     signInWithRedirect,
-    getRedirectResult,
     signOut as firebaseSignOut,
     type User,
 } from 'firebase/auth';
@@ -23,26 +22,25 @@ export async function signInWithGoogle(): Promise<void> {
 }
 
 /**
- * Check for redirect result on page load.
- * After signInWithRedirect the user is navigated away to Google and then
- * back; this function picks up the result and sets the auth cookie.
- * Call this once when the app initialises.
+ * Ensure the server-side session cookie exists for the given user.
+ * Called by AuthProvider every time onAuthStateChanged fires with a user,
+ * guaranteeing that the cookie is set **before** any authenticated page
+ * or API route is accessed.
+ *
+ * This replaces the old handleRedirectResult approach which suffered from
+ * a race condition — onAuthStateChanged could fire before getRedirectResult
+ * resolved, causing the UI to navigate to authenticated pages before the
+ * cookie was created.
  */
-export async function handleRedirectResult(): Promise<User | null> {
-    try {
-        const result = await getRedirectResult(getClientAuth());
-        if (result?.user) {
-            const idToken = await result.user.getIdToken();
-            await fetch('/api/auth/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken }),
-            });
-            return result.user;
-        }
-        return null;
-    } catch {
-        return null;
+export async function ensureSessionCookie(user: User): Promise<void> {
+    const idToken = await user.getIdToken();
+    const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+    });
+    if (!res.ok) {
+        throw new Error('Failed to create session cookie');
     }
 }
 

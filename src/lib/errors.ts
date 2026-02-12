@@ -145,3 +145,28 @@ export class NoQuestionsAvailableError extends BadRequestError {
         this.name = 'NoQuestionsAvailableError';
     }
 }
+
+// ── Marketplace errors ───────────────────────────
+export class MarketplaceStudyNotFoundError extends NotFoundError {
+    constructor() {
+        super('Marketplace study');
+        this.name = 'MarketplaceStudyNotFoundError';
+    }
+}
+
+export class MarketplaceQuestionNotFoundError extends NotFoundError {
+    constructor() {
+        super('Marketplace question');
+        this.name = 'MarketplaceQuestionNotFoundError';
+    }
+}
+
+export class MarketplaceImportConflictError extends ConflictError {
+    constructor(overlappingDomainIds: string[]) {
+        super(
+            `Already imported domains: ${overlappingDomainIds.join(', ')}. ` +
+            'Delete your existing study to reimport, or select different domains.'
+        );
+        this.name = 'MarketplaceImportConflictError';
+    }
+}

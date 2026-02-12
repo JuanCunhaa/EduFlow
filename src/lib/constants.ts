@@ -43,3 +43,26 @@ export const EXAM_CREATE_RATE_LIMIT = 5;
 
 /** Max answer saves per minute per user */
 export const ANSWER_SAVE_RATE_LIMIT = 60;
+
+// ── Marketplace ──────────────────────────────────
+
+/** Max marketplace imports per hour per user */
+export const MARKETPLACE_IMPORT_RATE_LIMIT = 5;
+
+/** Rate window for marketplace imports (1 hour) */
+export const MARKETPLACE_IMPORT_RATE_WINDOW = 3_600_000;
+
+/** Max marketplace browse requests per minute per user */
+export const MARKETPLACE_BROWSE_RATE_LIMIT = 60;
+
+/** Max marketplace admin writes per minute */
+export const MARKETPLACE_ADMIN_RATE_LIMIT = 30;
+
+/** Max questions per single marketplace import */
+export const MARKETPLACE_IMPORT_MAX_QUESTIONS = 498;
+
+/** Max domains selectable per import */
+export const MARKETPLACE_IMPORT_MAX_DOMAINS = 10;
+
+/** Firestore batch write limit (reserved 2 for study doc + marketplace counter update) */
+export const FIRESTORE_BATCH_LIMIT = 500;

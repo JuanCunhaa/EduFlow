@@ -195,6 +195,68 @@ export interface QuestionNote {
     updatedAt: number; // epoch ms
 }
 
+// === Marketplace ===
+
+/** Domain with optional description for marketplace display */
+export interface MarketplaceDomain extends StudyDomain {
+    description?: string;
+}
+
+/** A study published in the global marketplace (not user-scoped) */
+export interface MarketplaceStudy {
+    id: string;
+    abbreviation: string;
+    name: string;
+    description: string;
+    domains: MarketplaceDomain[];
+    questionCount: number;
+    domainQuestionCounts: Record<string, number>;
+    importCount: number;
+    accentColor?: string;
+    tags: string[];
+    isActive: boolean;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    createdBy: string;
+}
+
+/** A question published in the global marketplace */
+export interface MarketplaceQuestion {
+    id: string;
+    studyId: string;
+    domainIds: string[];
+    text: string;
+    options: Option[];
+    correctOptionIndex: number;
+    explanation: Explanation;
+    difficulty: Difficulty;
+    tags: string[];
+    isActive: boolean;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    createdBy: string;
+}
+
+/** Lineage metadata added to user docs after marketplace import */
+export interface SourceMetadata {
+    type: 'marketplace';
+    marketplaceStudyId: string;
+    importedAt: Timestamp;
+    /** Domain IDs that were selected during import (study only) */
+    importedDomainIds?: string[];
+    /** Question count at time of import (study only) */
+    marketplaceQuestionCount?: number;
+    /** Original question ID in marketplace (question only) */
+    marketplaceQuestionId?: string;
+}
+
+/** Result returned by the import operation */
+export interface MarketplaceImportResult {
+    studyId: string;
+    importedQuestions: number;
+    importedDomains: number;
+}
+
 // === API ===
 
 // Re-export API types from dedicated module

@@ -105,6 +105,49 @@ export const updateGoalSchema = z.object({
     message: 'At least one goal field is required',
 });
 
+// === Marketplace ===
+
+export const marketplaceDomainSchema = studyDomainSchema.extend({
+    description: z.string().max(500).transform(stripHtml).optional(),
+});
+
+export const createMarketplaceStudySchema = z.object({
+    abbreviation: safeString(1).pipe(z.string().max(20)),
+    name: safeString(2).pipe(z.string().max(200)),
+    description: safeString(10).pipe(z.string().max(2000)),
+    domains: z.array(marketplaceDomainSchema).min(1).max(30),
+    accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    tags: z.array(z.string().transform(stripHtml).pipe(z.string().max(50))).max(20).default([]),
+});
+
+export const updateMarketplaceStudySchema = createMarketplaceStudySchema.partial();
+
+const marketplaceQuestionBaseSchema = z.object({
+    domainIds: z.array(z.string().min(1)).min(1).max(10),
+    text: safeString(10),
+    options: z.array(optionSchema).min(4).max(5),
+    correctOptionIndex: z.number().int().min(0).max(4),
+    explanation: explanationSchema,
+    difficulty: difficultySchema,
+    tags: z.array(z.string().transform(stripHtml)).default([]),
+});
+
+export const createMarketplaceQuestionSchema = marketplaceQuestionBaseSchema.refine(
+    (data) => data.correctOptionIndex < data.options.length,
+    { message: 'correctOptionIndex must be less than the number of options', path: ['correctOptionIndex'] }
+);
+
+export const updateMarketplaceQuestionSchema = marketplaceQuestionBaseSchema.partial();
+
+export const marketplaceBulkQuestionsSchema = z.object({
+    questions: z.array(createMarketplaceQuestionSchema).min(1).max(500),
+});
+
+export const marketplaceImportSchema = z.object({
+    studyId: z.string().min(1),
+    domainIds: z.array(z.string().min(1)).min(1).max(10),
+});
+
 // === Type Exports ===
 
 export type CreateStudyInput = z.infer<typeof createStudySchema>;
@@ -116,3 +159,9 @@ export type ExamConfigInput = z.infer<typeof examConfigSchema>;
 export type SubmitAnswerInput = z.infer<typeof submitAnswerSchema>;
 export type BulkImportInput = z.infer<typeof bulkImportSchema>;
 export type UpdateGoalInput = z.infer<typeof updateGoalSchema>;
+export type CreateMarketplaceStudyInput = z.infer<typeof createMarketplaceStudySchema>;
+export type UpdateMarketplaceStudyInput = z.infer<typeof updateMarketplaceStudySchema>;
+export type CreateMarketplaceQuestionInput = z.infer<typeof createMarketplaceQuestionSchema>;
+export type UpdateMarketplaceQuestionInput = z.infer<typeof updateMarketplaceQuestionSchema>;
+export type MarketplaceBulkQuestionsInput = z.infer<typeof marketplaceBulkQuestionsSchema>;
+export type MarketplaceImportInput = z.infer<typeof marketplaceImportSchema>;

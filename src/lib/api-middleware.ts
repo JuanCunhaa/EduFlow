@@ -11,9 +11,9 @@
  */
 
 import { NextResponse } from 'next/server';
-import { verifyAuth, verifyAuthStrict, type AuthUser } from '@/lib/firebase/server-auth';
+import { verifyAuth, verifyAuthStrict, isAdmin, type AuthUser } from '@/lib/firebase/server-auth';
 import { createRequestLogger } from '@/lib/logger';
-import { AppError, UnauthorizedError } from '@/lib/errors';
+import { AppError, UnauthorizedError, ForbiddenError } from '@/lib/errors';
 
 export type { AuthUser } from '@/lib/firebase/server-auth';
 
@@ -195,4 +195,20 @@ export function withPublicRoute(
             );
         }
     };
+}
+
+/**
+ * Same as withAuth but requires admin role.
+ * Always uses checkRevoked for extra security on admin operations.
+ */
+export function withAdmin(
+    handler: AuthenticatedHandler,
+    options: Omit<WithAuthOptions, 'checkRevoked'> = {}
+) {
+    return withAuth(async (request, context) => {
+        if (!isAdmin(context.user)) {
+            throw new ForbiddenError('Admin access required');
+        }
+        return handler(request, context);
+    }, { ...options, checkRevoked: true });
 }

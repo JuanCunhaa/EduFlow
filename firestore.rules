@@ -44,6 +44,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Marketplace studies: read-only for authenticated users, writes via Admin SDK only
+    match /marketplace_studies/{studyId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Marketplace questions: read-only for authenticated users, writes via Admin SDK only
+    match /marketplace_questions/{questionId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
     // Rate limits: internal collection, no client access
     match /_rateLimits/{doc} {
       allow read, write: if false;

@@ -8,6 +8,7 @@ import {
     ClipboardList,
     BarChart3,
     Database,
+    Store,
     ChevronLeft,
     ChevronRight,
     Menu,
@@ -21,6 +22,7 @@ const NAV_KEYS = [
     { href: '/exams', key: 'practiceExams', icon: ClipboardList },
     { href: '/questions', key: 'questionBank', icon: Database },
     { href: '/analytics', key: 'progress', icon: BarChart3 },
+    { href: '/marketplace', key: 'marketplace', icon: Store },
 ] as const;
 
 export function Sidebar() {

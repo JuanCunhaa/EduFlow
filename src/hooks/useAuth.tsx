@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthChange, signInWithGoogle, signOut, handleRedirectResult } from '@/lib/firebase/auth';
+import { onAuthChange, signInWithGoogle, signOut, ensureSessionCookie } from '@/lib/firebase/auth';
 
 interface AuthContextValue {
     user: User | null;
@@ -16,14 +16,32 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const sessionSyncedRef = useRef(false);
 
     useEffect(() => {
-        const unsubscribe = onAuthChange((firebaseUser: User | null) => {
-            setUser(firebaseUser);
+        const unsubscribe = onAuthChange(async (firebaseUser: User | null) => {
+            if (firebaseUser) {
+                // Ensure the session cookie exists before exposing the user.
+                // This avoids the race condition where the UI navigates to
+                // an authenticated page before the cookie is set.
+                if (!sessionSyncedRef.current) {
+                    try {
+                        await ensureSessionCookie(firebaseUser);
+                        sessionSyncedRef.current = true;
+                    } catch {
+                        // Cookie creation failed — treat as signed out
+                        setUser(null);
+                        setLoading(false);
+                        return;
+                    }
+                }
+                setUser(firebaseUser);
+            } else {
+                sessionSyncedRef.current = false;
+                setUser(null);
+            }
             setLoading(false);
         });
-        // Check for redirect result (fallback for popup-blocked)
-        handleRedirectResult().catch(() => {});
         return unsubscribe;
     }, []);
 
