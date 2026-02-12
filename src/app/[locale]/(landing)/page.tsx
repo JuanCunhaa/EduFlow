@@ -83,6 +83,7 @@ export default function LandingPage() {
             <Benefits />
             <HowItWorks />
             <ProductDepth />
+            <Pricing />
             <FinalCTA />
             <Footer />
         </div>
@@ -107,6 +108,12 @@ function Nav() {
                     <span className="text-lg font-semibold tracking-tight">{t('brand')}</span>
                 </Link>
                 <div className="flex items-center gap-3">
+                    <a
+                        href="#pricing"
+                        className="hidden sm:inline-flex text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                        Pricing
+                    </a>
                     <button
                         type="button"
                         onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
@@ -382,7 +389,114 @@ function ProductDepth() {
     );
 }
 
-// ── 7. Final CTA ─────────────────────────────────
+// ── 7. Pricing ───────────────────────────────────
+
+const FREE_FEATURES = ['f1', 'f2', 'f3', 'f4', 'f5'] as const;
+const PRO_FEATURES = ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10'] as const;
+const TEAM_FEATURES = ['f1', 'f2', 'f3', 'f4'] as const;
+
+function Pricing() {
+    const t = useTranslations('pricing');
+
+    return (
+        <AnimatedSection id="pricing" className="py-24 sm:py-32">
+            <div className="mx-auto max-w-6xl px-6">
+                <motion.div variants={fadeUp} className="text-center mb-14">
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">{t('title')}</h2>
+                    <p className="mt-4 text-muted-foreground text-lg max-w-md mx-auto">{t('subtitle')}</p>
+                </motion.div>
+
+                <div className="grid gap-6 md:grid-cols-3 items-start">
+                    {/* Free */}
+                    <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card/50 p-6 sm:p-8 backdrop-blur-sm">
+                        <h3 className="text-lg font-semibold">{t('tier.free.name')}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('tier.free.description')}</p>
+                        <div className="mt-4 flex items-baseline gap-1">
+                            <span className="text-4xl font-bold">$0</span>
+                            <span className="text-muted-foreground text-sm">/ {t('tier.free.period')}</span>
+                        </div>
+                        <Link
+                            href="/login"
+                            className="mt-6 flex w-full items-center justify-center rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold transition-all hover:bg-accent/30"
+                        >
+                            {t('tier.free.cta')}
+                        </Link>
+                        <ul className="mt-8 space-y-3">
+                            {FREE_FEATURES.map((key) => (
+                                <li key={key} className="flex items-start gap-2">
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                    <span className="text-sm text-muted-foreground">{t(`tier.free.${key}`)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </motion.div>
+
+                    {/* Pro — highlighted */}
+                    <motion.div variants={fadeUp} className="relative rounded-2xl border-2 border-primary/30 bg-card/50 p-6 sm:p-8 backdrop-blur-sm shadow-lg shadow-primary/5">
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold text-primary-foreground">
+                            {t('tier.pro.badge')}
+                        </div>
+                        <h3 className="text-lg font-semibold">{t('tier.pro.name')}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('tier.pro.description')}</p>
+                        <div className="mt-4 flex items-baseline gap-1">
+                            <span className="text-4xl font-bold">$29</span>
+                            <span className="text-muted-foreground text-sm">{t('tier.pro.perMonth')}</span>
+                        </div>
+                        <Link
+                            href="/login"
+                            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all hover:brightness-110 shadow-md shadow-primary/20"
+                        >
+                            {t('tier.pro.cta')}
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
+                        <ul className="mt-8 space-y-3">
+                            {PRO_FEATURES.map((key) => (
+                                <li key={key} className="flex items-start gap-2">
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                                    <span className="text-sm text-foreground">{t(`tier.pro.${key}`)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </motion.div>
+
+                    {/* Team */}
+                    <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card/50 p-6 sm:p-8 backdrop-blur-sm">
+                        <div className="mb-1 inline-block rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                            {t('tier.team.badge')}
+                        </div>
+                        <h3 className="text-lg font-semibold">{t('tier.team.name')}</h3>
+                        <p className="mt-1 text-sm text-muted-foreground">{t('tier.team.description')}</p>
+                        <div className="mt-4 flex items-baseline gap-1">
+                            <span className="text-4xl font-bold">$49</span>
+                            <span className="text-muted-foreground text-sm">{t('tier.team.perUser')}</span>
+                        </div>
+                        <button
+                            disabled
+                            className="mt-6 flex w-full items-center justify-center rounded-xl border border-border bg-card px-6 py-3 text-sm font-semibold text-muted-foreground opacity-60 cursor-not-allowed"
+                        >
+                            {t('tier.team.cta')}
+                        </button>
+                        <ul className="mt-8 space-y-3">
+                            {TEAM_FEATURES.map((key) => (
+                                <li key={key} className="flex items-start gap-2">
+                                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                                    <span className="text-sm text-muted-foreground">{t(`tier.team.${key}`)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </motion.div>
+                </div>
+
+                {/* Footer */}
+                <motion.p variants={fadeIn} className="mt-10 text-center text-xs text-muted-foreground">
+                    {t('footer.secure')}
+                </motion.p>
+            </div>
+        </AnimatedSection>
+    );
+}
+
+// ── 8. Final CTA ─────────────────────────────────
 
 function FinalCTA() {
     const t = useTranslations('landing.cta');

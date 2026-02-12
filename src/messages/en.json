@@ -310,6 +310,7 @@
     "questionBank": "Question Bank",
     "progress": "Progress",
     "marketplace": "Marketplace",
+    "settings": "Settings",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "expandSidebar": "Expand sidebar",
@@ -623,6 +624,169 @@
         "invalid": "Invalid JSON format"
       },
       "forbidden": "You don't have permission to access this page"
+    }
+  },
+
+  "billing": {
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Manage your account and subscription"
+    },
+    "plan": {
+      "free": "Free",
+      "pro": "Pro",
+      "team": "Team",
+      "trial": "Pro Trial",
+      "pastDue": "Payment Issue",
+      "canceling": "Cancels {date}"
+    },
+    "cta": {
+      "upgrade": "Upgrade",
+      "startTrial": "Start free trial",
+      "managePlan": "Manage subscription",
+      "canceledNotice": "Your plan cancels on {date}. Reactivate →",
+      "pastDueNotice": "Payment failed. Update payment method →"
+    },
+    "checkout": {
+      "success": "Welcome to Pro! Your account has been upgraded.",
+      "activating": "Activating your account…",
+      "activatingDetail": "Almost done! Your account is being activated. Refresh if needed."
+    },
+    "featureLock": {
+      "tooltip": "Available with Pro"
+    },
+    "paywall": {
+      "cta": "Upgrade to Pro",
+      "maybeLater": "Maybe later",
+      "used": "used",
+      "daily_exam_limit": {
+        "title": "Daily exam limit reached",
+        "body": "Free accounts include 3 exams per day. Upgrade to Pro for unlimited exams."
+      },
+      "exam_question_limit": {
+        "title": "Need more questions?",
+        "body": "Free exams are limited to 25 questions. Pro exams support up to 150."
+      },
+      "advanced_exam_modes": {
+        "title": "Unlock smart study modes",
+        "body": "Spaced Review, Weak Domains, and 4 more adaptive modes are available with Pro."
+      },
+      "question_pool_limit": {
+        "title": "Full question bank access",
+        "body": "Free accounts can access 50 questions per study. Upgrade for the full question bank."
+      },
+      "analytics": {
+        "title": "Track your progress",
+        "body": "Unlock score trends, readiness predictions, and domain mastery insights."
+      },
+      "csv_export": {
+        "title": "Export your data",
+        "body": "Download your exam history and scores as CSV with Pro."
+      },
+      "marketplace_import_limit": {
+        "title": "Import more content",
+        "body": "Free accounts include 1 marketplace import. Upgrade for unlimited."
+      },
+      "question_creation_limit": {
+        "title": "Create more questions",
+        "body": "You've reached the free limit. Upgrade for unlimited question creation."
+      },
+      "study_creation_limit": {
+        "title": "Add more studies",
+        "body": "Free accounts include 2 studies. Upgrade for unlimited."
+      },
+      "bulk_import": {
+        "title": "Bulk import available with Pro",
+        "body": "Import up to 500 questions at once with Pro."
+      },
+      "question_notes": {
+        "title": "Take notes on questions",
+        "body": "Question notes are a Pro feature. Upgrade to annotate your study material."
+      }
+    }
+  },
+
+  "pricing": {
+    "title": "Simple, transparent pricing",
+    "subtitle": "Start free. Upgrade when you're ready to get serious about passing.",
+    "backToDashboard": "Back to Dashboard",
+    "signIn": "Sign in",
+    "toggle": {
+      "monthly": "Monthly",
+      "annual": "Annual",
+      "label": "Toggle billing interval",
+      "save": "Save 43%"
+    },
+    "tier": {
+      "free": {
+        "name": "Free",
+        "period": "forever",
+        "description": "Perfect for trying ExamFlow and casual studying.",
+        "cta": "Get started",
+        "currentPlan": "Current plan",
+        "f1": "3 practice exams per day",
+        "f2": "Up to 25 questions per exam",
+        "f3": "Practice and Domain Focus modes",
+        "f4": "Post-exam score breakdown",
+        "f5": "Daily challenge & streaks"
+      },
+      "pro": {
+        "name": "Pro",
+        "perMonth": "/month",
+        "perMonthAnnual": "/mo, billed annually",
+        "description": "Everything you need to pass your certification exam.",
+        "badge": "7-day free trial",
+        "cta": "Start free trial",
+        "currentPlan": "Current plan",
+        "loading": "Redirecting…",
+        "f1": "Unlimited exams",
+        "f2": "Up to 150 questions per exam",
+        "f3": "All 6 study modes including Spaced Review",
+        "f4": "Full analytics dashboard",
+        "f5": "Score trends & readiness prediction",
+        "f6": "Domain mastery breakdown",
+        "f7": "Unlimited question creation",
+        "f8": "Unlimited marketplace imports",
+        "f9": "CSV export",
+        "f10": "Question notes"
+      },
+      "team": {
+        "name": "Team",
+        "perUser": "/user/month",
+        "description": "For training teams, bootcamps, and L&D departments.",
+        "badge": "Coming soon",
+        "cta": "Contact us",
+        "f1": "Everything in Pro",
+        "f2": "Team analytics dashboard",
+        "f3": "SSO (SAML)",
+        "f4": "Seat management"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "cancel": {
+        "q": "Can I cancel anytime?",
+        "a": "Yes, you can cancel your subscription at any time from your account settings. You'll keep Pro access until the end of your billing period."
+      },
+      "trialEnd": {
+        "q": "What happens when my trial ends?",
+        "a": "You'll be charged automatically when your trial ends. You can cancel anytime before the trial ends to avoid being charged."
+      },
+      "switchPlan": {
+        "q": "Can I switch from monthly to annual?",
+        "a": "Yes! You can switch at any time from your billing portal. When switching to annual, you'll be credited for any unused time on your monthly plan."
+      },
+      "refunds": {
+        "q": "Do you offer refunds?",
+        "a": "Contact our support team within 7 days of purchase for a full refund. No questions asked."
+      },
+      "paymentMethods": {
+        "q": "What payment methods do you accept?",
+        "a": "We accept all major credit and debit cards through Stripe. Apple Pay and Google Pay are also supported."
+      }
+    },
+    "footer": {
+      "secure": "Payments processed securely by Stripe. Your card information is never stored on our servers."
     }
   }
 }

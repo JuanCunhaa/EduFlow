@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-middleware';
+import { withAuth, withPlan } from '@/lib/api-middleware';
 import { createQuestionSchema } from '@/lib/validators';
 import { listQuestions, createQuestion } from '@/services/question-service';
 import { checkScrapingSignals, addGuardHeaders } from '@/lib/scraping-guard';
+import { enforcePlanLimit } from '@/lib/plan-limits';
 
 /**
  * GET /api/questions
@@ -50,8 +51,9 @@ export const GET = withAuth(async (request, { user }) => {
 /**
  * POST /api/questions
  * Create a new question in the user's personal bank.
+ * Enforces: question creation limit (free tier).
  */
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withPlan(async (request, { user, plan }) => {
     const body = await request.json();
     const parsed = createQuestionSchema.safeParse(body);
 
@@ -61,6 +63,9 @@ export const POST = withAuth(async (request, { user }) => {
             { status: 400 }
         );
     }
+
+    // ── Plan enforcement ──
+    await enforcePlanLimit(user.uid, plan, 'question_creation_limit');
 
     const id = await createQuestion(user.uid, parsed.data);
     return { data: { id } };

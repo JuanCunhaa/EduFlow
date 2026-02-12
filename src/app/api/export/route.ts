@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-middleware';
+import { withPlan } from '@/lib/api-middleware';
 import { listExams } from '@/services/exam-service';
 import { listStudies } from '@/services/study-service';
 import { getStats } from '@/services/stats-service';
 
 /**
  * GET /api/export?format=csv&studyId=xxx
- * Export user progress as CSV.
+ * Export user progress as CSV. Pro-only feature.
  */
-export const GET = withAuth(async (request, { user }) => {
+export const GET = withPlan(async (request, { user }) => {
     const { searchParams } = new URL(request.url);
     const studyId = searchParams.get('studyId') || undefined;
     const format = searchParams.get('format') || 'csv';
@@ -66,4 +66,4 @@ export const GET = withAuth(async (request, { user }) => {
             'Content-Disposition': `attachment; filename="isc2-progress-${new Date().toISOString().split('T')[0]}.csv"`,
         },
     });
-});
+}, 'pro');

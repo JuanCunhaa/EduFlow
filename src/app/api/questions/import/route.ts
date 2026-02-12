@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-middleware';
+import { withPlan } from '@/lib/api-middleware';
 import { bulkImportSchema } from '@/lib/validators';
 import { importQuestions } from '@/services/question-service';
 import { rateLimit } from '@/lib/rate-limit';
@@ -7,9 +7,10 @@ import { rateLimit } from '@/lib/rate-limit';
 /**
  * POST /api/questions/import
  * Bulk import questions into the user's personal bank (max 500).
+ * Pro-only feature.
  * Rate limited: max 3 imports per minute per user.
  */
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withPlan(async (request, { user }) => {
     const allowed = await rateLimit(`import:${user.uid}`, 3, 60_000, false);
     if (!allowed) {
         return NextResponse.json(
@@ -30,4 +31,4 @@ export const POST = withAuth(async (request, { user }) => {
 
     const result = await importQuestions(user.uid, parsed.data.questions);
     return { data: result };
-});
+}, 'pro');

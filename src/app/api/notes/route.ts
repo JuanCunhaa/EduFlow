@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-middleware';
+import { withAuth, withPlan } from '@/lib/api-middleware';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { z } from 'zod';
 
@@ -53,9 +53,9 @@ export const GET = withAuth(async (request, { user }) => {
 
 /**
  * PUT /api/notes
- * Save a note for a question.
+ * Save a note for a question. Pro-only feature.
  */
-export const PUT = withAuth(async (request, { user }) => {
+export const PUT = withPlan(async (request, { user }) => {
     const body = await request.json();
     const parsed = noteSchema.safeParse(body);
 
@@ -82,4 +82,4 @@ export const PUT = withAuth(async (request, { user }) => {
     }
 
     return { data: { success: true } };
-});
+}, 'pro');

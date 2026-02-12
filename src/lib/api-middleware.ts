@@ -14,6 +14,9 @@ import { NextResponse } from 'next/server';
 import { verifyAuth, verifyAuthStrict, isAdmin, type AuthUser } from '@/lib/firebase/server-auth';
 import { createRequestLogger } from '@/lib/logger';
 import { AppError, UnauthorizedError, ForbiddenError } from '@/lib/errors';
+import { resolveEffectivePlan } from '@/lib/plan-limits';
+import { adminGetDoc } from '@/lib/firebase/admin-firestore';
+import type { PlanTier, UserProfile } from '@/types';
 
 export type { AuthUser } from '@/lib/firebase/server-auth';
 
@@ -21,6 +24,11 @@ export interface RouteContext {
     user: AuthUser;
     log: ReturnType<typeof createRequestLogger>;
     params: Record<string, string>;
+}
+
+export interface PlanRouteContext extends RouteContext {
+    plan: PlanTier;
+    profile: UserProfile;
 }
 
 type RouteResult = Record<string, unknown> | NextResponse;
@@ -211,4 +219,54 @@ export function withAdmin(
         }
         return handler(request, context);
     }, { ...options, checkRevoked: true });
+}
+
+type PlanHandler = (
+    request: Request,
+    context: PlanRouteContext
+) => Promise<RouteResult>;
+
+/**
+ * Wraps an API route with auth + plan resolution.
+ * Injects `plan` and `profile` into context.
+ * If `requiredPlan` is specified, blocks users below that tier.
+ */
+export function withPlan(
+    handler: PlanHandler,
+    requiredPlan?: PlanTier,
+    options: WithAuthOptions = {}
+) {
+    return withAuth(async (request, context) => {
+        // Bypass paywall when disabled via env var (rollback Level 1)
+        if (process.env.PAYWALL_ENABLED === 'false') {
+            const profile = await adminGetDoc<UserProfile>('users', context.user.uid);
+            return handler(request, {
+                ...context,
+                plan: 'pro',
+                profile: profile || { plan: 'free' } as UserProfile,
+            });
+        }
+
+        const profile = await adminGetDoc<UserProfile>('users', context.user.uid);
+        const effectivePlan = resolveEffectivePlan(
+            profile || null,
+            context.user.roles.includes('admin')
+        );
+
+        if (requiredPlan && !meetsRequirementLocal(effectivePlan, requiredPlan)) {
+            const { PaywallError } = await import('@/lib/errors');
+            throw new PaywallError(requiredPlan);
+        }
+
+        return handler(request, {
+            ...context,
+            plan: effectivePlan,
+            profile: profile || { plan: 'free' } as UserProfile,
+        });
+    }, options);
+}
+
+function meetsRequirementLocal(current: PlanTier, required: PlanTier): boolean {
+    const hierarchy: Record<PlanTier, number> = { free: 0, pro: 1, team: 2 };
+    return hierarchy[current] >= hierarchy[required];
 }

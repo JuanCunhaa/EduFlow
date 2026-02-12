@@ -64,6 +64,22 @@ export class ForbiddenError extends AppError {
     }
 }
 
+export class PaywallError extends AppError {
+    constructor(
+        requiredPlan: string,
+        details?: { feature?: string; currentUsage?: number; limit?: number }
+    ) {
+        super(`Upgrade to ${requiredPlan} to access this feature`, 403, 'PAYWALL_REQUIRED', {
+            requiredPlan,
+            feature: details?.feature,
+            currentUsage: details?.currentUsage,
+            limit: details?.limit,
+            upgradeUrl: '/pricing',
+        });
+        this.name = 'PaywallError';
+    }
+}
+
 // ── 404 Not Found ────────────────────────────────
 export class NotFoundError extends AppError {
     constructor(resource = 'Resource') {

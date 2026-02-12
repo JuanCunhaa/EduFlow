@@ -94,6 +94,42 @@ export interface Exam {
     timeSpentSeconds: number;
 }
 
+// === Billing ===
+
+export type PlanTier = 'free' | 'pro' | 'team';
+
+export type StripeSubStatus = 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid' | 'incomplete';
+
+export type PaywallFeature =
+    | 'daily_exam_limit'
+    | 'exam_question_limit'
+    | 'advanced_exam_modes'
+    | 'question_pool_limit'
+    | 'analytics'
+    | 'csv_export'
+    | 'marketplace_import_limit'
+    | 'question_creation_limit'
+    | 'study_creation_limit'
+    | 'bulk_import'
+    | 'question_notes';
+
+export interface BillingStatus {
+    plan: PlanTier;
+    status: StripeSubStatus | null;
+    periodEnd: number | null;
+    cancelAtPeriodEnd: boolean;
+    trial: boolean;
+    trialEndsAt: number | null;
+}
+
+export interface PaywallDetails {
+    requiredPlan: PlanTier;
+    feature: PaywallFeature;
+    currentUsage?: number;
+    limit?: number;
+    upgradeUrl: string;
+}
+
 // === User ===
 
 export interface UserProfile {
@@ -106,6 +142,15 @@ export interface UserProfile {
     averageScore: number;
     createdAt: Timestamp;
     lastActiveAt: Timestamp;
+
+    // ── Billing ──
+    plan: PlanTier;
+    stripeCustomerId: string | null;
+    stripeSubscriptionId: string | null;
+    stripeSubscriptionStatus: StripeSubStatus | null;
+    planPeriodEnd: number | null;          // epoch ms
+    trialEndsAt: number | null;            // epoch ms
+    cancelAtPeriodEnd?: boolean;
 }
 
 export interface ExamAttemptSummary {

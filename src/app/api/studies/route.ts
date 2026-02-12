@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { withAuth } from '@/lib/api-middleware';
+import { withAuth, withPlan } from '@/lib/api-middleware';
 import { createStudySchema } from '@/lib/validators';
 import { listStudies, createStudy } from '@/services/study-service';
+import { enforcePlanLimit } from '@/lib/plan-limits';
 
 /**
  * GET /api/studies
@@ -18,8 +19,9 @@ export const GET = withAuth(async (_request, { user }) => {
 /**
  * POST /api/studies
  * Create a new study with domains.
+ * Enforces: study creation limit (free tier).
  */
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withPlan(async (request, { user, plan }) => {
     const body = await request.json();
     const parsed = createStudySchema.safeParse(body);
 
@@ -29,6 +31,9 @@ export const POST = withAuth(async (request, { user }) => {
             { status: 400 }
         );
     }
+
+    // ── Plan enforcement ──
+    await enforcePlanLimit(user.uid, plan, 'study_creation_limit');
 
     const id = await createStudy(user.uid, parsed.data);
     return { data: { id } };

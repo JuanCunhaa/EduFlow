@@ -310,6 +310,7 @@
     "questionBank": "Banco de Questões",
     "progress": "Progresso",
     "marketplace": "Marketplace",
+    "settings": "Configurações",
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu",
     "expandSidebar": "Expandir barra lateral",
@@ -623,6 +624,169 @@
         "invalid": "Formato JSON inválido"
       },
       "forbidden": "Você não tem permissão para acessar esta página"
+    }
+  },
+
+  "billing": {
+    "settings": {
+      "title": "Configurações",
+      "subtitle": "Gerencie sua conta e assinatura"
+    },
+    "plan": {
+      "free": "Grátis",
+      "pro": "Pro",
+      "team": "Time",
+      "trial": "Pro (Teste)",
+      "pastDue": "Problema no pagamento",
+      "canceling": "Cancela em {date}"
+    },
+    "cta": {
+      "upgrade": "Fazer upgrade",
+      "startTrial": "Iniciar teste grátis",
+      "managePlan": "Gerenciar assinatura",
+      "canceledNotice": "Seu plano cancela em {date}. Reativar →",
+      "pastDueNotice": "Pagamento falhou. Atualizar método de pagamento →"
+    },
+    "checkout": {
+      "success": "Bem-vindo ao Pro! Sua conta foi atualizada.",
+      "activating": "Ativando sua conta…",
+      "activatingDetail": "Quase pronto! Sua conta está sendo ativada. Recarregue se necessário."
+    },
+    "featureLock": {
+      "tooltip": "Disponível com o Pro"
+    },
+    "paywall": {
+      "cta": "Fazer upgrade para Pro",
+      "maybeLater": "Talvez depois",
+      "used": "usado(s)",
+      "daily_exam_limit": {
+        "title": "Limite diário de exames atingido",
+        "body": "Contas gratuitas incluem 3 exames por dia. Faça upgrade para Pro e tenha exames ilimitados."
+      },
+      "exam_question_limit": {
+        "title": "Precisa de mais questões?",
+        "body": "Exames gratuitos são limitados a 25 questões. Exames Pro suportam até 150."
+      },
+      "advanced_exam_modes": {
+        "title": "Desbloqueie modos inteligentes",
+        "body": "Revisão Espaçada, Domínios Fracos e mais 4 modos adaptativos estão disponíveis com o Pro."
+      },
+      "question_pool_limit": {
+        "title": "Acesso completo ao banco de questões",
+        "body": "Contas gratuitas podem acessar 50 questões por estudo. Faça upgrade para o banco completo."
+      },
+      "analytics": {
+        "title": "Acompanhe seu progresso",
+        "body": "Desbloqueie tendências de pontuação, previsões de aprovação e análise de domínios."
+      },
+      "csv_export": {
+        "title": "Exporte seus dados",
+        "body": "Baixe seu histórico de exames e pontuações em CSV com o Pro."
+      },
+      "marketplace_import_limit": {
+        "title": "Importe mais conteúdo",
+        "body": "Contas gratuitas incluem 1 importação do marketplace. Faça upgrade para ilimitado."
+      },
+      "question_creation_limit": {
+        "title": "Crie mais questões",
+        "body": "Você atingiu o limite gratuito. Faça upgrade para criação ilimitada de questões."
+      },
+      "study_creation_limit": {
+        "title": "Adicione mais estudos",
+        "body": "Contas gratuitas incluem 2 estudos. Faça upgrade para ilimitado."
+      },
+      "bulk_import": {
+        "title": "Importação em massa disponível com o Pro",
+        "body": "Importe até 500 questões de uma vez com o Pro."
+      },
+      "question_notes": {
+        "title": "Anote nas questões",
+        "body": "Anotações em questões são um recurso Pro. Faça upgrade para anotar seu material de estudo."
+      }
+    }
+  },
+
+  "pricing": {
+    "title": "Preços simples e transparentes",
+    "subtitle": "Comece grátis. Faça upgrade quando estiver pronto para levar a sério.",
+    "backToDashboard": "Voltar ao Dashboard",
+    "signIn": "Entrar",
+    "toggle": {
+      "monthly": "Mensal",
+      "annual": "Anual",
+      "label": "Alternar período de cobrança",
+      "save": "Economize 43%"
+    },
+    "tier": {
+      "free": {
+        "name": "Grátis",
+        "period": "para sempre",
+        "description": "Perfeito para experimentar o ExamFlow e estudar casualmente.",
+        "cta": "Começar",
+        "currentPlan": "Plano atual",
+        "f1": "3 exames práticos por dia",
+        "f2": "Até 25 questões por exame",
+        "f3": "Modos Prática e Foco por Domínio",
+        "f4": "Detalhamento da pontuação pós-exame",
+        "f5": "Desafio diário e sequências"
+      },
+      "pro": {
+        "name": "Pro",
+        "perMonth": "/mês",
+        "perMonthAnnual": "/mês, cobrado anualmente",
+        "description": "Tudo que você precisa para passar no seu exame de certificação.",
+        "badge": "7 dias de teste grátis",
+        "cta": "Iniciar teste grátis",
+        "currentPlan": "Plano atual",
+        "loading": "Redirecionando…",
+        "f1": "Exames ilimitados",
+        "f2": "Até 150 questões por exame",
+        "f3": "Todos os 6 modos incluindo Revisão Espaçada",
+        "f4": "Dashboard completo de analytics",
+        "f5": "Tendências de pontuação e previsão de aprovação",
+        "f6": "Detalhamento de domínios",
+        "f7": "Criação ilimitada de questões",
+        "f8": "Importações ilimitadas do marketplace",
+        "f9": "Exportação CSV",
+        "f10": "Anotações em questões"
+      },
+      "team": {
+        "name": "Time",
+        "perUser": "/usuário/mês",
+        "description": "Para equipes de treinamento, bootcamps e departamentos de T&D.",
+        "badge": "Em breve",
+        "cta": "Fale conosco",
+        "f1": "Tudo do Pro",
+        "f2": "Dashboard de analytics do time",
+        "f3": "SSO (SAML)",
+        "f4": "Gerenciamento de assentos"
+      }
+    },
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "cancel": {
+        "q": "Posso cancelar a qualquer momento?",
+        "a": "Sim, você pode cancelar sua assinatura a qualquer momento nas configurações da conta. Você manterá o acesso Pro até o final do período de cobrança."
+      },
+      "trialEnd": {
+        "q": "O que acontece quando meu teste termina?",
+        "a": "Você será cobrado automaticamente quando o teste terminar. Você pode cancelar a qualquer momento antes de ser cobrado."
+      },
+      "switchPlan": {
+        "q": "Posso trocar de mensal para anual?",
+        "a": "Sim! Você pode trocar a qualquer momento pelo portal de cobrança. Ao trocar para anual, você receberá um crédito pelo tempo não usado do plano mensal."
+      },
+      "refunds": {
+        "q": "Vocês oferecem reembolso?",
+        "a": "Entre em contato com nosso suporte dentro de 7 dias da compra para um reembolso total. Sem perguntas."
+      },
+      "paymentMethods": {
+        "q": "Quais métodos de pagamento são aceitos?",
+        "a": "Aceitamos todos os principais cartões de crédito e débito via Stripe. Apple Pay e Google Pay também são suportados."
+      }
+    },
+    "footer": {
+      "secure": "Pagamentos processados com segurança pelo Stripe. Suas informações de cartão nunca são armazenadas em nossos servidores."
     }
   }
 }

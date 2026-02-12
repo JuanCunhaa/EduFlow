@@ -13,9 +13,11 @@ import {
     ChevronRight,
     Menu,
     X,
+    Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { PlanBadge } from '@/components/ui/PlanBadge';
 
 const NAV_KEYS = [
     { href: '/dashboard', key: 'studies', icon: BookOpen },
@@ -23,6 +25,7 @@ const NAV_KEYS = [
     { href: '/questions', key: 'questionBank', icon: Database },
     { href: '/analytics', key: 'progress', icon: BarChart3 },
     { href: '/marketplace', key: 'marketplace', icon: Store },
+    { href: '/settings', key: 'settings', icon: Settings },
 ] as const;
 
 export function Sidebar() {
@@ -121,6 +124,11 @@ export function Sidebar() {
                         );
                     })}
                 </nav>
+
+                {/* Plan badge */}
+                <div className={cn('border-t border-border px-3 py-3', collapsed && 'flex justify-center')}>
+                    <PlanBadge compact={collapsed} />
+                </div>
 
                 {/* Collapse Toggle (desktop only) */}
                 <button

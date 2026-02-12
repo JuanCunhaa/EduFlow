@@ -17,8 +17,9 @@ import {
     Target,
 } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import dynamic from 'next/dynamic';
+import { CheckoutSuccessHandler } from '@/components/ui/CheckoutSuccessHandler';
 
 const StudyFormDialog = dynamic(() => import('@/components/studies/StudyFormDialog').then(m => ({ default: m.StudyFormDialog })), { ssr: false });
 
@@ -94,6 +95,9 @@ export default function DashboardPage() {
 
     return (
         <Shell>
+            <Suspense fallback={null}>
+                <CheckoutSuccessHandler />
+            </Suspense>
             <div className="space-y-8 animate-fade-in">
                 <div className="flex items-center justify-between">
                     <div>

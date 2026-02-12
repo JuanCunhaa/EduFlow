@@ -4,6 +4,8 @@ import { useState } from 'react';
 import type { Difficulty, Study, StudyDomain, ExamMode } from '@/types';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, Clock, BookOpen, Target, Zap, Layers } from 'lucide-react';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { FeatureLock } from '@/components/ui/FeatureLock';
 
 interface ExamConfigFormProps {
     /** Available studies — the user picks one */
@@ -37,6 +39,7 @@ const MODE_I18N_MAP: Record<ExamMode, { label: string; desc: string }> = {
 export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: Readonly<ExamConfigFormProps>) {
     const t = useTranslations('examConfig');
     const tc = useTranslations('common');
+    const { isModeAllowed, maxQuestionsPerExam, isFree } = usePlanLimits();
     const [selectedStudyId, setSelectedStudyId] = useState(activeStudyId || studies[0]?.id || '');
     const [questionCount, setQuestionCount] = useState(25);
     const [timeLimitMinutes, setTimeLimitMinutes] = useState(60);
@@ -96,10 +99,12 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                 <div className="grid gap-2">
                     {MODE_KEYS.map((mValue) => {
                         const keys = MODE_I18N_MAP[mValue];
-                        return (
+                        const locked = !isModeAllowed(mValue);
+                        const modeButton = (
                             <button
                                 key={mValue}
-                                onClick={() => setMode(mValue)}
+                                onClick={() => !locked && setMode(mValue)}
+                                disabled={locked}
                                 className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-200 ${mode === mValue
                                     ? 'border-primary/30 bg-primary/5 text-foreground'
                                     : 'border-border bg-card text-muted-foreground hover:bg-accent/30'
@@ -114,6 +119,13 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                                 )}
                             </button>
                         );
+                        return locked ? (
+                            <FeatureLock key={mValue} feature="advanced_exam_modes">
+                                {modeButton}
+                            </FeatureLock>
+                        ) : (
+                            modeButton
+                        );
                     })}
                 </div>
             </div>
@@ -124,18 +136,29 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                     <BookOpen className="h-3.5 w-3.5" /> {t('questions')}
                 </h2>
                 <div className="flex flex-wrap gap-2">
-                    {QUESTION_COUNTS.map((n) => (
-                        <button
-                            key={n}
-                            onClick={() => setQuestionCount(n)}
-                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${questionCount === n
-                                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
-                                }`}
-                        >
-                            {n}
-                        </button>
-                    ))}
+                    {QUESTION_COUNTS.map((n) => {
+                        const locked = isFree && n > maxQuestionsPerExam;
+                        const countButton = (
+                            <button
+                                key={n}
+                                onClick={() => !locked && setQuestionCount(n)}
+                                disabled={locked}
+                                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${questionCount === n
+                                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                                    : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                    }`}
+                            >
+                                {n}
+                            </button>
+                        );
+                        return locked ? (
+                            <FeatureLock key={n} feature="exam_question_limit" showLabel={false}>
+                                {countButton}
+                            </FeatureLock>
+                        ) : (
+                            countButton
+                        );
+                    })}
                 </div>
             </div>
 
