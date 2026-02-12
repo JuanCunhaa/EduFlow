@@ -52,9 +52,11 @@ export function QuestionForm({ question, studyId, domains, onSubmit, onClose }: 
                 text: question.text,
                 options: question.options,
                 correctOptionIndex: question.correctOptionIndex,
-                explanation: typeof question.explanation === 'string'
-                    ? { short: question.explanation, whyOthersWrong: {} }
-                    : question.explanation,
+                explanation: !question.explanation
+                    ? { short: '', whyOthersWrong: {} }
+                    : typeof question.explanation === 'string'
+                        ? { short: question.explanation, whyOthersWrong: {} }
+                        : { short: question.explanation.short || '', whyOthersWrong: question.explanation.whyOthersWrong || {} },
                 difficulty: question.difficulty,
                 tags: question.tags,
             });

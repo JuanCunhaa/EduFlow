@@ -128,7 +128,7 @@ export function QuestionTable({
                                                     </div>
                                                 ))}
                                                 <div className="mt-2 border-t border-border pt-2 text-xs text-muted-foreground">
-                                                    {typeof q.explanation === 'string' ? q.explanation : q.explanation.short}
+                                                    {!q.explanation ? '—' : typeof q.explanation === 'string' ? q.explanation : q.explanation.short}
                                                 </div>
                                             </div>
                                         )}
