@@ -1,7 +1,7 @@
 import {
     GoogleAuthProvider,
     onAuthStateChanged,
-    signInWithRedirect,
+    signInWithPopup,
     signOut as firebaseSignOut,
     type User,
 } from 'firebase/auth';
@@ -10,15 +10,24 @@ import { getClientAuth } from './config';
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Sign in with Google using redirect flow.
- * This avoids the Cross-Origin-Opener-Policy issue that occurs with
- * signInWithPopup — Google's accounts.google.com returns a strict COOP
- * header that prevents the SDK from polling window.closed on the popup.
- * The redirect flow navigates the current page instead, so COOP is irrelevant.
+ * Sign in with Google using popup flow.
+ * Returns the authenticated user immediately — no redirect needed.
+ *
+ * Note: The browser console may show a COOP (Cross-Origin-Opener-Policy)
+ * warning because accounts.google.com sends `COOP: same-origin`. This is
+ * a cosmetic warning — it does NOT block the sign-in. The popup closes
+ * normally and the user credential is returned.
+ *
+ * We previously used signInWithRedirect to avoid this warning, but the
+ * redirect flow has fundamental reliability issues in local development
+ * (and sometimes in production) with Firebase v12+:
+ * - Depends on Service Workers or cross-origin storage access
+ * - getRedirectResult() often returns null after the redirect completes
+ * - Race conditions between onAuthStateChanged and cookie creation
  */
-export async function signInWithGoogle(): Promise<void> {
-    await signInWithRedirect(getClientAuth(), googleProvider);
-    // signInWithRedirect navigates away; execution won't continue past here.
+export async function signInWithGoogle(): Promise<User> {
+    const result = await signInWithPopup(getClientAuth(), googleProvider);
+    return result.user;
 }
 
 /**

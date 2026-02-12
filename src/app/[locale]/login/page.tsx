@@ -60,8 +60,12 @@ function LoginContent() {
                             setError(null);
                             try {
                                 await signIn();
-                            } catch {
-                                setError(t('error'));
+                            } catch (err) {
+                                // Don't show error if user just closed the popup
+                                const code = (err as { code?: string })?.code;
+                                if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
+                                    setError(t('error'));
+                                }
                             } finally {
                                 setSigningIn(false);
                             }
