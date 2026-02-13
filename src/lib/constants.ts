@@ -111,6 +111,83 @@ export const ALL_EXAM_MODES: readonly string[] = [...FREE_EXAM_MODES, ...PRO_EXA
 /** Trial period in days */
 export const TRIAL_PERIOD_DAYS = 7;
 
+// ── Content Pipeline ─────────────────────────────
+
+/** Minimum sentences in explanation.short (count periods) */
+export const MIN_EXPLANATION_SENTENCES = 2;
+
+/** Minimum stem length in characters */
+export const MIN_STEM_LENGTH = 20;
+
+/** Minimum tags per question */
+export const MIN_TAGS_PER_QUESTION = 1;
+
+/** Maximum tags per question */
+export const MAX_TAGS_PER_QUESTION = 10;
+
+/** TF-IDF duplicate detection: exact/near-exact threshold */
+export const DUPLICATE_THRESHOLD = 0.75;
+
+/** TF-IDF duplicate detection: suspiciously similar threshold */
+export const SIMILAR_THRESHOLD = 0.55;
+
+/** Concept fingerprint similarity overlay threshold */
+export const CONCEPT_FINGERPRINT_THRESHOLD = 0.45;
+
+/** Minimum attempts before difficulty recalibration kicks in */
+export const RECALIBRATION_MIN_ATTEMPTS = 50;
+
+/** Correct rate thresholds for calibrated difficulty */
+export const CALIBRATED_DIFFICULTY_EASY_THRESHOLD = 0.80;
+export const CALIBRATED_DIFFICULTY_HARD_THRESHOLD = 0.40;
+
+/** Difficulty distribution targets */
+export const DIFFICULTY_DISTRIBUTION: Record<string, Record<string, number>> = {
+    default: { easy: 0.20, medium: 0.50, hard: 0.30 },
+    cc:      { easy: 0.30, medium: 0.50, hard: 0.20 },
+    cissp:   { easy: 0.15, medium: 0.45, hard: 0.40 },
+    'security-plus': { easy: 0.25, medium: 0.50, hard: 0.25 },
+};
+
+/** Distribution tolerance (±%) */
+export const DIFFICULTY_DISTRIBUTION_TOLERANCE = 0.05;
+
+/** Minimum questions per domain before cert goes live */
+export const MIN_QUESTIONS_PER_DOMAIN: Record<string, number> = {
+    cissp: 80,
+    cc: 60,
+    'security-plus': 60,
+    default: 25,
+};
+
+/** Coverage badge thresholds */
+export const COVERAGE_FULL_THRESHOLD = 1.0;    // 100%+
+export const COVERAGE_GOOD_THRESHOLD = 0.7;    // 70-99%
+
+/** Post-publish monitoring thresholds */
+export const MONITORING_TOO_EASY_THRESHOLD = 0.95;   // >95% correct rate
+export const MONITORING_TOO_HARD_THRESHOLD = 0.15;   // <15% correct rate
+export const MONITORING_HIGH_SKIP_THRESHOLD = 0.30;   // >30% skip rate
+
+/** Question report rate limit per user */
+export const REPORT_RATE_LIMIT = 10;           // per hour
+export const REPORT_RATE_WINDOW = 3_600_000;
+
+/** Content batch max size */
+export const CONTENT_BATCH_MAX_SIZE = 500;
+
+/** Quality score minimum for publishing */
+export const QUALITY_SCORE_PUBLISH_THRESHOLD = 3.5;
+
+/** Quality score minimum per dimension (reject below) */
+export const QUALITY_SCORE_REJECT_THRESHOLD = 3.0;
+
+/** Terms to flag for potential bias */
+export const BIAS_FLAG_TERMS = [
+    'always', 'never', 'obviously', 'clearly', 'everyone knows',
+    'simple', 'trivially', 'of course',
+];
+
 /** Allowed Stripe price IDs (loaded from env vars) */
 export function getAllowedPriceIds(): string[] {
     return [

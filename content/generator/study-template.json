@@ -1,0 +1,16 @@
+{
+  "studyId": "",
+  "certSlug": "",
+  "certName": "",
+  "issuer": "",
+  "domains": [
+    {
+      "domainId": "",
+      "domainName": "",
+      "domainNumber": 1,
+      "topics": []
+    }
+  ],
+  "lang": "en",
+  "createdAt": ""
+}

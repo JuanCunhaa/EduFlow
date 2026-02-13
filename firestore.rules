@@ -60,5 +60,21 @@ service cloud.firestore {
     match /_rateLimits/{doc} {
       allow read, write: if false;
     }
+
+    // Question reports: users can read their own reports, all writes via Admin SDK
+    match /question_reports/{reportId} {
+      allow read: if request.auth != null && resource.data.reportedBy == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Content audit log: no client access, admin reads via Admin SDK
+    match /content_audit/{entryId} {
+      allow read, write: if false;
+    }
+
+    // Content contributors: no client access
+    match /content_contributors/{contributorId} {
+      allow read, write: if false;
+    }
   }
 }

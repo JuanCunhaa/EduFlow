@@ -8,6 +8,29 @@ export type ExamStatus = 'in_progress' | 'completed' | 'abandoned';
 
 export type ExamMode = 'practice' | 'weak_domains' | 'recent_misses' | 'real_mix' | 'domain_focus' | 'spaced_review';
 
+// === Content Pipeline ===
+
+export type ReviewStatus =
+    | 'draft'
+    | 'founder_reviewed'
+    | 'expert_reviewed'
+    | 'needs_revision'
+    | 'approved'
+    | 'published'
+    | 'archived';
+
+export type QuestionType = 'mcq' | 'ordering' | 'hotspot';
+
+export type ContentAction = 'created' | 'reviewed' | 'approved' | 'rejected' | 'imported' | 'archived' | 'edited' | 'flagged' | 'reported';
+
+export type ReportReason = 'wrong_answer' | 'ambiguous' | 'outdated' | 'duplicate' | 'unclear' | 'offensive' | 'other';
+
+export type ReportStatus = 'open' | 'reviewing' | 'resolved_fixed' | 'resolved_rejected' | 'resolved_archived';
+
+export type QuestionLifecycle = 'active' | 'flagged' | 'archived' | 'revised';
+
+export type CoverageBadge = 'full' | 'good' | 'partial';
+
 // === Study ===
 
 export interface StudyDomain {
@@ -42,6 +65,8 @@ export interface Explanation {
     short: string;
     /** Per-option reasoning keyed by label (e.g. "A", "B"). Correct option may be omitted. */
     whyOthersWrong: Record<string, string>;
+    /** Optional exam-taking strategy tip */
+    examTip?: string;
 }
 
 export interface Question {
@@ -54,6 +79,7 @@ export interface Question {
     explanation: Explanation;
     difficulty: Difficulty;
     tags: string[];
+    questionType?: QuestionType;      // default: 'mcq'
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }
@@ -212,6 +238,10 @@ export interface QuestionAttemptRecord {
     interval?: number;
     /** Epoch ms of next scheduled review */
     nextReviewAt?: number;
+    /** Last selected option index (for distractor analysis) */
+    lastSelectedIndex?: number;
+    /** Distribution of selected options across attempts: { "0": 2, "1": 1, "3": 4 } */
+    selectedDistribution?: Record<string, number>;
 }
 
 /**
@@ -276,10 +306,175 @@ export interface MarketplaceQuestion {
     explanation: Explanation;
     difficulty: Difficulty;
     tags: string[];
+    questionType?: QuestionType;
     isActive: boolean;
+    lifecycle?: QuestionLifecycle;
+    reviewStatus?: ReviewStatus;
+    /** Aggregated cross-user performance data */
+    performanceStats?: QuestionPerformanceStats;
     createdAt: Timestamp;
     updatedAt: Timestamp;
     createdBy: string;
+}
+
+// === Question Performance (Cross-User Data) ===
+
+/** Aggregated performance stats for a marketplace question */
+export interface QuestionPerformanceStats {
+    totalAttempts: number;
+    correctCount: number;
+    /** Percentage of users who answered correctly (0-100) */
+    correctRate: number;
+    /** Distribution of selected options: { "A": 120, "B": 340, "C": 50, "D": 90 } */
+    optionDistribution: Record<string, number>;
+    /** Average time spent in milliseconds */
+    avgTimeMs: number;
+    /** Number of times skipped */
+    skipCount: number;
+    /** Number of times reported */
+    reportCount: number;
+    /** Calibrated difficulty based on correctRate thresholds */
+    calibratedDifficulty?: Difficulty;
+    lastUpdatedAt: number; // epoch ms
+}
+
+// === Question Report ===
+
+/** User-submitted report on a question quality issue */
+export interface QuestionReport {
+    id: string;
+    questionId: string;
+    /** Marketplace question ID (if reporting marketplace content) */
+    marketplaceQuestionId?: string;
+    studyId: string;
+    reportedBy: string; // uid
+    reason: ReportReason;
+    description: string;
+    status: ReportStatus;
+    /** Admin resolution notes */
+    resolution?: string;
+    resolvedBy?: string;
+    resolvedAt?: Timestamp;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+// === Content Audit Trail ===
+
+/** Audit entry for content pipeline actions */
+export interface ContentAuditEntry {
+    id: string;
+    action: ContentAction;
+    actor: string;         // uid or email
+    batchId?: string;      // links to content/cert/domain/batch-NNN.json
+    studyId?: string;
+    questionId?: string;
+    questionCount?: number;
+    notes?: string;        // reviewer feedback, rejection reason, etc.
+    metadata?: Record<string, unknown>;
+    createdAt: Timestamp;
+}
+
+// === Content Batch (Staging) ===
+
+/** Metadata for a content batch file */
+export interface ContentBatchMetadata {
+    certId: string;
+    domainId: string;
+    batchNumber: number;
+    generatedAt: string;   // ISO datetime
+    generatedBy: string;   // 'gpt-4o' | 'claude' | author email
+    reviewedBy?: string;
+    reviewedAt?: string;
+    qaResult?: {
+        passed: number;
+        failed: number;
+        warnings: number;
+    };
+}
+
+export interface ContentBatch {
+    metadata: ContentBatchMetadata;
+    questions: ContentBatchQuestion[];
+}
+
+/** Question as it appears in a staging batch (pre-import) */
+export interface ContentBatchQuestion {
+    text: string;
+    options: Option[];
+    correctOptionIndex: number;
+    explanation: Explanation;
+    difficulty: Difficulty;
+    domainIds: string[];
+    tags: string[];
+    questionType?: QuestionType;
+    /** Review status in the pipeline */
+    reviewStatus?: ReviewStatus;
+    /** Quality rubric score (1-5 average across 6 dimensions) */
+    qualityScore?: number;
+    /** Reviewer notes */
+    reviewNotes?: string;
+}
+
+// === Exam Objective Mapping ===
+
+export interface ExamObjective {
+    id: string;            // e.g. "1.1"
+    text: string;
+    domain: string;        // domain abbreviation
+    questionCount: number;
+    lastQuestionAdded?: string; // ISO date
+}
+
+export interface CertObjectiveMapping {
+    certId: string;
+    outlineVersion: string;
+    lastChecked: string;   // ISO date
+    objectives: ExamObjective[];
+}
+
+// === Coverage Score ===
+
+export interface DomainCoverage {
+    domainId: string;
+    domainName: string;
+    questionCount: number;
+    target: number;
+    percentage: number;
+}
+
+export interface CertCoverage {
+    certId: string;
+    badge: CoverageBadge;
+    overallScore: number;         // min(domain_counts) / target_per_domain
+    domains: DomainCoverage[];
+    totalQuestions: number;
+}
+
+// === Difficulty Recalibration ===
+
+export interface RecalibrationResult {
+    questionId: string;
+    authorDifficulty: Difficulty;
+    calibratedDifficulty: Difficulty;
+    correctRate: number;
+    totalAttempts: number;
+    changed: boolean;
+}
+
+// === Expert/Contributor ===
+
+export interface ContentContributor {
+    id: string;
+    name: string;
+    email: string;
+    role: 'admin' | 'reviewer' | 'author';
+    certifications?: string[];     // e.g. ['CISSP', 'CCSP']
+    isActive: boolean;
+    questionsReviewed?: number;
+    questionsAuthored?: number;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
 }
 
 /** Lineage metadata added to user docs after marketplace import */

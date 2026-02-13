@@ -29,6 +29,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { recordActivity, awardBadge, getStats } from '@/services/stats-service';
 import { GRACE_PERIOD_SECONDS, EXAM_CREATE_RATE_LIMIT } from '@/lib/constants';
 import { recalculateAverageScore } from '@/services/exam-analytics-service';
+import { updateQuestionPerformanceStats } from '@/services/content-quality-service';
 import type { Exam, Question, ExamConfig, DomainScore, ExamMode, BadgeId } from '@/types';
 
 // ── Types ────────────────────────────────────────
@@ -454,6 +455,10 @@ export async function submitExam(
         awardBadge(uid, 'domain_master').catch(() => {});
     }
 
+    // Fire-and-forget: update marketplace-level performance stats (distractor tracking)
+    // Looks up which user questions have a marketplace source and aggregates cross-user stats
+    updateMarketplacePerformanceStats(uid, exam.questionIds, finalAnswers, storedCorrectAnswers ?? {}).catch(() => {});
+
     return {
         examId,
         score,
@@ -629,4 +634,52 @@ function scoreFromStored(
 
     const score = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
     return { score, domainScores };
+}
+
+/**
+ * Fire-and-forget: update marketplace-level cross-user performance stats.
+ * Looks up which user questions originated from marketplace imports,
+ * then calls updateQuestionPerformanceStats for each marketplace source question.
+ */
+async function updateMarketplacePerformanceStats(
+    uid: string,
+    questionIds: string[],
+    answers: Record<string, number | null>,
+    correctAnswers: Record<string, number>
+): Promise<void> {
+    if (questionIds.length === 0) return;
+
+    const db = getAdminDb();
+    const questionsCol = db.collection(`users/${uid}/questions`);
+
+    // Batch-fetch user questions to check for marketplace source
+    const refs = questionIds.map(id => questionsCol.doc(id));
+    const snaps = await db.getAll(...refs);
+
+    for (const snap of snaps) {
+        if (!snap.exists) continue;
+
+        const data = snap.data()!;
+        const marketplaceQuestionId = data['_source.marketplaceQuestionId'] as string | undefined;
+        if (!marketplaceQuestionId) continue;
+
+        const userAnswer = answers[snap.id];
+        const correctIndex = correctAnswers[snap.id];
+        if (correctIndex === undefined) continue;
+
+        const isCorrect = userAnswer === correctIndex;
+        const skipped = userAnswer === null || userAnswer === undefined;
+
+        try {
+            await updateQuestionPerformanceStats(
+                marketplaceQuestionId,
+                isCorrect,
+                userAnswer ?? undefined,
+                undefined, // timeMs not available per-question
+                skipped
+            );
+        } catch {
+            // Non-critical — silently continue for other questions
+        }
+    }
 }

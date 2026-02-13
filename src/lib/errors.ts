@@ -186,3 +186,43 @@ export class MarketplaceImportConflictError extends ConflictError {
         this.name = 'MarketplaceImportConflictError';
     }
 }
+
+// ── Content Pipeline errors ──────────────────────
+export class QuestionReportNotFoundError extends NotFoundError {
+    constructor() {
+        super('Question report');
+        this.name = 'QuestionReportNotFoundError';
+    }
+}
+
+export class DuplicateReportError extends ConflictError {
+    constructor() {
+        super('You have already reported this question');
+        this.name = 'DuplicateReportError';
+    }
+}
+
+export class ContentBatchValidationError extends ValidationError {
+    constructor(
+        errors: Array<{ questionIndex: number; errors: string[]; warnings: string[] }>
+    ) {
+        super('Content batch validation failed', { validationResults: errors });
+        this.name = 'ContentBatchValidationError';
+    }
+}
+
+export class DuplicateQuestionError extends ConflictError {
+    constructor(
+        duplicates: Array<{ newIndex: number; existingId: string; score: number }>
+    ) {
+        super(`${duplicates.length} duplicate(s) detected`);
+        this.name = 'DuplicateQuestionError';
+    }
+}
+
+export class ContentContributorNotFoundError extends NotFoundError {
+    constructor() {
+        super('Content contributor');
+        this.name = 'ContentContributorNotFoundError';
+    }
+}

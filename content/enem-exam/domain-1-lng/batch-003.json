@@ -1,0 +1,225 @@
+{
+  "metadata": {
+    "certId": "enem-exam",
+    "certName": "Exame Nacional do Ensino Médio (ENEM)",
+    "issuer": "INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira)",
+    "domainId": "lng",
+    "domainName": "Linguagens, Códigos e suas Tecnologias",
+    "domainNumber": 1,
+    "studyId": "yiis21fj3bx9fbUcMo2E",
+    "lang": "pt-BR",
+    "batchNumber": 3,
+    "generatedAt": "2026-02-13T00:50:29.680Z",
+    "generatedBy": "groq/gpt-5-nano",
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "qaResult": null
+  },
+  "questions": [
+    {
+      "text": "Texto para leitura: 'A leitura crítica permite identificar a relação entre dados e opiniões e avaliar a confiabilidade das fontes.' Com base nesse enunciado, assinale a alternativa que **BEST** resume a ideia central.",
+      "options": [
+        {
+          "label": "A",
+          "text": "A leitura crítica permite identificar a relação entre dados e opiniões e avaliar a confiabilidade das fontes."
+        },
+        {
+          "label": "B",
+          "text": "A leitura crítica foca apenas em entender o vocabulário sem considerar a proveniência das informações."
+        },
+        {
+          "label": "C",
+          "text": "A leitura crítica é útil somente em textos acadêmicos formais, não em mídia cotidiana."
+        },
+        {
+          "label": "D",
+          "text": "A leitura crítica substitui a necessidade de checar fontes."
+        }
+      ],
+      "correctOptionIndex": 0,
+      "explanation": {
+        "short": "A ideia central é a diferenciação entre dados e opiniões e a avaliação da confiabilidade das fontes, elemento fundamental da leitura crítica. Diretrizes de gestão de informações, como ISO 31000 (gestão de riscos) e ISO 27001 (segurança da informação), ressaltam a importância de avaliar fontes para manter a integridade das informações.",
+        "whyOthersWrong": {
+          "B": "A afirmação reduz a leitura crítica a vocabulário, o que desvaloriza a verificação de fontes e a relação entre dados e opiniões.",
+          "C": "Limitar a leitura crítica a textos acadêmicos é incorreto; a prática se aplica a diferentes typologias de texto e mídias.",
+          "D": "Checagem de fontes é parte essencial da leitura crítica; substituí-la enfraquece a avaliação da veracidade."
+        },
+        "examTip": "Identifique no enunciado a ideia-chave de avaliar fontes e distinguir dados de opiniões. Conecte com normas de qualidade da informação (ex.: ISO 9001, ISO 31000)."
+      },
+      "difficulty": "easy",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "interpretação-de-textos",
+        "coerencia-e-coesao",
+        "confiabilidade-de-fonte"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "Texto multimodal: gráfico de barras acompanhado de legenda e breve texto. Qual elemento multimodal **MOST** reforça a ideia de que o autor valoriza diferentes vozes?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Legenda do gráfico que identifica cada faixa linguística."
+        },
+        {
+          "label": "B",
+          "text": "Ilustração com retratos de várias pessoas de diferentes contextos e falas."
+        },
+        {
+          "label": "C",
+          "text": "Título descritivo do gráfico."
+        },
+        {
+          "label": "D",
+          "text": "Cores distintas para cada barra sem legenda adicional."
+        }
+      ],
+      "correctOptionIndex": 1,
+      "explanation": {
+        "short": "A imagem de retratos de diversas pessoas reforça a ideia de inclusão de várias vozes, algo que os dados por si só não comunicam. Diretrizes de governança da informação destacam a comunicação clara e inclusiva em contextos multimodais (ISO 27002; ISO 26000 para responsabilidade social).",
+        "whyOthersWrong": {
+          "A": "Embora útil, a legenda não evidencia a diversidade de vozes da forma mais direta.",
+          "C": "O título descreve o gráfico, mas não enfatiza vozes diferentes.",
+          "D": "As cores ajudam na leitura, mas não comunicam explicitamente a diversidade de vozes."
+        },
+        "examTip": "Observe como o recurso visual transmite valores de inclusão; multimodalidade efetiva usa elementos que aumentam a percepção de diversidade."
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "texto-multimodal",
+        "inferencia",
+        "multimodalidade"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "Caso hipotético: você está produzindo um texto dissertativo-argumentativo sobre variação linguística no Brasil. Qual é a **BEST** estratégia para organizar as ideias e manter a coesão?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Iniciar com uma tese genérica, desenvolver com exemplos desconexos e concluir sem síntese."
+        },
+        {
+          "label": "B",
+          "text": "Apresentar uma tese, desenvolver com argumentos, mas sem abordar contra-argumentos."
+        },
+        {
+          "label": "C",
+          "text": "Organizar com introdução com tese, desenvolvimento com argumentos, inclusão de contra-argumentos e conclusão que sintetize."
+        },
+        {
+          "label": "D",
+          "text": "Manter o texto em uma única sequência de frases curtas, sem parágrafos."
+        }
+      ],
+      "correctOptionIndex": 2,
+      "explanation": {
+        "short": "A estrutura com introdução, desenvolvimento, contra-argumento e conclusão é uma prática de coesão textual amplamente reconhecida em diretrizes de qualidade de comunicação (ISO 9001:2015) e em boas práticas de escrita conforme normas de comunicação. Além disso, a organização facilita a clareza e a persuasão no tema, conforme padrões de governança de informações (NIST SP 800-53).",
+        "whyOthersWrong": {
+          "A": "Essa abordagem sacrifica a coesão e a progressão lógica do texto.",
+          "B": "Faltar o contra-argumento reduz a força persuasiva e a reflexão crítica.",
+          "D": "Exibir apenas frases soltas fragmenta a ideia central e compromete a argumentação."
+        },
+        "examTip": "Defina uma tese clara na introdução, desenvolva com argumentos e exemplos, apresente e refute contra-argumentos e conclua sintetizando. Estruture parágrafos bem delineados."
+      },
+      "difficulty": "hard",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "produçao-de-textos",
+        "coesao-e-coesao",
+        "registro-e-coesao"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "Parágrafo: 'Os contextos sociais moldam o uso da linguagem. Portanto, a coesão depende de conectivos que conectam ideias.' Qual conectivo **MOST** adequado para ligar as duas frases?",
+      "options": [
+        {
+          "label": "A",
+          "text": "além disso"
+        },
+        {
+          "label": "B",
+          "text": "porém"
+        },
+        {
+          "label": "C",
+          "text": "entretanto"
+        },
+        {
+          "label": "D",
+          "text": "portanto"
+        }
+      ],
+      "correctOptionIndex": 3,
+      "explanation": {
+        "short": "A relação entre as frases é de causa/consequência, justificando o uso de portanto. A escolha correta reflete o encadeamento lógico esperado entre a ideia de moldagem social e a necessidade de conectivos para coesão.",
+        "whyOthersWrong": {
+          "A": "além disso adiciona uma ideia, não sinaliza relação de consequência.",
+          "B": "porém sugere contraste, inadequado para o encadeamento.",
+          "C": "entretanto também indica contraste, não relação causal."
+        },
+        "examTip": "Identifique o relacionamento lógico entre as orações (causa, consequência, adição) e escolha o conectivo que expressa essa relação com clareza."
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "coesao-textual",
+        "conectivos",
+        "lingua-portuguesa"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "Texto: uma campanha escolar utiliza linguagem inclusiva para respeitar identidades diversas, usando termos neutros e exemplos de diferentes origens. Qual recurso linguístico é mais eficaz para sinalizar respeito à diversidade linguística e social em uma mensagem pública? **BEST**",
+      "options": [
+        {
+          "label": "A",
+          "text": "Uso de vocabulário inclusivo e neutralidade de gênero."
+        },
+        {
+          "label": "B",
+          "text": "Uso de gírias regionais sem explicação."
+        },
+        {
+          "label": "C",
+          "text": "Exclusão de termos de minorias."
+        },
+        {
+          "label": "D",
+          "text": "Repetição de termos técnicos sem clareza."
+        }
+      ],
+      "correctOptionIndex": 0,
+      "explanation": {
+        "short": "O vocabulário inclusivo e a neutralidade de gênero promovem respeito e acessibilidade, princípio defendido pela ISO 26000 sobre responsabilidade social e pela prática de comunicação inclusiva. Além disso, normas de qualidade da comunicação (ISO 9001:2015) trabalham com clareza e adequação ao público-alvo.",
+        "whyOthersWrong": {
+          "B": "Gírias sem explicação podem excluir leitores que não compartilham o dialeto.",
+          "C": "Exclusão de termos de minorias contraria o objetivo de inclusão.",
+          "D": "Termos técnicos sem clareza dificultam compreensão e acessibilidade."
+        },
+        "examTip": "Priorize linguagem que reconheça diversidade, evite jargões não explicados e valide o público-alvo da mensagem."
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "variedade-linguistica",
+        "linguagem-inclusiva",
+        "registro-e-diversidade"
+      ],
+      "questionType": "mcq"
+    }
+  ]
+}

@@ -148,6 +148,100 @@ export const marketplaceImportSchema = z.object({
     domainIds: z.array(z.string().min(1)).min(1).max(10),
 });
 
+// === Question Report ===
+
+export const reportReasonSchema = z.enum([
+    'wrong_answer', 'ambiguous', 'outdated', 'duplicate', 'unclear', 'offensive', 'other',
+]);
+
+export const reportStatusSchema = z.enum([
+    'open', 'reviewing', 'resolved_fixed', 'resolved_rejected', 'resolved_archived',
+]);
+
+export const createQuestionReportSchema = z.object({
+    questionId: z.string().min(1),
+    marketplaceQuestionId: z.string().min(1).optional(),
+    studyId: z.string().min(1),
+    reason: reportReasonSchema,
+    description: safeString(10).pipe(z.string().max(2000)),
+});
+
+export const resolveQuestionReportSchema = z.object({
+    status: z.enum(['resolved_fixed', 'resolved_rejected', 'resolved_archived']),
+    resolution: safeString(5).pipe(z.string().max(2000)),
+});
+
+// === Content Audit ===
+
+export const contentActionSchema = z.enum([
+    'created', 'reviewed', 'approved', 'rejected', 'imported', 'archived', 'edited', 'flagged', 'reported',
+]);
+
+export const createContentAuditSchema = z.object({
+    action: contentActionSchema,
+    batchId: z.string().max(200).optional(),
+    studyId: z.string().min(1).optional(),
+    questionId: z.string().min(1).optional(),
+    questionCount: z.number().int().min(0).optional(),
+    notes: z.string().max(5000).transform(stripHtml).optional(),
+    metadata: z.record(z.unknown()).optional(),
+});
+
+// === Question Lifecycle ===
+
+export const questionLifecycleSchema = z.enum(['active', 'flagged', 'archived', 'revised']);
+
+export const updateQuestionLifecycleSchema = z.object({
+    lifecycle: questionLifecycleSchema,
+    reason: z.string().max(1000).transform(stripHtml).optional(),
+});
+
+// === Review Status ===
+
+export const reviewStatusSchema = z.enum([
+    'draft', 'founder_reviewed', 'expert_reviewed', 'needs_revision', 'approved', 'published', 'archived',
+]);
+
+// === Content Batch Validation ===
+
+export const contentBatchMetadataSchema = z.object({
+    certId: z.string().min(1).max(20),
+    domainId: z.string().min(1).max(20),
+    batchNumber: z.number().int().min(1),
+    generatedAt: z.string().datetime(),
+    generatedBy: z.string().min(1).max(100),
+    reviewedBy: z.string().max(100).optional(),
+    reviewedAt: z.string().datetime().optional(),
+});
+
+export const contentBatchQuestionSchema = z.object({
+    text: safeString(20),
+    options: z.array(optionSchema).min(4).max(5),
+    correctOptionIndex: z.number().int().min(0).max(4),
+    explanation: explanationSchema,
+    difficulty: difficultySchema,
+    domainIds: z.array(z.string().min(1)).min(1).max(10),
+    tags: z.array(z.string().transform(stripHtml)).min(1).max(10),
+    questionType: z.enum(['mcq', 'ordering', 'hotspot']).default('mcq'),
+}).refine(
+    (data) => data.correctOptionIndex < data.options.length,
+    { message: 'correctOptionIndex must be less than the number of options', path: ['correctOptionIndex'] }
+);
+
+export const contentBatchSchema = z.object({
+    metadata: contentBatchMetadataSchema,
+    questions: z.array(contentBatchQuestionSchema).min(1).max(500),
+});
+
+// === Content Contributor ===
+
+export const createContributorSchema = z.object({
+    name: safeString(2).pipe(z.string().max(100)),
+    email: z.string().email(),
+    role: z.enum(['admin', 'reviewer', 'author']),
+    certifications: z.array(z.string().max(20)).max(10).optional(),
+});
+
 // === Type Exports ===
 
 export type CreateStudyInput = z.infer<typeof createStudySchema>;
@@ -165,3 +259,10 @@ export type CreateMarketplaceQuestionInput = z.infer<typeof createMarketplaceQue
 export type UpdateMarketplaceQuestionInput = z.infer<typeof updateMarketplaceQuestionSchema>;
 export type MarketplaceBulkQuestionsInput = z.infer<typeof marketplaceBulkQuestionsSchema>;
 export type MarketplaceImportInput = z.infer<typeof marketplaceImportSchema>;
+export type CreateQuestionReportInput = z.infer<typeof createQuestionReportSchema>;
+export type ResolveQuestionReportInput = z.infer<typeof resolveQuestionReportSchema>;
+export type CreateContentAuditInput = z.infer<typeof createContentAuditSchema>;
+export type UpdateQuestionLifecycleInput = z.infer<typeof updateQuestionLifecycleSchema>;
+export type ContentBatchInput = z.infer<typeof contentBatchSchema>;
+export type ContentBatchQuestionInput = z.infer<typeof contentBatchQuestionSchema>;
+export type CreateContributorInput = z.infer<typeof createContributorSchema>;

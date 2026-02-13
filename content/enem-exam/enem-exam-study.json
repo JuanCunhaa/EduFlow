@@ -1,0 +1,62 @@
+{
+  "studyId": "yiis21fj3bx9fbUcMo2E",
+  "certSlug": "enem-exam",
+  "certName": "Exame Nacional do Ensino Médio (ENEM)",
+  "issuer": "INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira)",
+  "domains": [
+    {
+      "domainId": "lng",
+      "domainName": "Linguagens, Códigos e suas Tecnologias",
+      "domainNumber": 1,
+      "topics": [
+        "Interpretação de textos, leitura crítica e inferência",
+        "Análise de textos multimodais (gráficos, tabelas, imagens)",
+        "Variedade linguística e registro de diferentes gêneros (dissertativo, narrativo, poético, etc.)",
+        "Produção de textos: organização de ideias, coesão e argumentação",
+        "Recursos linguísticos: vocabulário, semântica e pragmática",
+        "Contexto sociocultural e diversidade linguística"
+      ]
+    },
+    {
+      "domainId": "mat",
+      "domainName": "Matemática e suas Tecnologias",
+      "domainNumber": 2,
+      "topics": [
+        "Números, operações e cálculo",
+        "Álgebra e funções",
+        "Geometria e mensuração",
+        "Probabilidade, estatística e inferência",
+        "Modelagem matemática e resolução de problemas",
+        "Leitura e interpretação de dados"
+      ]
+    },
+    {
+      "domainId": "nat",
+      "domainName": "Ciências da Natureza e suas Tecnologias",
+      "domainNumber": 3,
+      "topics": [
+        "Física: mecânica, energia e trabalho",
+        "Física: eletricidade, magnetismo e ondas",
+        "Química: propriedades da matéria e transformações químicas",
+        "Química: estequiometria, reações químicas e balanceamento",
+        "Biologia: genética, evolução e ecologia",
+        "Biologia: citologia, fisiologia e bioquímica",
+        "Ciência, tecnologia e sociedade: impactos éticos e ambientais"
+      ]
+    },
+    {
+      "domainId": "hum",
+      "domainName": "Ciências Humanas e suas Tecnologias",
+      "domainNumber": 4,
+      "topics": [
+        "História do Brasil: Brasil Colônia, Império, República e Contemporaneidade",
+        "História Mundial: transformações políticas e econômicas globais",
+        "Geografia: geografia física, recursos naturais e meio ambiente",
+        "Geografia Humana: urbanização, demografia e desigualdades",
+        "Sociologia: cultura, cidadania e estruturas sociais",
+        "Filosofia e Ética: pensamento crítico, ética e cidadania"
+      ]
+    }
+  ],
+  "lang": "pt-BR"
+}

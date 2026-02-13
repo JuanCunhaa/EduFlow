@@ -104,7 +104,7 @@ export async function updatePerformanceSummary(
             }
         }
 
-        // 2. Upsert question attempt records with SM-2 scheduling
+        // 2. Upsert question attempt records with SM-2 scheduling + distractor tracking
         for (const [qId, correctIndex] of Object.entries(result.correctAnswers)) {
             const userAnswer = result.answers[qId];
             const isCorrect = userAnswer === correctIndex;
@@ -129,6 +129,15 @@ export async function updatePerformanceSummary(
 
             const nextReviewAt = now + newInterval * 24 * 60 * 60 * 1000;
 
+            // Distractor tracking: record which option the user selected
+            const prevDistribution = prev?.selectedDistribution
+                ? { ...prev.selectedDistribution }
+                : {};
+            if (userAnswer !== null && userAnswer !== undefined) {
+                const key = String(userAnswer);
+                prevDistribution[key] = (prevDistribution[key] ?? 0) + 1;
+            }
+
             existing.questionAttempts[qId] = {
                 attempts: (prev?.attempts ?? 0) + 1,
                 correct: (prev?.correct ?? 0) + (isCorrect ? 1 : 0),
@@ -137,6 +146,8 @@ export async function updatePerformanceSummary(
                 easeFactor: newEF,
                 interval: newInterval,
                 nextReviewAt,
+                lastSelectedIndex: userAnswer ?? undefined,
+                selectedDistribution: prevDistribution,
             };
         }
 
@@ -206,7 +217,7 @@ export function buildPerformanceSummaryUpdate(
         };
     }
 
-    // Upsert question attempts with SM-2 spaced repetition scheduling
+    // Upsert question attempts with SM-2 spaced repetition scheduling + distractor tracking
     for (const [qId, correctIndex] of Object.entries(result.correctAnswers)) {
         const userAnswer = result.answers[qId];
         const isCorrect = userAnswer === correctIndex;
@@ -233,6 +244,15 @@ export function buildPerformanceSummaryUpdate(
 
         const nextReviewAt = now + newInterval * 24 * 60 * 60 * 1000;
 
+        // Distractor tracking: record which option the user selected
+        const prevDistribution = prev?.selectedDistribution
+            ? { ...prev.selectedDistribution }
+            : {};
+        if (userAnswer !== null && userAnswer !== undefined) {
+            const key = String(userAnswer);
+            prevDistribution[key] = (prevDistribution[key] ?? 0) + 1;
+        }
+
         summary.questionAttempts[qId] = {
             attempts: (prev?.attempts ?? 0) + 1,
             correct: (prev?.correct ?? 0) + (isCorrect ? 1 : 0),
@@ -241,6 +261,8 @@ export function buildPerformanceSummaryUpdate(
             easeFactor: newEF,
             interval: newInterval,
             nextReviewAt,
+            lastSelectedIndex: userAnswer ?? undefined,
+            selectedDistribution: prevDistribution,
         };
     }
 
