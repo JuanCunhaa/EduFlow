@@ -1,0 +1,210 @@
+{
+  "metadata": {
+    "certId": "enem",
+    "certName": "Exame Nacional do Ensino Médio",
+    "issuer": "Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP)",
+    "domainId": "mat",
+    "domainName": "Matemática e suas Tecnologias",
+    "domainNumber": 2,
+    "studyId": "jgbH3gfpP5oSImnqorxi",
+    "lang": "pt-BR",
+    "batchNumber": 1,
+    "generatedAt": "2026-02-13T17:37:58.760Z",
+    "generatedBy": "openai/gpt-4o-mini",
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "qaResult": null
+  },
+  "questions": [
+    {
+      "text": "Qual é o **MELHOR** método para resolver uma equação do primeiro grau como 3x + 5 = 20?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Isolar a variável x subtraindo 5 de ambos os lados."
+        },
+        {
+          "label": "B",
+          "text": "Multiplicar ambos os lados por 3."
+        },
+        {
+          "label": "C",
+          "text": "Reorganizar a equação para que x fique em um lado."
+        },
+        {
+          "label": "D",
+          "text": "Substituir x por um número e verificar."
+        }
+      ],
+      "correctOptionIndex": 0,
+      "explanation": {
+        "short": "O método mais eficiente para resolver uma equação do primeiro grau é isolar a variável. Ao subtrair 5 de ambos os lados, obtemos 3x = 15, que facilita o cálculo para encontrar x. Este procedimento é fundamentado na propriedade da igualdade, conforme descrito por Gelfand e Shen (2008).",
+        "whyOthersWrong": {
+          "B": "Multiplicar ambos os lados por 3 não isola a variável e complica a equação.",
+          "C": "Reorganizar é uma boa prática, mas não é tão direto quanto isolar a variável diretamente.",
+          "D": "Substituir x por um número apenas verifica a solução, mas não resolve a equação."
+        }
+      },
+      "examTip": "Pratique a resolução de equações do primeiro grau para se familiarizar com os passos e evitar erros simples.",
+      "difficulty": "easy",
+      "domainIds": [
+        "d2"
+      ],
+      "tags": [
+        "algebra"
+      ]
+    },
+    {
+      "text": "Em um triângulo, a **MAIOR** medida do ângulo é sempre oposta ao lado **MAIOR**. Se um triângulo tem lados de medidas 7 cm, 8 cm e 10 cm, qual é a medida do **MAIOR** ângulo?",
+      "options": [
+        {
+          "label": "A",
+          "text": "45 graus"
+        },
+        {
+          "label": "B",
+          "text": "60 graus"
+        },
+        {
+          "label": "C",
+          "text": "90 graus"
+        },
+        {
+          "label": "D",
+          "text": "120 graus"
+        }
+      ],
+      "correctOptionIndex": 3,
+      "explanation": {
+        "short": "Para encontrar o maior ângulo, podemos usar a Lei dos Cossenos. O ângulo oposto ao lado de 10 cm é o maior, e calculando temos que ele é aproximadamente 120 graus. Esta relação é bem explicada por Euclides em seus postulados sobre triângulos.",
+        "whyOthersWrong": {
+          "A": "45 graus é um ângulo agudo e não pode ser o maior em um triângulo com um lado de 10 cm.",
+          "B": "60 graus é um ângulo que não corresponde ao maior lado deste triângulo.",
+          "C": "90 graus seria um ângulo reto, mas não corresponde ao lado de 10 cm."
+        }
+      },
+      "examTip": "Lembre-se de aplicar a Lei dos Cossenos em triângulos não retângulos para encontrar ângulos.",
+      "difficulty": "medium",
+      "domainIds": [
+        "d2"
+      ],
+      "tags": [
+        "geometria"
+      ]
+    },
+    {
+      "text": "Um investidor aplicou R$ 5.000,00 em um fundo que oferece uma taxa de juros simples de 12% ao ano. Qual será o total acumulado após 3 anos, considerando a **MAIOR** parte do montante?",
+      "options": [
+        {
+          "label": "A",
+          "text": "R$ 6.800,00"
+        },
+        {
+          "label": "B",
+          "text": "R$ 7.000,00"
+        },
+        {
+          "label": "C",
+          "text": "R$ 7.200,00"
+        },
+        {
+          "label": "D",
+          "text": "R$ 7.500,00"
+        }
+      ],
+      "correctOptionIndex": 2,
+      "explanation": {
+        "short": "O montante em juros simples é calculado pela fórmula M = C + (C * i * t), onde C é o capital, i é a taxa e t é o tempo. Assim, M = 5000 + (5000 * 0.12 * 3) = R$ 7.200,00, segundo a fórmula de juros simples. Esta fórmula é comum em finanças e foi amplamente discutida por Mankiw (2014).",
+        "whyOthersWrong": {
+          "A": "R$ 6.800,00 é um valor incorreto, pois não considera a totalidade dos juros acumulados.",
+          "B": "R$ 7.000,00 também não contabiliza corretamente o cálculo dos juros.",
+          "D": "R$ 7.500,00 é um valor superestimado e não corresponde ao cálculo correto."
+        }
+      },
+      "examTip": "Entenda bem a diferença entre juros simples e compostos; pratique com exemplos.",
+      "difficulty": "medium",
+      "domainIds": [
+        "d2"
+      ],
+      "tags": [
+        "numeros-e-operacoes"
+      ]
+    },
+    {
+      "text": "Em um gráfico de barras, a **PRINCIPAL** informação que podemos obter é sobre a comparação de valores. Se um comerciante vendeu 150 unidades de produto A e 250 unidades de produto B, qual é a **MAIOR** diferença percentual nas vendas?",
+      "options": [
+        {
+          "label": "A",
+          "text": "33,33%"
+        },
+        {
+          "label": "B",
+          "text": "50%"
+        },
+        {
+          "label": "C",
+          "text": "66,67%"
+        },
+        {
+          "label": "D",
+          "text": "100%"
+        }
+      ],
+      "correctOptionIndex": 1,
+      "explanation": {
+        "short": "A diferença percentual é calculada pela fórmula ((B - A) / A) * 100. Portanto, ((250 - 150) / 150) * 100 = 66,67%. O conceito de diferença percentual é fundamental em análises de dados, conforme descrito por Triola (2018).",
+        "whyOthersWrong": {
+          "A": "33,33% representa um erro no cálculo da diferença percentual entre as vendas.",
+          "C": "66,67% é a diferença percentual correta, não pode ser a maior.",
+          "D": "100% não é aplicável, pois a diferença percentual é menor que 100%."
+        }
+      },
+      "examTip": "Ao trabalhar com porcentagens, sempre revise a fórmula para evitar erros de cálculo.",
+      "difficulty": "hard",
+      "domainIds": [
+        "d2"
+      ],
+      "tags": [
+        "analise-de-dados"
+      ]
+    },
+    {
+      "text": "Um estudante está organizando um conjunto de dados que inclui as idades de 10 colegas. As idades são: 15, 16, 16, 17, 18, 19, 19, 20, 20, 20. Qual é a **MAIOR** frequência entre as idades?",
+      "options": [
+        {
+          "label": "A",
+          "text": "15 anos"
+        },
+        {
+          "label": "B",
+          "text": "16 anos"
+        },
+        {
+          "label": "C",
+          "text": "19 anos"
+        },
+        {
+          "label": "D",
+          "text": "20 anos"
+        }
+      ],
+      "correctOptionIndex": 3,
+      "explanation": {
+        "short": "A idade de 20 anos aparece 3 vezes, que é a maior frequência entre as idades listadas. A análise de frequência é uma parte importante da estatística descritiva, conforme discutido por Bluman (2018).",
+        "whyOthersWrong": {
+          "A": "15 anos aparece apenas uma vez, o que não é a maior frequência.",
+          "B": "16 anos também aparece apenas duas vezes, não é a maior.",
+          "C": "19 anos aparece duas vezes, que é menor que 20 anos."
+        }
+      },
+      "examTip": "Pratique a contagem de frequências em conjuntos de dados para melhorar sua análise estatística.",
+      "difficulty": "medium",
+      "domainIds": [
+        "d2"
+      ],
+      "tags": [
+        "analise-de-dados"
+      ]
+    }
+  ]
+}

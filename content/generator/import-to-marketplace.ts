@@ -2,7 +2,7 @@
 /**
  * Import Generated Batch → Marketplace (via Firebase Admin SDK)
  *
- * Reads a generated batch JSON file and bulk-imports the questions
+ * Reads generated batch JSON files and bulk-imports the questions
  * into the marketplace_questions Firestore collection.
  *
  * This bypasses the HTTP API and writes directly to Firestore,
@@ -21,7 +21,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { cert, getApps, initializeApp, type ServiceAccount } from 'firebase-admin/app';
+import { cert as adminCert, getApps, initializeApp, type ServiceAccount } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import * as dotenv from 'dotenv';
 
@@ -41,6 +41,7 @@ interface BatchQuestion {
     difficulty: string;
     domainIds: string[];
     tags: string[];
+    questionType?: string;
 }
 
 interface BatchFile {
@@ -51,11 +52,14 @@ interface BatchFile {
         domainId: string;
         domainName?: string;
         domainNumber?: number;
+        studyId?: string;
+        lang?: string;
         batchNumber: number;
         generatedAt: string;
         generatedBy: string;
         reviewedBy: string | null;
         reviewedAt: string | null;
+        qaResult?: string | null;
     };
     questions: BatchQuestion[];
 }
@@ -136,7 +140,7 @@ function initFirebase() {
         process.exit(1);
     }
 
-    initializeApp({ credential: cert(serviceAccount) });
+    initializeApp({ credential: adminCert(serviceAccount) });
 }
 
 // ── Exported Function ────────────────────────────
@@ -155,7 +159,13 @@ export async function importBatchToMarketplace(files: string[], studyId: string,
     }
 
     const study = studySnap.data() as MarketplaceStudy;
+    console.log(`\n${'═'.repeat(60)}`);
+    console.log(`📦 IMPORT TO MARKETPLACE`);
+    console.log(`${'═'.repeat(60)}`);
     console.log(`   📚 Study: ${study.name} (${study.abbreviation})`);
+    console.log(`   🆔 Study ID: ${studyId}`);
+    console.log(`   📁 Files to process: ${files.length}`);
+    if (dryRun) console.log(`   🧪 DRY RUN — no writes will be made`);
 
     // ── Pre-fetch existing questions for deduplication ──
     const existingQuestionsSnap = await db.collection('marketplace_questions')
@@ -169,21 +179,201 @@ export async function importBatchToMarketplace(files: string[], studyId: string,
         if (data.text) existingTexts.add(data.text.trim().toLowerCase());
     });
 
-    // ── Process batches ──
-    let totalImported = 0;
+    console.log(`   📊 Existing questions in study: ${existingTexts.size}`);
+
+    // ── Collect valid domain IDs from the study ──
     const validDomainIds = new Set(study.domains.map(d => d.id));
 
-    for (const filePath of files) {
-        // Reuse the logic from original main... using a helper or just duplicating core logic?
-        // To avoid massive duplication in this edit, I will adapt the main() to use this function
-        // But for now, I will just implement the core logic here as requested by generate.ts
+    // ── Process each batch file ──
+    let totalImported = 0;
+    let totalSkippedDuplicate = 0;
+    let totalSkippedInvalid = 0;
+    const domainCounts = new Map<string, number>();
 
-        // ... (Logic from main loop) ...
-        // For brevity in this tool call, I will delegate to a shared function or 
-        // essentially make main() call this function.
+    for (const filePath of files) {
+        const relativePath = path.relative(process.cwd(), filePath);
+
+        // Read and parse the batch file
+        if (!fs.existsSync(filePath)) {
+            console.warn(`   ⚠️  File not found, skipping: ${relativePath}`);
+            continue;
+        }
+
+        let batch: BatchFile;
+        try {
+            const raw = fs.readFileSync(filePath, 'utf-8');
+            batch = JSON.parse(raw) as BatchFile;
+        } catch (err) {
+            console.warn(`   ⚠️  Failed to parse ${relativePath}: ${(err as Error).message}`);
+            continue;
+        }
+
+        if (!batch.questions || !Array.isArray(batch.questions) || batch.questions.length === 0) {
+            console.warn(`   ⚠️  No questions in ${relativePath}, skipping`);
+            continue;
+        }
+
+        // Filter questions: dedup + validate structure
+        const questionsToImport: BatchQuestion[] = [];
+
+        for (const q of batch.questions) {
+            // Deduplication check
+            const normalizedText = q.text?.trim().toLowerCase();
+            if (!normalizedText) {
+                totalSkippedInvalid++;
+                continue;
+            }
+
+            if (existingTexts.has(normalizedText)) {
+                totalSkippedDuplicate++;
+                continue;
+            }
+
+            // Basic structure validation
+            if (!q.options || q.options.length < 4) {
+                totalSkippedInvalid++;
+                continue;
+            }
+            if (typeof q.correctOptionIndex !== 'number' || q.correctOptionIndex < 0 || q.correctOptionIndex >= q.options.length) {
+                totalSkippedInvalid++;
+                continue;
+            }
+            if (!q.explanation?.short) {
+                totalSkippedInvalid++;
+                continue;
+            }
+
+            // Fix domainIds: if they use "d1", "d2" format, map them to actual study domain IDs
+            let domainIds = q.domainIds || [];
+            if (domainIds.length > 0) {
+                const mappedIds = domainIds.map(id => {
+                    // If the domainId is like "d1", "d2", etc., map to actual domain ID
+                    const match = /^d(\d+)$/.exec(id);
+                    if (match) {
+                        const domainNumber = Number.parseInt(match[1], 10);
+                        const domain = study.domains.find((d: any) => d.order === domainNumber);
+                        return domain ? domain.id : id;
+                    }
+                    return id;
+                });
+                domainIds = mappedIds;
+            }
+
+            // If domainIds is empty, use the batch metadata's domainId
+            if (domainIds.length === 0 && batch.metadata.domainId) {
+                domainIds = [batch.metadata.domainId];
+            }
+
+            // Validate domainIds against study domains
+            const validIds = domainIds.filter(id => validDomainIds.has(id));
+            if (validIds.length === 0) {
+                // Try batch metadata domainId as fallback
+                if (batch.metadata.domainId && validDomainIds.has(batch.metadata.domainId)) {
+                    domainIds = [batch.metadata.domainId];
+                } else {
+                    console.warn(`   ⚠️  Question skipped — no valid domainIds: [${domainIds.join(', ')}]`);
+                    totalSkippedInvalid++;
+                    continue;
+                }
+            } else {
+                domainIds = validIds;
+            }
+
+            // Update the question with corrected domainIds
+            q.domainIds = domainIds;
+
+            // Mark as seen for dedup within the current run
+            existingTexts.add(normalizedText);
+            questionsToImport.push(q);
+        }
+
+        if (questionsToImport.length === 0) {
+            console.log(`   ⏭️  ${relativePath}: 0 new questions (all duplicates/invalid)`);
+            continue;
+        }
+
+        console.log(`   📄 ${relativePath}: ${questionsToImport.length} questions to import`);
+
+        if (dryRun) {
+            totalImported += questionsToImport.length;
+            for (const q of questionsToImport) {
+                for (const dId of q.domainIds) {
+                    domainCounts.set(dId, (domainCounts.get(dId) || 0) + 1);
+                }
+            }
+            continue;
+        }
+
+        // ── Write to Firestore in batches of 498 ──
+        const BATCH_LIMIT = 498;
+        const now = FieldValue.serverTimestamp();
+
+        for (let i = 0; i < questionsToImport.length; i += BATCH_LIMIT) {
+            const chunk = questionsToImport.slice(i, i + BATCH_LIMIT);
+            const writeBatch = db.batch();
+
+            for (const q of chunk) {
+                const ref = db.collection('marketplace_questions').doc();
+                writeBatch.set(ref, {
+                    studyId,
+                    text: q.text,
+                    options: q.options,
+                    correctOptionIndex: q.correctOptionIndex,
+                    explanation: {
+                        short: q.explanation.short,
+                        whyOthersWrong: q.explanation.whyOthersWrong || {},
+                    },
+                    difficulty: q.difficulty || 'medium',
+                    domainIds: q.domainIds,
+                    tags: q.tags || [],
+                    questionType: q.questionType || 'mcq',
+                    isActive: true,
+                    createdAt: now,
+                    updatedAt: now,
+                    createdBy: 'system-generator',
+                });
+
+                // Track domain counts for study counter update
+                for (const dId of q.domainIds) {
+                    domainCounts.set(dId, (domainCounts.get(dId) || 0) + 1);
+                }
+            }
+
+            await writeBatch.commit();
+            totalImported += chunk.length;
+            console.log(`      ✅ Committed batch: ${chunk.length} questions`);
+        }
     }
 
-    // Actually, I should refactor main to call this function.
+    // ── Update study counters ──
+    if (!dryRun && totalImported > 0) {
+        const counterUpdates: Record<string, unknown> = {
+            questionCount: FieldValue.increment(totalImported),
+            updatedAt: FieldValue.serverTimestamp(),
+        };
+        for (const [domainId, count] of domainCounts) {
+            counterUpdates[`domainQuestionCounts.${domainId}`] = FieldValue.increment(count);
+        }
+        await studyRef.update(counterUpdates);
+        console.log(`   📈 Updated study counters: +${totalImported} total`);
+    }
+
+    // ── Summary ──
+    console.log(`\n${'═'.repeat(60)}`);
+    console.log('📊 IMPORT SUMMARY');
+    console.log(`${'═'.repeat(60)}`);
+    console.log(`   ✅ Imported: ${totalImported}`);
+    console.log(`   ⏭️  Skipped (duplicate): ${totalSkippedDuplicate}`);
+    console.log(`   ❌ Skipped (invalid): ${totalSkippedInvalid}`);
+    if (domainCounts.size > 0) {
+        console.log(`   📚 Per domain:`);
+        for (const [dId, count] of domainCounts) {
+            console.log(`      ${dId}: +${count}`);
+        }
+    }
+    if (dryRun) {
+        console.log(`   🧪 DRY RUN — no data was written`);
+    }
 }
 
 // ── Main (CLI) ───────────────────────────────────
@@ -196,10 +386,19 @@ async function main() {
     // Resolve files
     let batchFiles: string[] = [];
     if (args.file) {
-        if (!fs.existsSync(args.file)) process.exit(1);
-        batchFiles = [args.file];
+        const fullPath = path.resolve(process.cwd(), args.file);
+        if (!fs.existsSync(fullPath)) {
+            console.error(`❌ File not found: ${args.file}`);
+            process.exit(1);
+        }
+        batchFiles = [fullPath];
     } else if (args.dir) {
-        // ... (directory search logic) ...
+        const fullDir = path.resolve(process.cwd(), args.dir);
+        if (!fs.existsSync(fullDir)) {
+            console.error(`❌ Directory not found: ${args.dir}`);
+            process.exit(1);
+        }
+
         const findBatchFiles = (dir: string): string[] => {
             let results: string[] = [];
             const list = fs.readdirSync(dir);
@@ -214,9 +413,15 @@ async function main() {
             }
             return results;
         };
-        batchFiles = findBatchFiles(args.dir).sort();
+        batchFiles = findBatchFiles(fullDir).sort();
     }
 
+    if (batchFiles.length === 0) {
+        console.error('❌ No batch files found.');
+        process.exit(1);
+    }
+
+    console.log(`\n📁 Found ${batchFiles.length} batch file(s)`);
     await importBatchToMarketplace(batchFiles, args.studyId, args.dryRun);
 }
 

@@ -1,0 +1,56 @@
+{
+  "studyId": "jgbH3gfpP5oSImnqorxi",
+  "certSlug": "enem",
+  "certName": "Exame Nacional do Ensino Médio",
+  "issuer": "Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP)",
+  "domains": [
+    {
+      "domainId": "ling",
+      "domainName": "Linguagens, Códigos e suas Tecnologias",
+      "domainNumber": 1,
+      "topics": [
+        "Língua Portuguesa",
+        "Literatura",
+        "Língua Estrangeira",
+        "Artes",
+        "Educação Física",
+        "Tecnologias da Informação"
+      ]
+    },
+    {
+      "domainId": "mat",
+      "domainName": "Matemática e suas Tecnologias",
+      "domainNumber": 2,
+      "topics": [
+        "Números e Operações",
+        "Geometria",
+        "Álgebra",
+        "Análise de Dados",
+        "Raciocínio Lógico"
+      ]
+    },
+    {
+      "domainId": "ci1",
+      "domainName": "Ciências da Natureza e suas Tecnologias",
+      "domainNumber": 3,
+      "topics": [
+        "Biologia",
+        "Química",
+        "Física",
+        "Ciências Ambientais"
+      ]
+    },
+    {
+      "domainId": "ci2",
+      "domainName": "Ciências Humanas e suas Tecnologias",
+      "domainNumber": 4,
+      "topics": [
+        "História",
+        "Geografia",
+        "Filosofia",
+        "Sociologia"
+      ]
+    }
+  ],
+  "lang": "pt-BR"
+}

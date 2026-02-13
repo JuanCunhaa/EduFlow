@@ -11,7 +11,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { GroqClient } from './groq-client';
 
 // ── Types ────────────────────────────────────────
 
@@ -115,6 +114,17 @@ const KNOWN_CERTS: Record<string, CertInfo> = {
             { id: 'pm', number: 5, name: 'Security Program Management and Oversight', weight: '20%', topics: ['governance', 'risk management', 'compliance', 'security policies', 'awareness programs', 'audits'] },
         ],
     },
+    enem: {
+        slug: 'enem',
+        name: 'Exame Nacional do Ensino Médio',
+        issuer: 'Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP)',
+        domains: [
+            { id: 'ling', number: 1, name: 'Linguagens, Códigos e suas Tecnologias', weight: '25%', topics: ['Língua Portuguesa', 'Literatura', 'Língua Estrangeira', 'Artes', 'Educação Física', 'Tecnologias da Informação'] },
+            { id: 'mat', number: 2, name: 'Matemática e suas Tecnologias', weight: '25%', topics: ['Números e Operações', 'Geometria', 'Álgebra', 'Análise de Dados', 'Raciocínio Lógico'] },
+            { id: 'ci1', number: 3, name: 'Ciências da Natureza e suas Tecnologias', weight: '25%', topics: ['Biologia', 'Química', 'Física', 'Ciências Ambientais'] },
+            { id: 'ci2', number: 4, name: 'Ciências Humanas e suas Tecnologias', weight: '25%', topics: ['História', 'Geografia', 'Filosofia', 'Sociologia'] },
+        ],
+    },
 };
 
 // Aliases for flexible CLI input
@@ -129,6 +139,7 @@ const CERT_ALIASES: Record<string, string> = {
     'comptia-security': 'security+',
     'comptia security+': 'security+',
     'sy0-701': 'security+',
+    'enem': 'enem',
 };
 
 // ── Language names ────────────────────────────────
@@ -260,78 +271,101 @@ export function buildSystemPrompt(
         : '  (none — this is the first batch)';
 
     const langInstruction = lang !== 'en'
-        ? `\n\nLANGUAGE REQUIREMENT (CRITICAL):\nAll question text, options, explanations, whyOthersWrong, and examTip MUST be written in ${LANG_NAMES[lang] || lang}.\nKeep technical terms, acronyms, standard names, and framework names in English (e.g., "NIST SP 800-53", "CIA triad", "RBAC").\nThe JSON keys (text, options, label, etc.) stay in English — only the VALUES are translated.`
+        ? `\n\nLANGUAGE REQUIREMENT (CRITICAL):\nAll question text, options, explanations, whyOthersWrong, and examTip MUST be written in ${LANG_NAMES[lang] || lang}.\nKeep technical terms, acronyms, and well-known proper names in their original form.\nThe JSON keys (text, options, label, etc.) stay in English — only the VALUES are translated.`
         : '';
 
-    return `You are an expert exam question author for the ${domain.certName} certification (${domain.certIssuer}).${langInstruction}
+    // Detect if this is a security/IT certification or a general exam
+    const securityIssuers = ['ISC2', 'CompTIA', 'ISACA', 'EC-Council', 'SANS', 'AWS', 'Microsoft', 'Google', 'Cisco'];
+    const isSecurityCert = securityIssuers.some(s => domain.certIssuer.includes(s));
+
+    const referencesSection = isSecurityCert
+        ? `\nReferences to cite in explanations (use REAL ones only):
+- NIST SP 800-53, SP 800-61, SP 800-37, SP 800-175B, SP 800-30, SP 800-171
+- ISO 27001/27002, ISO 27005, ISO 27017/27018, ISO 31000
+- GDPR, HIPAA, SOX, PCI DSS, FERPA, GLBA
+- ISC2 CBK, CompTIA exam objectives, COBIT, ITIL
+- CSA CCM, OWASP Top 10, CIS Controls, MITRE ATT&CK`
+        : `\nReferences to cite in explanations:
+- Use REAL, well-known academic references, textbooks, laws, or official sources relevant to ${domain.certName}
+- Cite specific authors, theories, laws, or frameworks when applicable
+- Do NOT invent fake references or publication numbers`;
+
+    const avoidSection = isSecurityCert
+        ? `- Vendor-specific answers (Cisco, Microsoft, AWS, etc.)
+- Inventing fake standards or SP/ISO numbers`
+        : `- Inventing fake authors, laws, or publication references
+- Questions that are opinion-based rather than factual`;
+
+    return `You are an expert exam question author for ${domain.certName} (${domain.certIssuer}).${langInstruction}
 
 Domain ${domain.domainNumber}: ${domain.domainName} (${domain.domainWeight} of exam)
 
 Key topics for this domain:
 ${topicsText}
 
-You know the FULL official exam objectives for this domain from your training data. Use them to generate high-quality questions that comprehensively cover this domain.
+Use your training knowledge of this exam's official content to generate high-quality questions covering this domain comprehensively.
 
-Rules (MANDATORY):
-1. Output ONLY a valid JSON object with a single key "questions" containing an array
-2. Each question follows this schema:
-   {
-     "text": "...",
-     "options": [{"label": "A", "text": "..."}, {"label": "B", "text": "..."}, {"label": "C", "text": "..."}, {"label": "D", "text": "..."}],
-     "correctOptionIndex": 0-3,
-     "explanation": {
-       "short": "2+ sentences with specific reference to standard/framework",
-       "whyOthersWrong": {"A": "...", "B": "...", "C": "...", "D": "..."} (skip the correct letter),
-       "examTip": "optional exam-taking insight"
-     },
-     "difficulty": "easy|medium|hard",
-     "domainIds": ["d${domain.domainNumber}"],
-     "tags": ["topic-tag", "another-tag"],
-     "questionType": "mcq"
-   }
-3. 4 options per question labeled A–D
-4. difficulty: "easy", "medium", or "hard"
-5. Follow the 20/50/30 ratio: ~${Math.round(count * 0.2)} easy, ~${Math.round(count * 0.5)} medium, ~${Math.round(count * 0.3)} hard
-6. explanation.short: 2+ sentences, must cite a REAL standard/framework (NIST SP, ISO, RFC, etc.)
-7. whyOthersWrong: entry for EVERY incorrect option, 1–3 sentences each
-8. Distractors must be plausible real concepts, never absurd
-9. BOLD qualifiers in stems: **BEST**, **FIRST**, **MOST**, **PRIMARY**, **NOT**
-10. No "All of the above", "None of the above", no vendor-specific answers
-11. tags: include relevant topic tags (lowercase, hyphenated)
-12. Spread questions across ALL key topics above — cover as many as possible
-13. OPTION LENGTH BALANCE (CRITICAL): All 4 options MUST have similar length (within ~20% character count of each other). The correct answer must NEVER be noticeably longer or more detailed than distractors. If the correct answer needs detail, make ALL options equally detailed. This is a HARD requirement.
-14. CORRECT ANSWER POSITION: Distribute correctOptionIndex evenly across 0, 1, 2, 3 throughout the batch. Do NOT cluster correct answers in any position. Aim for roughly equal distribution.
-15. DISTRACTOR QUALITY: Each wrong option must be a plausible, real concept that someone with partial knowledge might choose. Add specific details/qualifiers to wrong options to make them as convincing as the correct answer.
-16. questionType: MUST be "mcq".
+OUTPUT FORMAT (STRICT — output ONLY this JSON, nothing else):
+{"questions": [
+  {
+    "text": "Question stem here, written naturally without any formatting...",
+    "options": [
+      {"label": "A", "text": "First option"},
+      {"label": "B", "text": "Second option"},
+      {"label": "C", "text": "Third option"},
+      {"label": "D", "text": "Fourth option"}
+    ],
+    "correctOptionIndex": 0,
+    "explanation": {
+      "short": "2+ sentences explaining WHY the correct answer is right, citing a real reference.",
+      "whyOthersWrong": {
+        "B": "Why B is wrong (1-3 sentences)",
+        "C": "Why C is wrong (1-3 sentences)",
+        "D": "Why D is wrong (1-3 sentences)"
+      },
+      "examTip": "A practical tip for the exam-taker"
+    },
+    "difficulty": "medium",
+    "domainIds": ["d${domain.domainNumber}"],
+    "tags": ["topic-tag"],
+    "questionType": "mcq"
+  }
+]}
 
-Standards references to use (cite REAL ones only):
-- NIST SP 800-53, SP 800-61, SP 800-37, SP 800-175B, SP 800-30, SP 800-171
-- ISO 27001/27002, ISO 27005, ISO 27017/27018, ISO 31000
-- GDPR, HIPAA, SOX, PCI DSS, FERPA, GLBA
-- ISC2 CBK, CompTIA exam objectives, COBIT, ITIL
-- CSA CCM, OWASP Top 10, CIS Controls, MITRE ATT&CK
+RULES (ALL MANDATORY):
+1. Generate exactly ${count} questions
+2. 4 options per question, labeled A–D
+3. difficulty distribution: ~${Math.round(count * 0.2)} easy, ~${Math.round(count * 0.5)} medium, ~${Math.round(count * 0.3)} hard
+4. explanation.short: 2+ complete sentences, must cite a REAL source
+5. whyOthersWrong: one entry for EACH incorrect option (skip the correct letter), 1–3 sentences each
+6. examTip: REQUIRED — a practical, actionable study/exam tip
+7. PLAIN TEXT ONLY: Do NOT use markdown, bold (**), caps-lock, or any emphasis formatting in question text or options. Write naturally. Example: "Qual foi a maior consequência..." NOT "Qual foi a **MAIOR** consequência..."
+8. tags: lowercase, hyphenated topic tags (at least 1)
+9. questionType: always "mcq"
+10. domainIds: always ["d${domain.domainNumber}"]
+11. Spread questions across ALL topics listed above — cover maximum breadth
+${referencesSection}
 
-AVOID:
-- Inventing fake standards or SP/ISO numbers
+QUALITY REQUIREMENTS:
+- OPTION LENGTH: All 4 options MUST be similar length (±20% character count). The correct answer must NOT be longer than distractors.
+- CORRECT POSITION: Distribute correctOptionIndex evenly (0,1,2,3). Never cluster in one position.
+- DISTRACTOR QUALITY: Wrong options must be plausible real concepts, never absurd.
+- No "All of the above" or "None of the above"
+${avoidSection}
 - Questions answerable without reading options
-- Two options that are effectively the same answer
-- Outdated technologies presented as current
-- Vendor-specific answers (Cisco, Microsoft, AWS, etc.)
-- "All of the following EXCEPT" framing
-- Trick questions that test trick identification, not knowledge
-- Making the correct answer longer, more specific, or more "complete-sounding" than distractors
-- Using hedging language ("may", "could", "sometimes") only in distractors while using definitive language only in the correct answer
-- Clustering correct answers in the same position (A, B, C, or D)
+- Two options that are effectively the same
+- Trick questions or overly ambiguous stems
+- Hedging language only in distractors ("may", "could") while correct answer uses definitive language
 
 QUESTION TYPES:
-- Definition/recall (easy): "What is the PRIMARY purpose of..."
-- Application (medium): Scenario with clear answer, 2-5 sentence stem
-- Best-answer scenario (hard): Multi-step scenario, 4-10 sentence stem, all options partially correct
+- Easy: Direct recall — "Qual é o principal objetivo de..."
+- Medium: Applied scenario with clear answer, 2-5 sentence stem
+- Hard: Complex scenario, 4-10 sentence stem, all options partially correct but one is best
 
-Existing questions in this domain (DO NOT DUPLICATE concepts or stems):
+Existing questions (DO NOT DUPLICATE concepts or stems):
 ${existingSection}
 
-Generate exactly ${count} questions. Output ONLY {"questions": [...]}. No markdown, no explanation outside JSON.`;
+Output ONLY the JSON object. No markdown fences, no explanation outside JSON.`;
 }
 
 /**

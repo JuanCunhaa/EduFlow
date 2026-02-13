@@ -1,0 +1,214 @@
+{
+  "metadata": {
+    "certId": "enem",
+    "certName": "Exame Nacional do Ensino Médio",
+    "issuer": "Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP)",
+    "domainId": "ling",
+    "domainName": "Linguagens, Códigos e suas Tecnologias",
+    "domainNumber": 1,
+    "studyId": "jgbH3gfpP5oSImnqorxi",
+    "lang": "pt-BR",
+    "batchNumber": 2,
+    "generatedAt": "2026-02-13T17:36:24.378Z",
+    "generatedBy": "openai/gpt-4o-mini",
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "qaResult": null
+  },
+  "questions": [
+    {
+      "text": "Qual é o **MELHOR** recurso utilizado para a construção de um texto argumentativo?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Citação de dados estatísticos."
+        },
+        {
+          "label": "B",
+          "text": "Uso de adjetivos para descrever."
+        },
+        {
+          "label": "C",
+          "text": "Narrativa de histórias pessoais."
+        },
+        {
+          "label": "D",
+          "text": "Repetição de ideias principais."
+        }
+      ],
+      "correctOptionIndex": 0,
+      "explanation": {
+        "short": "A citação de dados estatísticos confere credibilidade e suporte às argumentações. Segundo a obra de Rolf A. F. e Paulo L. P. (2018), textos argumentativos eficazes utilizam evidências concretas para persuadir o leitor.",
+        "whyOthersWrong": {
+          "B": "O uso de adjetivos, embora possa enriquecer a descrição, não é um recurso fundamental para argumentação.",
+          "C": "Narrativas pessoais podem ser usadas, mas não são tão eficazes quanto dados objetivos para sustentar um argumento.",
+          "D": "A repetição de ideias principais pode causar monotonia e não fortalece a argumentação."
+        }
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "texto-argumentativo"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "No contexto da **LITERATURA**, qual é a **PRINCIPAL** característica do Modernismo brasileiro?",
+      "options": [
+        {
+          "label": "A",
+          "text": "A valorização da estética clássica."
+        },
+        {
+          "label": "B",
+          "text": "A busca pela identidade nacional."
+        },
+        {
+          "label": "C",
+          "text": "A utilização de linguagem formal."
+        },
+        {
+          "label": "D",
+          "text": "A predominância do romantismo."
+        }
+      ],
+      "correctOptionIndex": 1,
+      "explanation": {
+        "short": "A busca pela identidade nacional é uma característica marcante do Modernismo no Brasil, que se expressou em obras de autores como Mário de Andrade. Segundo o crítico literário Antônio Cândido, essa busca reflete a diversidade cultural brasileira.",
+        "whyOthersWrong": {
+          "A": "A valorização da estética clássica é mais associada ao período anterior, como o Neoclassicismo.",
+          "C": "A linguagem formal é mais típica do academicismo, enquanto o Modernismo buscou uma linguagem coloquial.",
+          "D": "A predominância do romantismo é característica de um período anterior ao Modernismo."
+        }
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "modernismo",
+        "literatura"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "Em relação à **EDUCAÇÃO FÍSICA**, qual é a **MAIOR** importância da prática regular de atividades físicas para a saúde mental?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Aumento da autoimagem."
+        },
+        {
+          "label": "B",
+          "text": "Redução do estresse e ansiedade."
+        },
+        {
+          "label": "C",
+          "text": "Promoção do trabalho em equipe."
+        },
+        {
+          "label": "D",
+          "text": "Melhora da capacidade cardiovascular."
+        }
+      ],
+      "correctOptionIndex": 1,
+      "explanation": {
+        "short": "A redução do estresse e da ansiedade é amplamente reconhecida como um dos benefícios da atividade física regular, conforme indicado pela Organização Mundial da Saúde (OMS). A prática de exercícios libera endorfinas, que promovem bem-estar.",
+        "whyOthersWrong": {
+          "A": "Embora a autoimagem possa melhorar, não é o principal benefício relacionado à saúde mental.",
+          "C": "A promoção do trabalho em equipe é importante, mas não é a maior contribuição para a saúde mental.",
+          "D": "A melhora da capacidade cardiovascular é relevante, mas não se relaciona diretamente com os benefícios psicológicos."
+        }
+      },
+      "difficulty": "easy",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "educacao-fisica",
+        "saude-mental"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "Analise a seguinte frase: \"O livro que você me emprestou é muito interessante\". Qual é o **PRIMEIRO** elemento a ser identificado para compreender essa oração?",
+      "options": [
+        {
+          "label": "A",
+          "text": "O sujeito da oração."
+        },
+        {
+          "label": "B",
+          "text": "O verbo da oração."
+        },
+        {
+          "label": "C",
+          "text": "O objeto direto."
+        },
+        {
+          "label": "D",
+          "text": "O complemento verbal."
+        }
+      ],
+      "correctOptionIndex": 0,
+      "explanation": {
+        "short": "O sujeito da oração é o elemento que realiza ou sofre a ação, e identificar o sujeito é a primeira etapa na análise sintática. Segundo Celso Cunha e Lindley Cintra (2008), entender o sujeito é crucial para a compreensão da estrutura da oração.",
+        "whyOthersWrong": {
+          "B": "Embora o verbo seja fundamental, o sujeito é o elemento que deve ser identificado primeiro na análise.",
+          "C": "O objeto direto vem depois do sujeito e do verbo, portanto não é o primeiro a ser identificado.",
+          "D": "O complemento verbal é uma parte da oração que depende do verbo e também não é o primeiro a ser analisado."
+        }
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "gramatica",
+        "analise-sintatica"
+      ],
+      "questionType": "mcq"
+    },
+    {
+      "text": "No contexto da **MÚSICA**, qual é a **MAIOR** função social da canção popular brasileira?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Entreter o público."
+        },
+        {
+          "label": "B",
+          "text": "Divulgar informações científicas."
+        },
+        {
+          "label": "C",
+          "text": "Proporcionar reflexão sobre questões sociais."
+        },
+        {
+          "label": "D",
+          "text": "Apresentar a história da música clássica."
+        }
+      ],
+      "correctOptionIndex": 2,
+      "explanation": {
+        "short": "A canção popular brasileira frequentemente provoca reflexão sobre questões sociais, como desigualdade e cultura, sendo um meio de crítica social. Segundo o sociólogo Thiago de Mello, a música é uma forma de expressão que denuncia problemas sociais.",
+        "whyOthersWrong": {
+          "A": "Embora entreter seja uma função da música, a reflexão crítica é mais significativa na canção popular.",
+          "B": "Divulgar informações científicas não é uma função comum da música popular.",
+          "D": "Apresentar a história da música clássica está fora do escopo da canção popular."
+        }
+      },
+      "difficulty": "hard",
+      "domainIds": [
+        "d1"
+      ],
+      "tags": [
+        "musica",
+        "funcao-social"
+      ],
+      "questionType": "mcq"
+    }
+  ]
+}

@@ -13,10 +13,10 @@
  *   npx tsx content/generator/generate.ts --cert cissp --count 10
  *   npx tsx content/generator/generate.ts --cert cc --domain sp --count 10
  *   npx tsx content/generator/generate.ts --cert "CompTIA Security+" --count 5
- *   npx tsx content/generator/generate.ts --cert "AWS Cloud Practitioner" --count 10
+ *   npx tsx content/generator/generate.ts --cert "ENEM" --count 10 --lang pt-BR
  *
  * Required env:
- *   GROQ_API_KEY — Free key from https://console.groq.com/keys
+ *   OPENAI_API_KEY — from https://platform.openai.com/api-keys
  *
  * Output:
  *   content/{cert-slug}/domain-{N}-{id}/batch-{NNN}.json
@@ -28,7 +28,6 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 import { createInterface } from 'readline';
 
-import { GroqClient } from './groq-client';
 import { OpenAIClient } from './openai-client';
 import {
     resolveCert,
@@ -85,7 +84,7 @@ function parseArgs(): CliArgs {
     const domain = map.get('domain') || null;
     const count = parseInt(map.get('count') || '10', 10);
     const lang = map.get('lang') || 'en';
-    const model = map.get('model') || 'llama-3.3-70b-versatile';
+    const model = map.get('model') || 'gpt-4o-mini';
     const temperature = parseFloat(map.get('temperature') || '0.7');
     const dryRun = map.get('dry-run') === 'true';
     const studyFile = map.get('study-file') || null;
@@ -130,28 +129,15 @@ async function main() {
 
     // ── Init Client ──
     let client: AIClient | null = null;
-    const isOpenAI = args.model.startsWith('gpt-') || args.model.startsWith('o1-') || args.model.startsWith('o3-');
 
-    if (isOpenAI) {
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey && !args.dryRun) {
-            console.error('❌ OPENAI_API_KEY not set.');
-            process.exit(1);
-        }
-        if (apiKey) {
-            client = new OpenAIClient({ apiKey, model: args.model, temperature: args.temperature });
-            console.log(`   🤖 Provider: OpenAI (${args.model})`);
-        }
-    } else {
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey && !args.dryRun) {
-            console.error('❌ GROQ_API_KEY not set.');
-            process.exit(1);
-        }
-        if (apiKey) {
-            client = new GroqClient({ apiKey, model: args.model, temperature: args.temperature, maxTokens: 8192, responseFormat: 'json_object' });
-            console.log(`   ⚡ Provider: Groq (${args.model})`);
-        }
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey && !args.dryRun) {
+        console.error('❌ OPENAI_API_KEY not set. Get one at https://platform.openai.com/api-keys');
+        process.exit(1);
+    }
+    if (apiKey) {
+        client = new OpenAIClient({ apiKey, model: args.model, temperature: args.temperature });
+        console.log(`   🤖 Provider: OpenAI (${args.model})`);
     }
 
     // ── 1. Resolve Context (Cert/Domains) ──
@@ -298,7 +284,7 @@ async function main() {
 
             try {
                 if (args.dryRun) {
-                    console.log(`   🚀 Calling ${isOpenAI ? 'OpenAI' : 'Groq'} (${args.model})...`);
+                    console.log(`   🚀 Calling OpenAI (${args.model})...`);
                     // Simulate delay
                     await new Promise(r => setTimeout(r, 500));
                     generatedForDomain += count;
@@ -417,7 +403,7 @@ function saveBatch(
             lang,
             batchNumber,
             generatedAt: new Date().toISOString(),
-            generatedBy: `groq/${model}`,
+            generatedBy: `openai/${model}`,
             reviewedBy: null,
             reviewedAt: null,
             qaResult: null,

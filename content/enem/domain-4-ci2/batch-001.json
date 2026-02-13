@@ -1,0 +1,137 @@
+{
+  "metadata": {
+    "certId": "enem",
+    "certName": "Exame Nacional do Ensino Médio",
+    "issuer": "Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira (INEP)",
+    "domainId": "ci2",
+    "domainName": "Ciências Humanas e suas Tecnologias",
+    "domainNumber": 4,
+    "studyId": "jgbH3gfpP5oSImnqorxi",
+    "lang": "pt-BR",
+    "batchNumber": 1,
+    "generatedAt": "2026-02-13T17:40:57.699Z",
+    "generatedBy": "openai/gpt-4o-mini",
+    "reviewedBy": null,
+    "reviewedAt": null,
+    "qaResult": null
+  },
+  "questions": [
+    {
+      "text": "Qual é o **PRINCIPAL** objetivo do Tratado de Tordesilhas, assinado em 1494 entre Portugal e Espanha?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Dividir as terras da América entre os dois países."
+        },
+        {
+          "label": "B",
+          "text": "Estabelecer regras para o comércio entre os dois países."
+        },
+        {
+          "label": "C",
+          "text": "Regular a navegação no Oceano Atlântico."
+        },
+        {
+          "label": "D",
+          "text": "Criar alianças militares contra outros países."
+        }
+      ],
+      "correctOptionIndex": 0,
+      "explanation": {
+        "short": "O Tratado de Tordesilhas visava dividir as terras recém-descobertas entre Portugal e Espanha, estabelecendo uma linha imaginária no Oceano Atlântico. Isso foi fundamental para a colonização das Américas, conforme explica o historiador Sérgio Buarque de Holanda em 'Raízes do Brasil'.",
+        "whyOthersWrong": {
+          "B": "Embora o comércio tenha sido importante, o tratado não tinha como objetivo principal regular as relações comerciais entre os países.",
+          "C": "A navegação no Oceano Atlântico era uma preocupação, mas a divisão territorial era o foco central do tratado.",
+          "D": "O tratado não tinha relação com alianças militares, mas sim com a delimitação de territórios coloniais."
+        },
+        "examTip": "Lembre-se de estudar os tratados que marcaram a colonização, pois são frequentemente cobrados."
+      },
+      "difficulty": "easy",
+      "domainIds": [
+        "d4"
+      ],
+      "tags": [
+        "historia",
+        "tratados"
+      ]
+    },
+    {
+      "text": "No contexto da Revolução Industrial, qual foi a **MELHOR** consequência social observada nas cidades?",
+      "options": [
+        {
+          "label": "A",
+          "text": "Aumento da pobreza urbana."
+        },
+        {
+          "label": "B",
+          "text": "Melhoria das condições de trabalho."
+        },
+        {
+          "label": "C",
+          "text": "Crescimento de movimentos trabalhistas."
+        },
+        {
+          "label": "D",
+          "text": "Redução da urbanização."
+        }
+      ],
+      "correctOptionIndex": 2,
+      "explanation": {
+        "short": "A Revolução Industrial gerou um aumento significativo no número de trabalhadores urbanos, levando ao surgimento de movimentos trabalhistas que buscavam melhores condições de trabalho e direitos. Segundo Eric Hobsbawm, em 'A Era das Revoluções', isso foi uma resposta direta às más condições de vida.",
+        "whyOthersWrong": {
+          "A": "Embora a pobreza urbana tenha aumentado, ela não é uma consequência social positiva como a formação de movimentos trabalhistas.",
+          "B": "As condições de trabalho geralmente pioraram durante a Revolução Industrial, o que levou à necessidade de reformas.",
+          "D": "A urbanização aumentou consideravelmente, ao contrário da afirmação de que teria havido uma redução."
+        },
+        "examTip": "Estude as consequências sociais e econômicas da Revolução Industrial para entender melhor os impactos na sociedade."
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d4"
+      ],
+      "tags": [
+        "historia",
+        "revolucao-industrial"
+      ]
+    },
+    {
+      "text": "A **MAIOR** contribuição da filosofia iluminista para a sociedade moderna é considerada:",
+      "options": [
+        {
+          "label": "A",
+          "text": "A defesa da monarquia absoluta."
+        },
+        {
+          "label": "B",
+          "text": "A promoção da razão e do pensamento crítico."
+        },
+        {
+          "label": "C",
+          "text": "A rejeição de qualquer forma de governo."
+        },
+        {
+          "label": "D",
+          "text": "A valorização das tradições culturais."
+        }
+      ],
+      "correctOptionIndex": 1,
+      "explanation": {
+        "short": "O Iluminismo promoveu a razão e o pensamento crítico, desafiando dogmas e defendendo a liberdade individual. Essa filosofia influenciou revoluções e reformas sociais, conforme argumenta Kant em sua obra 'Resposta à Pergunta: O que é Iluminismo?'.",
+        "whyOthersWrong": {
+          "A": "Os filósofos iluministas, como Rousseau e Montesquieu, criticavam a monarquia absoluta em favor de sistemas mais democráticos.",
+          "C": "Embora alguns iluministas criticassem o governo, a maioria defendia sistemas políticos racionais e justos.",
+          "D": "O Iluminismo não se baseou na valorização das tradições, mas sim na crítica a elas e na busca por novos paradigmas."
+        },
+        "examTip": "Familiarize-se com as principais obras dos filósofos iluministas para entender suas contribuições."
+      },
+      "difficulty": "medium",
+      "domainIds": [
+        "d4"
+      ],
+      "tags": [
+        "filosofia",
+        "iluminismo"
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ Este repositório contém a automação para gerar e importar questões para a p
 ## 🚀 Como Usar (Passo a Passo)
 
 ### 1. Gerar Questões
-Use o comando abaixo para gerar um lote de questões usando Inteligência Artificial (Groq/Llama).
+Use o comando abaixo para gerar um lote de questões usando Inteligência Artificial (OpenAI).
 O sistema salva automaticamente o ID do estudo (studyId) para não criar duplicatas.
 
 ```bash
