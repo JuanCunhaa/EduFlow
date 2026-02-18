@@ -10,11 +10,6 @@ import useSWR, { mutate } from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import type { BillingStatus, PlanTier } from '@/types';
 
-interface BillingResponse {
-    data: BillingStatus;
-    isAdmin: boolean;
-}
-
 interface UsePlanReturn {
     /** The user's effective plan */
     plan: PlanTier;
@@ -41,7 +36,7 @@ interface UsePlanReturn {
 }
 
 export function usePlan(): UsePlanReturn {
-    const { data, error, isLoading } = useSWR<BillingResponse>(
+    const { data: billing, error, isLoading } = useSWR<BillingStatus>(
         '/api/billing/status',
         fetcher,
         {
@@ -51,13 +46,12 @@ export function usePlan(): UsePlanReturn {
         }
     );
 
-    const billing = data?.data;
     const plan = billing?.plan ?? 'free';
 
     return {
         plan,
         isPro: plan === 'pro' || plan === 'team',
-        isAdmin: data?.isAdmin ?? false,
+        isAdmin: billing?.isAdmin ?? false,
         isTrialing: billing?.status === 'trialing',
         isCanceling: billing?.cancelAtPeriodEnd ?? false,
         isPastDue: billing?.status === 'past_due',

@@ -857,6 +857,11 @@
     "language": "Idioma",
     "newStudyCreated": "Novo estudo criado",
     "warningsLabel": "avisos",
-    "errorsLabel": "erros"
+    "errorsLabel": "erros",
+    "selectAll": "Selecionar tudo",
+    "deselectAll": "Desmarcar tudo",
+    "discardAll": "Descartar tudo",
+    "importSelected": "Importar selecionadas",
+    "questionsLabel": "perguntas"
   }
 }

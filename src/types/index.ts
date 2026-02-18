@@ -146,6 +146,7 @@ export interface BillingStatus {
     cancelAtPeriodEnd: boolean;
     trial: boolean;
     trialEndsAt: number | null;
+    isAdmin?: boolean;
 }
 
 export interface PaywallDetails {
