@@ -34,6 +34,8 @@
 
 **Público-Alvo**: Profissionais buscando certificações, estudantes de concursos e qualquer pessoa que precise otimizar seu tempo de estudo com dados.
 
+> 🖼️ **Nota**: Recomenda-se adicionar aqui um GIF demostrando o "Modo Exame" ou o Dashboard.
+
 ---
 
 ## ✨ Funcionalidades
@@ -65,6 +67,16 @@ Priorizamos a **simplicidade sênior**. Uma arquitetura serverless robusta, esca
 2.  **API**: Route Handlers em `src/app/api` processam lógica sensível (pagamentos, validações complexas).
 3.  **Dados**: Firestore armazena usuários, estudos, questões e histórico de exames com estrutura NoSQL otimizada para leitura.
 
+### Modelo de Dados (Firestore)
+
+Principais coleções e seus propósitos:
+
+- **`users`**: Perfis de usuário, configurações e status da assinatura (Free/Pro).
+- **`studies`**: Organizadores de conteúdo (ex: CISSP, OAB). Contém metadados como cor e nome.
+- **`questions`**: Banco de questões atômicas. Cada questão pertence a um `studyId` e possui `domainIds`, dificuldade e explicação detalhada.
+- **`exams`**: Registros de exames realizados, com pontuação, tempo gasto e respostas dadas.
+- **`marketplace_studies`**: Pacotes de estudo públicos criados pela comunidade, prontos para importação.
+
 ---
 
 ## 📂 Estrutura do Projeto
@@ -80,15 +92,44 @@ src/
  │   │   ├── marketplace/ # Loja de pacotes de estudo
  │   │   └── study/       # Detalhes e gestão de um estudo específico
  │   └── api/             # Endpoints server-side
+ │       ├── auth/        # Gerenciamento de sessão
+ │       ├── billing/     # Webhooks e checkout do Stripe
+ │       ├── exams/       # Processamento de submissões
+ │       └── generator/   # Integração com OpenAI
  ├── components/          # Componentes React reutilizáveis
- │   ├── ui/              # Componentes base (botões, inputs, modais)
+ ├── lib/                 # Lógica core
+ │   ├── validators.ts    # Schemas Zod para validação total de dados
  │   └── ...
- ├── lib/                 # Lógica core e configurações
- │   ├── firebase/        # Configuração e clientes Firebase
- │   ├── exam-engine.ts   # Algoritmos de seleção de questões
- │   └── stripe.ts        # Integração de pagamentos
- ├── messages/            # Arquivos de tradução (pt-BR.json, en.json)
- └── middleware.ts        # Middleware de Autenticação e Locale
+ ├── scripts/             # Scripts de manutenção e migração
+ └── messages/            # Arquivos de tradução (pt-BR.json, en.json)
+```
+
+---
+
+## 🔌 API Reference
+
+O projeto utiliza **Next.js Route Handlers** para expor uma API segura. Principais módulos:
+
+| Endpoint | Descrição |
+|----------|-----------|
+| `/api/auth/*` | Gerencia criação de usuários e sincronização com Firebase Auth. |
+| `/api/billing/webhook` | Recebe eventos do Stripe (renovações, cancelamentos) para atualizar status do usuário. |
+| `/api/exams/submit` | Processa respostas de exames, calcula pontuação e atualiza estatísticas de domínio. |
+| `/api/content/generate` | (Admin) Gera novas questões via IA baseado em parâmetros de estudo. |
+
+---
+
+## 🛠 Ferramentas e Scripts
+
+A pasta `scripts/` contém utilitários essenciais para manutenção da plataforma:
+
+- **`validate-questions.ts`**: Varre o banco de dados em busca de questões com formato inválido ou links quebrados.
+- **`duplicate-detector.ts`**: Identifica questões semanticamente idênticas para manter a qualidade do banco.
+- **`migrate-billing.ts`**: Script de migração para atualizar estruturas de dados de assinatura.
+
+Para executar um script:
+```bash
+npx tsx scripts/validate-questions.ts
 ```
 
 ---
@@ -131,6 +172,14 @@ src/
 - `npm run test`: Executa a suíte de testes com Vitest.
 - `npm run lint`: Verifica problemas de código.
 - `npx tsx content/generator/generate.ts`: (Interno) Gera questões via IA para popular o banco de dados.
+
+### Deploy
+
+A plataforma é otimizada para implantação na **Vercel**:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fseu-usuario%2Fexamflow)
+
+Certifique-se de configurar as variáveis de ambiente no painel da Vercel após a importação.
 
 ---
 
