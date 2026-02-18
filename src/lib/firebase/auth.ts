@@ -42,7 +42,7 @@ export async function signInWithGoogle(): Promise<User> {
  * cookie was created.
  */
 export async function ensureSessionCookie(user: User): Promise<void> {
-    const idToken = await user.getIdToken();
+    const idToken = await user.getIdToken(true);
     const res = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
