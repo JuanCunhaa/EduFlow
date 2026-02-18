@@ -311,6 +311,7 @@
     "progress": "Progresso",
     "marketplace": "Marketplace",
     "settings": "Configurações",
+    "admin": "Admin",
     "openMenu": "Abrir menu",
     "closeMenu": "Fechar menu",
     "expandSidebar": "Expandir barra lateral",
@@ -472,8 +473,25 @@
   "heatmap": {
     "title": "Atividade",
     "summary": "{questions} questões em {days} dias ativos",
-    "days": ["Seg", "Qua", "Sex"],
-    "months": ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+    "days": [
+      "Seg",
+      "Qua",
+      "Sex"
+    ],
+    "months": [
+      "Jan",
+      "Fev",
+      "Mar",
+      "Abr",
+      "Mai",
+      "Jun",
+      "Jul",
+      "Ago",
+      "Set",
+      "Out",
+      "Nov",
+      "Dez"
+    ],
     "less": "Menos",
     "more": "Mais",
     "tooltip": "{date}: {count} questões"
@@ -626,7 +644,6 @@
       "forbidden": "Você não tem permissão para acessar esta página"
     }
   },
-
   "billing": {
     "settings": {
       "title": "Configurações",
@@ -705,7 +722,6 @@
       }
     }
   },
-
   "pricing": {
     "title": "Preços simples e transparentes",
     "subtitle": "Comece grátis. Faça upgrade quando estiver pronto para levar a sério.",
@@ -788,5 +804,50 @@
     "footer": {
       "secure": "Pagamentos processados com segurança pelo Stripe. Suas informações de cartão nunca são armazenadas em nossos servidores."
     }
+  },
+  "admin": {
+    "title": "Painel Admin",
+    "subtitle": "Gerenciamento e supervisão da plataforma",
+    "forbidden": "Acesso Negado",
+    "forbiddenDesc": "Você não tem privilégios de administrador para acessar esta página.",
+    "totalUsers": "Total de Usuários",
+    "totalStudies": "Estudos Ativos",
+    "totalQuestions": "Total de Questões",
+    "openReports": "Relatórios Abertos",
+    "quickAccess": "Acesso Rápido",
+    "userManagement": "Gerenciamento de Usuários",
+    "userManagementDesc": "Buscar, visualizar e gerenciar contas e perfis de usuários",
+    "questionGenerator": "Gerador de Questões IA",
+    "questionGeneratorDesc": "Gerar questões de exame usando IA e importar para o marketplace",
+    "marketplaceAdmin": "Admin do Marketplace",
+    "marketplaceAdminDesc": "Gerenciar estudos, questões e conteúdo do marketplace",
+    "searchByEmail": "Buscar por e-mail…",
+    "search": "Buscar",
+    "loadAll": "Carregar Todos",
+    "loadMore": "Carregar Mais",
+    "searchPrompt": "Busque um usuário por e-mail ou clique em 'Carregar Todos' para listar todos.",
+    "noUsers": "Nenhum usuário encontrado.",
+    "setPlan": "Definir Plano",
+    "setPlanFor": "Definir plano para",
+    "makeAdmin": "Tornar Admin",
+    "removeAdmin": "Remover Admin",
+    "makeAdminConfirm": "Conceder privilégios de administrador para {email}? O usuário precisará sair e entrar novamente.",
+    "removeAdminConfirm": "Remover privilégios de administrador de {email}? O usuário precisará sair e entrar novamente.",
+    "roleNote": "⚠ O usuário precisa sair e entrar novamente para que as alterações de perfil tenham efeito (custom claims do Firebase são incorporados na sessão).",
+    "selectStudy": "Estudo",
+    "selectStudyPlaceholder": "Selecione um estudo…",
+    "selectDomain": "Domínio (opcional)",
+    "allDomains": "Todos os domínios",
+    "questionCount": "Questões a gerar",
+    "aiModel": "Modelo de IA",
+    "generating": "Gerando…",
+    "generateQuestions": "Gerar Questões",
+    "generationComplete": "Geração Concluída",
+    "generated": "Geradas",
+    "valid": "Válidas",
+    "invalid": "Inválidas",
+    "imported": "Importadas",
+    "generatedWith": "Gerado com",
+    "loadingStudies": "Carregando estudos…"
   }
 }

@@ -10,11 +10,18 @@ import useSWR, { mutate } from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import type { BillingStatus, PlanTier } from '@/types';
 
+interface BillingResponse {
+    data: BillingStatus;
+    isAdmin: boolean;
+}
+
 interface UsePlanReturn {
     /** The user's effective plan */
     plan: PlanTier;
     /** Whether the user has Pro or Team access */
     isPro: boolean;
+    /** Whether the user is an admin */
+    isAdmin: boolean;
     /** Whether the user is on a trial */
     isTrialing: boolean;
     /** Whether the subscription is set to cancel at period end */
@@ -34,7 +41,7 @@ interface UsePlanReturn {
 }
 
 export function usePlan(): UsePlanReturn {
-    const { data, error, isLoading } = useSWR<BillingStatus>(
+    const { data, error, isLoading } = useSWR<BillingResponse>(
         '/api/billing/status',
         fetcher,
         {
@@ -44,16 +51,18 @@ export function usePlan(): UsePlanReturn {
         }
     );
 
-    const plan = data?.plan ?? 'free';
+    const billing = data?.data;
+    const plan = billing?.plan ?? 'free';
 
     return {
         plan,
         isPro: plan === 'pro' || plan === 'team',
-        isTrialing: data?.status === 'trialing',
-        isCanceling: data?.cancelAtPeriodEnd ?? false,
-        isPastDue: data?.status === 'past_due',
-        periodEnd: data?.periodEnd ?? null,
-        trialEndsAt: data?.trialEndsAt ?? null,
+        isAdmin: data?.isAdmin ?? false,
+        isTrialing: billing?.status === 'trialing',
+        isCanceling: billing?.cancelAtPeriodEnd ?? false,
+        isPastDue: billing?.status === 'past_due',
+        periodEnd: billing?.periodEnd ?? null,
+        trialEndsAt: billing?.trialEndsAt ?? null,
         isLoading,
         error,
         refresh: async () => {

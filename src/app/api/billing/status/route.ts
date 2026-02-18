@@ -26,5 +26,5 @@ export const GET = withAuth(async (_request: Request, { user }: RouteContext) =>
         trialEndsAt: profile?.trialEndsAt || null,
     };
 
-    return { data: status };
+    return { data: status, isAdmin: user.roles.includes('admin') };
 });

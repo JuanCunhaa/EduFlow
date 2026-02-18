@@ -14,10 +14,12 @@ import {
     Menu,
     X,
     Settings,
+    Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { PlanBadge } from '@/components/ui/PlanBadge';
+import { usePlan } from '@/hooks/usePlan';
 
 const NAV_KEYS = [
     { href: '/dashboard', key: 'studies', icon: BookOpen },
@@ -33,6 +35,7 @@ export function Sidebar() {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { isAdmin } = usePlan();
 
     // Close mobile sidebar on route change
     useEffect(() => {
@@ -60,9 +63,11 @@ export function Sidebar() {
 
             {/* Mobile overlay */}
             {mobileOpen && (
-                <div
+                <button
+                    type="button"
                     className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
                     onClick={() => setMobileOpen(false)}
+                    aria-label={t('closeMenu')}
                 />
             )}
 
@@ -123,6 +128,38 @@ export function Sidebar() {
                             </Link>
                         );
                     })}
+
+                    {/* Admin link — only shown for admins */}
+                    {isAdmin && (
+                        <>
+                            <div className="my-2 border-t border-border/50" />
+                            {(() => {
+                                const isActive = pathname.replace(/^\/(en|pt-BR)/, '').startsWith('/admin');
+                                const label = t('admin');
+                                return (
+                                    <Link
+                                        href="/admin"
+                                        className={cn(
+                                            'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                                            isActive
+                                                ? 'bg-primary/10 text-primary'
+                                                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:translate-x-0.5'
+                                        )}
+                                        title={collapsed ? label : undefined}
+                                    >
+                                        {isActive && (
+                                            <div className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary shadow-[0_0_8px_var(--glow)]" />
+                                        )}
+                                        <Shield className={cn(
+                                            'h-4 w-4 shrink-0 transition-colors',
+                                            isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                                        )} />
+                                        {!collapsed && <span>{label}</span>}
+                                    </Link>
+                                );
+                            })()}
+                        </>
+                    )}
                 </nav>
 
                 {/* Plan badge */}

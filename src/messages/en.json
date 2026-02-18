@@ -311,6 +311,7 @@
     "progress": "Progress",
     "marketplace": "Marketplace",
     "settings": "Settings",
+    "admin": "Admin",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "expandSidebar": "Expand sidebar",
@@ -472,8 +473,25 @@
   "heatmap": {
     "title": "Activity",
     "summary": "{questions} questions in {days} active days",
-    "days": ["Mon", "Wed", "Fri"],
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "days": [
+      "Mon",
+      "Wed",
+      "Fri"
+    ],
+    "months": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
     "less": "Less",
     "more": "More",
     "tooltip": "{date}: {count} questions"
@@ -626,7 +644,6 @@
       "forbidden": "You don't have permission to access this page"
     }
   },
-
   "billing": {
     "settings": {
       "title": "Settings",
@@ -705,7 +722,6 @@
       }
     }
   },
-
   "pricing": {
     "title": "Simple, transparent pricing",
     "subtitle": "Start free. Upgrade when you're ready to get serious about passing.",
@@ -788,5 +804,50 @@
     "footer": {
       "secure": "Payments processed securely by Stripe. Your card information is never stored on our servers."
     }
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subtitle": "Platform management and oversight",
+    "forbidden": "Access Denied",
+    "forbiddenDesc": "You do not have admin privileges to view this page.",
+    "totalUsers": "Total Users",
+    "totalStudies": "Active Studies",
+    "totalQuestions": "Total Questions",
+    "openReports": "Open Reports",
+    "quickAccess": "Quick Access",
+    "userManagement": "User Management",
+    "userManagementDesc": "Search, view, and manage user accounts and roles",
+    "questionGenerator": "AI Question Generator",
+    "questionGeneratorDesc": "Generate exam questions using AI and import to marketplace",
+    "marketplaceAdmin": "Marketplace Admin",
+    "marketplaceAdminDesc": "Manage studies, questions, and marketplace content",
+    "searchByEmail": "Search by email address…",
+    "search": "Search",
+    "loadAll": "Load All",
+    "loadMore": "Load More",
+    "searchPrompt": "Search for a user by email or click 'Load All' to list all users.",
+    "noUsers": "No users found.",
+    "setPlan": "Set Plan",
+    "setPlanFor": "Set plan for",
+    "makeAdmin": "Make Admin",
+    "removeAdmin": "Remove Admin",
+    "makeAdminConfirm": "Grant admin privileges to {email}? They will need to log out and back in for changes to take effect.",
+    "removeAdminConfirm": "Remove admin privileges from {email}? They will need to log out and back in for changes to take effect.",
+    "roleNote": "⚠ The user must log out and back in for role changes to take effect (Firebase custom claims are embedded in the session).",
+    "selectStudy": "Study",
+    "selectStudyPlaceholder": "Select a study…",
+    "selectDomain": "Domain (optional)",
+    "allDomains": "All domains",
+    "questionCount": "Questions to generate",
+    "aiModel": "AI Model",
+    "generating": "Generating…",
+    "generateQuestions": "Generate Questions",
+    "generationComplete": "Generation Complete",
+    "generated": "Generated",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "imported": "Imported",
+    "generatedWith": "Generated with",
+    "loadingStudies": "Loading studies…"
   }
 }
