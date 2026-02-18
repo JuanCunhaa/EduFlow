@@ -848,6 +848,15 @@
     "invalid": "Invalid",
     "imported": "Imported",
     "generatedWith": "Generated with",
-    "loadingStudies": "Loading studies…"
+    "loadingStudies": "Loading studies…",
+    "existingStudyMode": "Existing Study",
+    "freeformMode": "Free-form Topic",
+    "topicLabel": "Topic / Certification",
+    "topicPlaceholder": "e.g. ENEM, AWS Solutions Architect, CompTIA A+…",
+    "topicHint": "Enter any certification, exam, or topic. The AI will discover domains and create a new study automatically.",
+    "language": "Language",
+    "newStudyCreated": "New study created",
+    "warningsLabel": "warnings",
+    "errorsLabel": "errors"
   }
 }
