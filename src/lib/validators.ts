@@ -184,7 +184,7 @@ export const createContentAuditSchema = z.object({
     questionId: z.string().min(1).optional(),
     questionCount: z.number().int().min(0).optional(),
     notes: z.string().max(5000).transform(stripHtml).optional(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 // === Question Lifecycle ===

@@ -444,20 +444,20 @@ export async function submitExam(
     if (projectedStreak >= 30 && !oldBadges.has('streak_30')) newBadges.push('streak_30');
 
     // Post-commit: stats, badges, averageScore (all fire-and-forget, non-blocking)
-    recalculateAverageScore(uid).catch(() => {});
+    recalculateAverageScore(uid).catch(() => { });
 
-    recordActivity(uid, totalQuestions, correctAnswers, true).catch(() => {});
+    recordActivity(uid, totalQuestions, correctAnswers, true).catch(() => { });
 
     if (score === 100) {
-        awardBadge(uid, 'perfect_score').catch(() => {});
+        awardBadge(uid, 'perfect_score').catch(() => { });
     }
     if (allDomainsPass) {
-        awardBadge(uid, 'domain_master').catch(() => {});
+        awardBadge(uid, 'domain_master').catch(() => { });
     }
 
     // Fire-and-forget: update marketplace-level performance stats (distractor tracking)
     // Looks up which user questions have a marketplace source and aggregates cross-user stats
-    updateMarketplacePerformanceStats(uid, exam.questionIds, finalAnswers, storedCorrectAnswers ?? {}).catch(() => {});
+    updateMarketplacePerformanceStats(uid, exam.questionIds, finalAnswers, storedCorrectAnswers ?? {}).catch(() => { });
 
     return {
         examId,
@@ -674,8 +674,8 @@ async function updateMarketplacePerformanceStats(
             await updateQuestionPerformanceStats(
                 marketplaceQuestionId,
                 isCorrect,
-                userAnswer ?? undefined,
-                undefined, // timeMs not available per-question
+                userAnswer ?? -1,
+                0, // timeMs not available per-question
                 skipped
             );
         } catch {
