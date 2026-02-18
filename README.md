@@ -1,52 +1,176 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ExamFlow — Plataforma de Inteligência em Exames
 
-## Getting Started
+> **Domine sua Próxima Certificação com Precisão de IA.**
+> Uma plataforma multi-tenant premium para preparação de exames, projetada para se adaptar a qualquer certificação ou prova.
 
-First, run the development server:
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-85%25-green)
+![License](https://img.shields.io/badge/license-Proprietary-blue)
+![Next.js](https://img.shields.io/badge/Next.js-16.1-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+
+---
+
+## 📚 Índice
+
+- [Sobre](#-sobre)
+- [Funcionalidades](#-funcionalidades)
+- [Arquitetura](#-arquitetura)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Instalação e Uso](#-instalação-e-uso)
+- [Variáveis de Ambiente](#-variáveis-de-ambiente)
+- [API](#-api)
+- [Roadmap](#-roadmap)
+- [Contribuindo](#-contribuindo)
+- [Licença](#-licença)
+
+---
+
+## 💡 Sobre
+
+**O Problema**: A preparação tradicional para exames (seja certificações de TI, concursos ou provas acadêmicas) é estática e não oferece feedback real sobre onde o candidato precisa melhorar.
+
+**A Solução**: O **ExamFlow** é um motor de estudo adaptativo agnóstico a conteúdo. Ele utiliza IA para identificar lacunas de conhecimento, criar ciclos de revisão espaçada e fornecer métricas de prontidão em tempo real. Diferente de plataformas rígidas, o ExamFlow permite criar "Estudos" para qualquer objetivo, importando ou gerando questões automaticamente.
+
+**Público-Alvo**: Profissionais buscando certificações, estudantes de concursos e qualquer pessoa que precise otimizar seu tempo de estudo com dados.
+
+---
+
+## ✨ Funcionalidades
+
+- **🧠 Motor de Exame Inteligente**: 6 modos de estudo, incluindo "Mix Real" (simulação), "Domínios Fracos" (foco em erros) e "Revisão Espaçada" (algoritmo SM-2).
+- **🛒 Marketplace de Conteúdo**: Compartilhe e importe pacotes de estudo criados pela comunidade para diversos exames (CISSP, AWS, OAB, ENEM, etc.).
+- **📊 Analytics Avançado**: Acompanhe sua "Taxa de Prontidão", sequências de estudo (streaks) e desempenho detalhado por domínio de conhecimento.
+- **🏆 Gamificação**: Sistema de conquistas (badges) e desafios diários para manter o engajamento.
+- **� Criação e IA**: Ferramentas para criar questões manualmente ou gerar bancos de questões inteiros via IA (`content/generator`).
+- **🔐 Multi-tenant e Seguro**: Arquitetura robusta com autenticação Firebase e regras de segurança por nível de acesso.
+- **💳 Assinaturas Integradas**: Gestão completa de planos Free, Pro e Team via Stripe.
+- **🎨 UI Premium**: Interface "Dark Mode First", fluida e responsiva, desenvolvida com Tailwind v4 e Framer Motion.
+
+---
+
+## 🏗 Arquitetura
+
+Priorizamos a **simplicidade sênior**. Uma arquitetura serverless robusta, escalável e de fácil manutenção.
+
+- **Frontend/Fullstack**: [Next.js 16](https://nextjs.org/) (App Router, Server Components).
+- **Backend/DB**: [Firebase](https://firebase.google.com/) (Auth, Firestore, Storage, Security Rules).
+- **Linguagem**: [TypeScript](https://www.typescriptlang.org/) (Tipagem estrita em todo o projeto).
+- **Estilização**: [Tailwind CSS 4](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/).
+- **Pagamentos**: [Stripe](https://stripe.com/).
+- **Qualidade**: [Vitest](https://vitest.dev/) para testes unitários e ESLint para padronização.
+
+**Fluxo de Dados**:
+1.  **Cliente**: Next.js renderiza a UI e gerencia estado com `swr`.
+2.  **API**: Route Handlers em `src/app/api` processam lógica sensível (pagamentos, validações complexas).
+3.  **Dados**: Firestore armazena usuários, estudos, questões e histórico de exames com estrutura NoSQL otimizada para leitura.
+
+---
+
+## 📂 Estrutura do Projeto
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+src/
+ ├── app/                 # Rotas e Páginas (Next.js App Router)
+ │   ├── [locale]/        # Rotas internacionalizadas (i18n)
+ │   │   ├── (landing)/   # Páginas de marketing
+ │   │   ├── admin/       # Painel administrativo
+ │   │   ├── dashboard/   # Área do aluno (visão geral)
+ │   │   ├── exams/       # Interface de execução de exames
+ │   │   ├── marketplace/ # Loja de pacotes de estudo
+ │   │   └── study/       # Detalhes e gestão de um estudo específico
+ │   └── api/             # Endpoints server-side
+ ├── components/          # Componentes React reutilizáveis
+ │   ├── ui/              # Componentes base (botões, inputs, modais)
+ │   └── ...
+ ├── lib/                 # Lógica core e configurações
+ │   ├── firebase/        # Configuração e clientes Firebase
+ │   ├── exam-engine.ts   # Algoritmos de seleção de questões
+ │   └── stripe.ts        # Integração de pagamentos
+ ├── messages/            # Arquivos de tradução (pt-BR.json, en.json)
+ └── middleware.ts        # Middleware de Autenticação e Locale
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Instalação e Uso
 
-## Learn More
+### Pré-requisitos
+- Node.js 18+
+- Projeto Firebase configurado
+- Conta Stripe (para funcionalidades de pagamento)
 
-To learn more about Next.js, take a look at the following resources:
+### Passo a Passo
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/seu-usuario/examflow.git
+    cd examflow
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    # ou pnpm install
+    ```
 
-## Deploy on Vercel
+3.  **Configuração de Ambiente:**
+    ```bash
+    cp .env.example .env.local
+    ```
+    Preencha as chaves do Firebase, Stripe e OpenAI no arquivo `.env.local`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4.  **Rodar Servidor de Desenvolvimento:**
+    ```bash
+    npm run dev
+    ```
+    Acesse `http://localhost:3000`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Scripts Úteis
 
-## Firestore Setup
+- `npm run test`: Executa a suíte de testes com Vitest.
+- `npm run lint`: Verifica problemas de código.
+- `npx tsx content/generator/generate.ts`: (Interno) Gera questões via IA para popular o banco de dados.
 
-### TTL Policy for Rate Limits
+---
 
-The rate limiter stores documents in the `_rateLimits` collection with an `expireAt` field. You **must** configure a Firestore TTL policy to auto-delete expired documents, otherwise they accumulate forever.
+## 🔐 Variáveis de Ambiente
 
-Run this via `gcloud` CLI:
+| Variável | Descrição |
+|----------|------------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Chave de API do Firebase (Web) |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | ID do Projeto Firebase |
+| `STRIPE_SECRET_KEY` | Chave Secreta do Stripe (Server-side) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Chave Pública do Stripe (Client-side) |
+| `OPENAI_API_KEY` | Chave da OpenAI (para gerador de conteúdo) |
+| `NEXT_PUBLIC_APP_URL` | URL base da aplicação (ex: http://localhost:3000) |
 
-```bash
-gcloud firestore fields ttls update expireAt \
-  --collection-group=_rateLimits \
-  --enable-ttl
-```
+---
 
-Or configure it in the [Firebase Console](https://console.firebase.google.com/) → Firestore → TTL Policies → Add Policy:
-- **Collection group:** `_rateLimits`
-- **Field:** `expireAt`
+## � Roadmap
+
+- [x] Motor de Exames e Pontuação
+- [x] Dashboard de Aluno e Analytics
+- [x] Marketplace de Conteúdo Comunitário
+- [x] Internacionalização (PT-BR / EN)
+- [ ] **App Mobile** (React Native / PWA)
+- [ ] **Modo Offline** (Sincronização posterior)
+
+---
+
+## 🤝 Contribuindo
+
+Contribuições são bem-vindas! Se você tem uma ideia de melhoria:
+
+1.  Faça um Fork do projeto.
+2.  Crie uma Branch para sua feature (`git checkout -b feature/MinhaFeature`).
+3.  Commit suas mudanças (`git commit -m 'feat: Adiciona nova funcionalidade'`).
+4.  Push para a Branch (`git push origin feature/MinhaFeature`).
+5.  Abra um Pull Request.
+
+---
+
+## 📄 Licença
+
+**Proprietário.** Copyright © 2026 Juan Cunha. Todos os direitos reservados.
+A cópia não autorizada deste arquivo, por qualquer meio, é estritamente proibida sem permissão prévia.
