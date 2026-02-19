@@ -4,9 +4,8 @@
  */
 
 import { getAdminDb } from '@/lib/firebase/admin';
-import type { UserStats, BadgeId, Question } from '@/types';
-import { secureRandom } from '@/lib/utils';
-import { DAILY_CHALLENGE_COUNT, HEATMAP_ROLLING_DAYS } from '@/lib/constants';
+import type { UserStats, BadgeId } from '@/types';
+import { HEATMAP_ROLLING_DAYS } from '@/lib/constants';
 
 const STATS_DOC = 'current';
 
@@ -136,65 +135,6 @@ export async function awardBadge(uid: string, badge: BadgeId): Promise<void> {
         const db = getAdminDb();
         await db.doc(`${statsPath(uid)}/${STATS_DOC}`).set({ badges: stats.badges }, { merge: true });
     }
-}
-
-// ── Daily Challenge ──────────────────────────────
-
-export interface DailyChallengeResult {
-    questions: Array<Omit<Question, 'explanation'>>;
-    date: string;
-}
-
-/**
- * Generate a daily challenge: 5 questions from the user's weakest domains.
- * Questions are regenerated each day based on date.
- */
-export async function getDailyChallenge(
-    uid: string,
-    studyId: string
-): Promise<DailyChallengeResult> {
-    const today = getTodayString();
-    const db = getAdminDb();
-
-    // Check if we have a cached challenge for today
-    const cacheRef = db.doc(`users/${uid}/stats/daily-challenge-${today}`);
-    const cached = await cacheRef.get();
-    if (cached.exists) {
-        return cached.data() as DailyChallengeResult;
-    }
-
-    // Fetch analytics to find weak domains (import from analytics service directly to avoid circular dep)
-    const { getAnalytics } = await import('@/services/exam-analytics-service');
-    const analytics = await getAnalytics(uid, studyId);
-    const weakDomainIds = analytics.domainStats
-        .slice(0, 3) // already sorted weakest first
-        .map(d => d.domainId);
-
-    // Fetch questions from weak domains
-    const { fetchQuestionPool } = await import('@/services/question-service');
-    const pool = await fetchQuestionPool({
-        uid,
-        studyId,
-        domainIds: weakDomainIds.length > 0 ? weakDomainIds : undefined,
-        limit: 50,
-    });
-
-    // Filter out malformed questions (e.g. missing options)
-    const valid = pool.filter(q => Array.isArray(q.options) && q.options.length >= 4);
-
-    // Shuffle and pick daily challenge questions
-    const shuffled = valid.sort(() => secureRandom() - 0.5);
-    const selected = shuffled.slice(0, DAILY_CHALLENGE_COUNT);
-
-    // Strip explanation but keep correctOptionIndex for client-side feedback
-    const sanitized = selected.map(({ explanation: _, ...rest }) => rest);
-
-    const result: DailyChallengeResult = { questions: sanitized, date: today };
-
-    // Cache for today
-    await cacheRef.set(result);
-
-    return result;
 }
 
 // ── Date helpers ─────────────────────────────────

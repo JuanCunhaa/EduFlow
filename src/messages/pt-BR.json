@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "ExamFlow — Gerador de Exames",
-    "description": "Plataforma premium de exames práticos para certificações CISSP, CC, SSCP, CCSP e CGRC."
+    "description": "Plataforma premium de exames práticos para certificações de TI e cibersegurança. Exames adaptativos, repetição espaçada e análise de desempenho."
   },
   "common": {
     "cancel": "Cancelar",
@@ -69,7 +69,7 @@
     "testimonials": {
       "sarah": {
         "name": "Sarah Mitchell",
-        "role": "Candidata CISSP",
+        "role": "Candidata a Certificação em Cibersegurança",
         "quote": "O ExamFlow me mostrou exatamente em quais domínios eu era mais fraca. Saí de 58% para aprovação em três semanas."
       },
       "daniel": {
@@ -79,12 +79,12 @@
       },
       "priya": {
         "name": "Priya Chakraborty",
-        "role": "Certificada CC",
+        "role": "Profissional Recém-Certificada",
         "quote": "Passei no CC na primeira tentativa. As questões adaptativas tornaram o estudo realmente eficiente."
       },
       "marcus": {
         "name": "Marcus Johnson",
-        "role": "Gerente de TI preparando para SSCP",
+        "role": "Gerente de TI preparando para certificação",
         "quote": "Finalmente uma plataforma que não só me testa — me ensina onde estou falhando e por quê."
       },
       "ana": {
@@ -94,7 +94,7 @@
       },
       "james": {
         "name": "James Thornton",
-        "role": "Certificado CISSP",
+        "role": "Profissional Certificado em Segurança",
         "quote": "O modo Real Mix pareceu exatamente como o exame real. Sem surpresas no dia da prova."
       }
     },
@@ -276,7 +276,52 @@
     "examsCount": "{count} exames",
     "averageScore": "nota média",
     "domainMastery": "Domínio por Área",
-    "examHistory": "Histórico de Exames"
+    "examHistory": "Histórico de Exames",
+    "notReady": "Não Pronto",
+    "notReadyDesc": "Continue estudando. Foque nos domínios fracos primeiro.",
+    "building": "Evoluindo",
+    "buildingDesc": "Você está progredindo. Mire nas áreas fracas e continue praticando.",
+    "gettingClose": "Quase Lá",
+    "gettingCloseDesc": "Revise domínios fracos e faça mais simulados completos.",
+    "likelyReady": "Provavelmente Pronto",
+    "likelyReadyDesc": "Você está bem. Polimento final e agende seu exame.",
+    "highlyReady": "Altamente Pronto",
+    "highlyReadyDesc": "Você está pronto. Considere agendar seu exame esta semana.",
+    "improving": "Melhorando",
+    "declining": "Em queda",
+    "stable": "Estável",
+    "trendDelta": "{direction} ({delta} nos últimos {count} exames)",
+    "factors": "Fatores",
+    "factorDomain": "Precisão por Domínio",
+    "factorScores": "Notas Recentes",
+    "factorHard": "Questões Difíceis",
+    "factorCoverage": "Cobertura de Questões",
+    "factorWeak": "Domínios Fracos",
+    "factorTrend": "Tendência de Nota",
+    "factorTime": "Gestão de Tempo",
+    "proOnly": "Pro",
+    "upgradeForFactors": "Assine o Pro para ver o detalhamento da sua prontidão",
+    "weaknessMap": "Mapa de Fraquezas",
+    "weakLabel": "Fraco",
+    "strongLabel": "Forte",
+    "weakRecommendation1": "Foque em {domain} — seu domínio mais fraco",
+    "weakRecommendationMulti": "Comece por {domain} — sua maior oportunidade",
+    "allPassingRecommendation": "Você está passando em todos os domínios. Equilibre revisando o mais baixo.",
+    "startFocusedExam": "Iniciar Exame Focado",
+    "studyPlan": "Plano de Estudos",
+    "studyPlanDesc": "Seu plano personalizado de 7 dias",
+    "studyPlanProOnly": "Assine o Pro para ter um plano de estudos personalizado",
+    "planTarget": "Meta: Prontidão {target}+",
+    "planCurrent": "Atual: Prontidão {current}",
+    "startSession": "Iniciar",
+    "actDomainFocus": "Foco em Domínio: {domain}",
+    "actWeakDomains": "Prática de Domínios Fracos",
+    "actSpacedReview": "Revisão Espaçada ({count} pendentes)",
+    "actHardQuestions": "Treino de Questões Difíceis",
+    "actFullLength": "Simulado Completo",
+    "actReviewMistakes": "Revisar Erros",
+    "actRest": "Dia de Descanso",
+    "estMinutes": "{min} min"
   },
   "studyPage": {
     "title": "Flashcards",
@@ -324,16 +369,14 @@
     "timeLimit": "Tempo Limite",
     "difficulty": "Dificuldade",
     "domains": "Domínios",
-    "practice": "Prática",
-    "practiceDesc": "Seleção aleatória em todos os domínios",
-    "weakDomains": "Domínios Fracos",
-    "weakDomainsDesc": "Foque nos domínios onde você tem dificuldade",
-    "recentMisses": "Erros Recentes",
-    "recentMissesDesc": "Questões que você errou recentemente (ponderadas por tempo)",
-    "realMix": "Mix Real",
-    "realMixDesc": "Simula um exame real: domínios balanceados, dificuldade mista, sem repetições",
+    "smartPractice": "Prática Inteligente",
+    "smartPracticeDesc": "25 questões • Todos os domínios • Adapta-se às suas fraquezas",
+    "startNow": "Começar Agora",
+    "customize": "Personalizar",
     "domainFocus": "Foco em Domínio",
     "domainFocusDesc": "Aprofunde-se nos domínios selecionados",
+    "weakAreas": "Áreas Fracas",
+    "weakAreasDesc": "Foque nos seus domínios mais fracos",
     "spacedReview": "Revisão Espaçada",
     "spacedReviewDesc": "Repetição espaçada SM-2 — prioriza questões pendentes de revisão",
     "allDomains": "Todos os domínios",
@@ -469,69 +512,6 @@
     "namePlaceholder": "Certified Information Systems Security Professional",
     "domainCodePlaceholder": "SAM",
     "domainNamePlaceholder": "Gestão de Segurança e Riscos"
-  },
-  "heatmap": {
-    "title": "Atividade",
-    "summary": "{questions} questões em {days} dias ativos",
-    "days": [
-      "Seg",
-      "Qua",
-      "Sex"
-    ],
-    "months": [
-      "Jan",
-      "Fev",
-      "Mar",
-      "Abr",
-      "Mai",
-      "Jun",
-      "Jul",
-      "Ago",
-      "Set",
-      "Out",
-      "Nov",
-      "Dez"
-    ],
-    "less": "Menos",
-    "more": "Mais",
-    "tooltip": "{date}: {count} questões"
-  },
-  "badges": {
-    "title": "Conquistas",
-    "firstExam": "Primeiro Exame",
-    "firstExamDesc": "Complete seu primeiro exame prático",
-    "streak3": "Sequência de 3 Dias",
-    "streak3Desc": "Estude por 3 dias consecutivos",
-    "weekWarrior": "Guerreiro da Semana",
-    "weekWarriorDesc": "Estude por 7 dias consecutivos",
-    "monthlyMaster": "Mestre Mensal",
-    "monthlyMasterDesc": "Estude por 30 dias consecutivos",
-    "perfectScore": "Nota Perfeita",
-    "perfectScoreDesc": "Tire 100% em qualquer exame",
-    "centurion": "Centurião",
-    "centurionDesc": "Responda 100 questões no total",
-    "domainMaster": "Mestre de Domínio",
-    "domainMasterDesc": "Tire 70%+ em cada domínio em um único exame"
-  },
-  "dailyChallenge": {
-    "title": "Desafio Diário",
-    "questionsFromWeak": "{count} questões dos seus domínios fracos",
-    "loadFailed": "Falha ao carregar desafio. Tente novamente mais tarde.",
-    "noQuestions": "Sem questões disponíveis para hoje. Adicione mais questões ao seu estudo.",
-    "complete": "Desafio Completo!",
-    "result": "Você acertou {correct} de {total}",
-    "done": "Concluído",
-    "progress": "Questão {current} de {total}",
-    "finish": "Finalizar"
-  },
-  "pomodoro": {
-    "title": "Timer de Estudo",
-    "focus": "Foco",
-    "break": "Pausa",
-    "reset": "Reiniciar",
-    "pause": "Pausar",
-    "start": "Iniciar",
-    "sessions": "{count, plural, =0 {sessões} one {sessão} other {sessões}}"
   },
   "language": {
     "label": "Idioma",

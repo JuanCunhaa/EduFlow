@@ -63,7 +63,7 @@ export const GET = withPlan(async (request, { user }) => {
     return new NextResponse(csv, {
         headers: {
             'Content-Type': 'text/csv; charset=utf-8',
-            'Content-Disposition': `attachment; filename="isc2-progress-${new Date().toISOString().split('T')[0]}.csv"`,
+            'Content-Disposition': `attachment; filename="examflow-progress-${new Date().toISOString().split('T')[0]}.csv"`,
         },
     });
 }, 'pro');

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "ExamFlow — Exams Generator",
-    "description": "Premium practice exam platform for CISSP, CC, SSCP, CCSP, and CGRC certifications."
+    "description": "Premium practice exam platform for IT and cybersecurity certifications. Adaptive exams, spaced repetition, and performance analytics."
   },
   "common": {
     "cancel": "Cancel",
@@ -69,7 +69,7 @@
     "testimonials": {
       "sarah": {
         "name": "Sarah Mitchell",
-        "role": "CISSP Candidate",
+        "role": "Cybersecurity Certification Candidate",
         "quote": "ExamFlow showed me exactly which domains I was weakest in. I went from 58% to passing in three weeks."
       },
       "daniel": {
@@ -79,12 +79,12 @@
       },
       "priya": {
         "name": "Priya Chakraborty",
-        "role": "CC Certified",
+        "role": "Recently Certified Professional",
         "quote": "I passed CC on my first attempt. The adaptive questions made studying actually efficient."
       },
       "marcus": {
         "name": "Marcus Johnson",
-        "role": "IT Manager preparing for SSCP",
+        "role": "IT Manager preparing for certification",
         "quote": "Finally a platform that doesn't just quiz me — it teaches me where I'm failing and why."
       },
       "ana": {
@@ -94,7 +94,7 @@
       },
       "james": {
         "name": "James Thornton",
-        "role": "CISSP Certified",
+        "role": "Certified Security Professional",
         "quote": "Real Mix mode felt just like the real exam. No surprises on test day."
       }
     },
@@ -276,7 +276,52 @@
     "examsCount": "{count} exams",
     "averageScore": "average score",
     "domainMastery": "Domain Mastery",
-    "examHistory": "Exam History"
+    "examHistory": "Exam History",
+    "notReady": "Not Ready",
+    "notReadyDesc": "Keep studying. Focus on weak domains first.",
+    "building": "Building",
+    "buildingDesc": "You're making progress. Target weak areas and keep practicing.",
+    "gettingClose": "Getting Close",
+    "gettingCloseDesc": "Review weak domains and take more full-length exams.",
+    "likelyReady": "Likely Ready",
+    "likelyReadyDesc": "You're in good shape. Polish weak spots and schedule your exam.",
+    "highlyReady": "Highly Ready",
+    "highlyReadyDesc": "You're ready. Consider scheduling your exam this week.",
+    "improving": "Improving",
+    "declining": "Declining",
+    "stable": "Stable",
+    "trendDelta": "{direction} ({delta} over last {count} exams)",
+    "factors": "Factors",
+    "factorDomain": "Domain Accuracy",
+    "factorScores": "Recent Scores",
+    "factorHard": "Hard Questions",
+    "factorCoverage": "Question Coverage",
+    "factorWeak": "Weak Domains",
+    "factorTrend": "Score Trend",
+    "factorTime": "Time Management",
+    "proOnly": "Pro",
+    "upgradeForFactors": "Upgrade to Pro to see your detailed readiness breakdown",
+    "weaknessMap": "Weakness Map",
+    "weakLabel": "Weak",
+    "strongLabel": "Strong",
+    "weakRecommendation1": "Focus on {domain} — your weakest domain",
+    "weakRecommendationMulti": "Tackle {domain} first — it's your biggest opportunity",
+    "allPassingRecommendation": "You're passing all domains. Equalize by reviewing your lowest.",
+    "startFocusedExam": "Start Focused Exam",
+    "studyPlan": "Study Plan",
+    "studyPlanDesc": "Your personalized 7-day plan",
+    "studyPlanProOnly": "Upgrade to Pro to get a personalized study plan",
+    "planTarget": "Target: Readiness {target}+",
+    "planCurrent": "Current: Readiness {current}",
+    "startSession": "Start",
+    "actDomainFocus": "Domain Focus: {domain}",
+    "actWeakDomains": "Weak Domains Practice",
+    "actSpacedReview": "Spaced Review ({count} due)",
+    "actHardQuestions": "Hard Questions Drill",
+    "actFullLength": "Full-Length Exam",
+    "actReviewMistakes": "Review Mistakes",
+    "actRest": "Rest Day",
+    "estMinutes": "{min} min"
   },
   "studyPage": {
     "title": "Flashcards",
@@ -324,16 +369,14 @@
     "timeLimit": "Time Limit",
     "difficulty": "Difficulty",
     "domains": "Domains",
-    "practice": "Practice",
-    "practiceDesc": "Random selection across all domains",
-    "weakDomains": "Weak Domains",
-    "weakDomainsDesc": "Focus on domains you struggle with",
-    "recentMisses": "Recent Misses",
-    "recentMissesDesc": "Questions you recently got wrong (time-decay weighted)",
-    "realMix": "Real Mix",
-    "realMixDesc": "Simulates a real exam: balanced domains, mixed difficulty, no repeats",
+    "smartPractice": "Smart Practice",
+    "smartPracticeDesc": "25 questions • All domains • Auto-adapts to your weaknesses",
+    "startNow": "Start Now",
+    "customize": "Customize",
     "domainFocus": "Domain Focus",
     "domainFocusDesc": "Deep-dive into selected domains",
+    "weakAreas": "Weak Areas",
+    "weakAreasDesc": "Target your lowest-scoring domains",
     "spacedReview": "Spaced Review",
     "spacedReviewDesc": "SM-2 spaced repetition — prioritises questions due for review",
     "allDomains": "All domains",
@@ -469,69 +512,6 @@
     "namePlaceholder": "Certified Information Systems Security Professional",
     "domainCodePlaceholder": "SAM",
     "domainNamePlaceholder": "Security and Risk Management"
-  },
-  "heatmap": {
-    "title": "Activity",
-    "summary": "{questions} questions in {days} active days",
-    "days": [
-      "Mon",
-      "Wed",
-      "Fri"
-    ],
-    "months": [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec"
-    ],
-    "less": "Less",
-    "more": "More",
-    "tooltip": "{date}: {count} questions"
-  },
-  "badges": {
-    "title": "Badges",
-    "firstExam": "First Exam",
-    "firstExamDesc": "Complete your first practice exam",
-    "streak3": "3-Day Streak",
-    "streak3Desc": "Study for 3 consecutive days",
-    "weekWarrior": "Week Warrior",
-    "weekWarriorDesc": "Study for 7 consecutive days",
-    "monthlyMaster": "Monthly Master",
-    "monthlyMasterDesc": "Study for 30 consecutive days",
-    "perfectScore": "Perfect Score",
-    "perfectScoreDesc": "Score 100% on any exam",
-    "centurion": "Centurion",
-    "centurionDesc": "Answer 100 questions total",
-    "domainMaster": "Domain Master",
-    "domainMasterDesc": "Score 70%+ in every domain on a single exam"
-  },
-  "dailyChallenge": {
-    "title": "Daily Challenge",
-    "questionsFromWeak": "{count} questions from your weak domains",
-    "loadFailed": "Failed to load challenge. Try again later.",
-    "noQuestions": "No questions available for today. Add more questions to your study.",
-    "complete": "Challenge Complete!",
-    "result": "You got {correct} of {total} correct",
-    "done": "Done",
-    "progress": "Question {current} of {total}",
-    "finish": "Finish"
-  },
-  "pomodoro": {
-    "title": "Study Timer",
-    "focus": "Focus",
-    "break": "Break",
-    "reset": "Reset",
-    "pause": "Pause",
-    "start": "Start",
-    "sessions": "{count, plural, =0 {sessions} one {session} other {sessions}}"
   },
   "language": {
     "label": "Language",

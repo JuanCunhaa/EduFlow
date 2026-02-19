@@ -263,6 +263,72 @@ export interface PerformanceSummary {
     updatedAt: number; // epoch ms
 }
 
+// === Readiness Score ===
+
+export type ReadinessBand = 'not_ready' | 'building' | 'getting_close' | 'likely_ready' | 'highly_ready';
+
+export interface ReadinessFactor {
+    value: number;   // 0.0–1.0
+    weight: number;  // 0.0–1.0
+}
+
+export interface ReadinessResult {
+    readiness: number;          // 0–100
+    band: ReadinessBand;
+    trend: {
+        direction: 'improving' | 'declining' | 'stable';
+        delta: number;
+        examsAnalyzed: number;
+    };
+    factors: {
+        weightedDomainAccuracy: ReadinessFactor;
+        recentScores: ReadinessFactor & { scores: number[] };
+        hardQuestionAccuracy: ReadinessFactor;
+        questionCoverage: ReadinessFactor & { attempted: number; total: number };
+        weakDomainPenalty: ReadinessFactor & { weakDomains: string[] };
+        trendBonus: ReadinessFactor;
+        timeManagement: ReadinessFactor;
+    };
+}
+
+// === Study Plan ===
+
+export interface StudyPlan {
+    studyId: string;
+    generatedAt: number;
+    targetReadiness: number;
+    currentReadiness: number;
+    entries: PlanEntry[];
+    weakDomains: string[];
+    spReviewDue: number;
+    hardQuestionAccuracy: number;
+    questionCoverage: number;
+}
+
+export interface PlanEntry {
+    day: number;
+    dayOfWeek: string;
+    activity: PlanActivity;
+    rationale: string;
+    estimatedMinutes: number;
+    examConfig: {
+        mode: ExamMode;
+        questionCount: number;
+        timeLimitMinutes: number;
+        difficulty: Difficulty | 'all';
+        domainIds: string[];
+    } | null;
+}
+
+export type PlanActivity =
+    | { type: 'domain_focus'; domainId: string; domainName: string }
+    | { type: 'weak_domains' }
+    | { type: 'spaced_review'; questionsDue: number }
+    | { type: 'hard_questions' }
+    | { type: 'full_length_exam' }
+    | { type: 'review_mistakes' }
+    | { type: 'rest' };
+
 // === Question Notes ===
 
 export interface QuestionNote {
@@ -496,6 +562,30 @@ export interface MarketplaceImportResult {
     studyId: string;
     importedQuestions: number;
     importedDomains: number;
+}
+
+// === SEO / Email Leads ===
+
+export type CaptureSource =
+    | 'cert-hub'
+    | 'domain-page'
+    | 'practice-quiz'
+    | 'blog-post'
+    | 'exit-intent'
+    | 'in-app'
+    | 'unknown';
+
+export interface EmailLead {
+    email: string;
+    uid: string | null;
+    source: CaptureSource;
+    tags: string[];
+    certInterest: string[];
+    consent: boolean;
+    status: 'active' | 'unsubscribed' | 'bounced';
+    capturedAt: Date;
+    lastEmailedAt: Date | null;
+    convertedAt: Date | null;
 }
 
 // === API ===

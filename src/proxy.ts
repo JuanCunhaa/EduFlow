@@ -4,7 +4,13 @@ import { routing } from '@/i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-const PUBLIC_PATHS = ['/login', '/api/auth/verify'];
+const PUBLIC_PATHS = [
+    '/login',
+    '/api/auth/verify',
+    // SEO public pages
+    '/cissp', '/cc', '/sscp', '/ccsp', '/cgrc',
+    '/compare', '/blog', '/exam-modes',
+];
 const PUBLIC_EXACT = ['/'];
 
 /**
@@ -31,8 +37,13 @@ function stripLocale(pathname: string): string {
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Skip API routes, Next.js internals, and static assets
-    if (pathname.startsWith('/api/') || pathname.startsWith('/_next') || pathname.startsWith('/images/') || pathname === '/favicon.ico') {
+    // Skip API routes (except public leads endpoint), Next.js internals, and static assets
+    if (
+        (pathname.startsWith('/api/') && !pathname.startsWith('/api/leads')) ||
+        pathname.startsWith('/_next') ||
+        pathname.startsWith('/images/') ||
+        pathname === '/favicon.ico'
+    ) {
         return NextResponse.next();
     }
 

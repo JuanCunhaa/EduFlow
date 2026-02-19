@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Difficulty, Study, StudyDomain, ExamMode } from '@/types';
 import { useTranslations } from 'next-intl';
-import { ChevronRight, Clock, BookOpen, Target, Zap, Layers } from 'lucide-react';
+import { ChevronDown, ChevronRight, Clock, BookOpen, Target, Zap, Rocket, Settings2 } from 'lucide-react';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { FeatureLock } from '@/components/ui/FeatureLock';
 
@@ -23,41 +23,119 @@ interface ExamConfigFormProps {
     isLoading: boolean;
 }
 
-const QUESTION_COUNTS = [10, 25, 50, 100, 150];
-
-const MODE_KEYS: ExamMode[] = ['practice', 'weak_domains', 'recent_misses', 'real_mix', 'domain_focus', 'spaced_review'];
-
-const MODE_I18N_MAP: Record<ExamMode, { label: string; desc: string }> = {
-    practice: { label: 'practice', desc: 'practiceDesc' },
-    weak_domains: { label: 'weakDomains', desc: 'weakDomainsDesc' },
-    recent_misses: { label: 'recentMisses', desc: 'recentMissesDesc' },
-    real_mix: { label: 'realMix', desc: 'realMixDesc' },
-    domain_focus: { label: 'domainFocus', desc: 'domainFocusDesc' },
-    spaced_review: { label: 'spacedReview', desc: 'spacedReviewDesc' },
+// ── Smart Practice defaults ────────────────────────
+const SMART_DEFAULTS = {
+    mode: 'real_mix' as ExamMode,
+    questionCount: 25,
+    timeLimitMinutes: 60,
+    difficulty: 'all' as const,
+    domainIds: [] as string[],
 };
+
+// ── Advanced mode tiles (reduced from 6 to 3) ─────
+type ModeTile = {
+    engineMode: ExamMode;
+    label: string;
+    desc: string;
+    proOnly: boolean;
+};
+
+const ADVANCED_MODES: ModeTile[] = [
+    { engineMode: 'domain_focus', label: 'domainFocus', desc: 'domainFocusDesc', proOnly: false },
+    { engineMode: 'weak_domains', label: 'weakAreas', desc: 'weakAreasDesc', proOnly: true },
+    { engineMode: 'spaced_review', label: 'spacedReview', desc: 'spacedReviewDesc', proOnly: true },
+];
+
+const QUESTION_COUNTS = [10, 25, 50];
+const TIME_LIMITS = [30, 60, 90];
+
+const STORAGE_KEY = 'examflow:advanced-config';
+
+interface SavedConfig {
+    mode: ExamMode;
+    questionCount: number;
+    timeLimitMinutes: number;
+    difficulty: Difficulty | 'all';
+}
+
+function loadSavedConfig(): SavedConfig | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw) as SavedConfig;
+    } catch {
+        return null;
+    }
+}
+
+function saveConfig(config: SavedConfig): void {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    } catch { /* localStorage full or unavailable — ignore */ }
+}
 
 export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: Readonly<ExamConfigFormProps>) {
     const t = useTranslations('examConfig');
     const tc = useTranslations('common');
     const { isModeAllowed, maxQuestionsPerExam, isFree } = usePlanLimits();
+
     const [selectedStudyId, setSelectedStudyId] = useState(activeStudyId || studies[0]?.id || '');
+    const [showAdvanced, setShowAdvanced] = useState(false);
+
+    // Advanced config — initialize from localStorage or defaults
+    const [mode, setMode] = useState<ExamMode>('domain_focus');
     const [questionCount, setQuestionCount] = useState(25);
     const [timeLimitMinutes, setTimeLimitMinutes] = useState(60);
     const [difficulty, setDifficulty] = useState<Difficulty | 'all'>('all');
     const [selectedDomainIds, setSelectedDomainIds] = useState<string[]>([]);
-    const [mode, setMode] = useState<ExamMode>('practice');
+
+    // Restore saved advanced config on mount
+    useEffect(() => {
+        const saved = loadSavedConfig();
+        if (saved) {
+            setMode(saved.mode);
+            setQuestionCount(saved.questionCount);
+            setTimeLimitMinutes(saved.timeLimitMinutes);
+            setDifficulty(saved.difficulty);
+        }
+    }, []);
+
+    // Persist advanced config whenever it changes
+    useEffect(() => {
+        saveConfig({ mode, questionCount, timeLimitMinutes, difficulty });
+    }, [mode, questionCount, timeLimitMinutes, difficulty]);
 
     const currentStudy = studies.find((s) => s.id === selectedStudyId);
     const domains: StudyDomain[] = currentStudy?.domains || [];
 
-    function toggleDomain(domainId: string) {
+    const toggleDomain = useCallback((domainId: string) => {
         setSelectedDomainIds((prev) =>
             prev.includes(domainId) ? prev.filter((x) => x !== domainId) : [...prev, domainId]
         );
-    }
+    }, []);
+
+    const handleQuickStart = () => {
+        if (!selectedStudyId) return;
+        onStart({
+            studyId: selectedStudyId,
+            ...SMART_DEFAULTS,
+        });
+    };
+
+    const handleAdvancedStart = () => {
+        if (!selectedStudyId) return;
+        onStart({
+            studyId: selectedStudyId,
+            questionCount,
+            timeLimitMinutes,
+            difficulty,
+            domainIds: selectedDomainIds,
+            mode,
+        });
+    };
 
     return (
-        <div className="mx-auto max-w-2xl space-y-10 animate-fade-in">
+        <div className="mx-auto max-w-2xl space-y-8 animate-fade-in">
             {/* Study selection */}
             <div className="space-y-3">
                 <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -91,169 +169,201 @@ export function ExamConfigForm({ studies, activeStudyId, onStart, isLoading }: R
                 </div>
             </div>
 
-            {/* Exam Mode */}
-            <div className="space-y-3">
-                <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Layers className="h-3.5 w-3.5" /> {t('mode')}
-                </h2>
-                <div className="grid gap-2">
-                    {MODE_KEYS.map((mValue) => {
-                        const keys = MODE_I18N_MAP[mValue];
-                        const locked = !isModeAllowed(mValue);
-                        const modeButton = (
-                            <button
-                                key={mValue}
-                                onClick={() => !locked && setMode(mValue)}
-                                disabled={locked}
-                                className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-200 ${mode === mValue
-                                    ? 'border-primary/30 bg-primary/5 text-foreground'
-                                    : 'border-border bg-card text-muted-foreground hover:bg-accent/30'
-                                    }`}
-                            >
-                                <div>
-                                    <span className="text-sm font-medium">{t(keys.label)}</span>
-                                    <p className="text-xs text-muted-foreground">{t(keys.desc)}</p>
-                                </div>
-                                {mode === mValue && (
-                                    <div className="h-2 w-2 rounded-full bg-primary" />
-                                )}
-                            </button>
-                        );
-                        return locked ? (
-                            <FeatureLock key={mValue} feature="advanced_exam_modes">
-                                {modeButton}
-                            </FeatureLock>
-                        ) : (
-                            modeButton
-                        );
-                    })}
+            {/* Quick Start — Smart Practice */}
+            <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">
+                        <Rocket className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <h3 className="text-base font-bold text-foreground">{t('smartPractice')}</h3>
+                        <p className="text-xs text-muted-foreground">{t('smartPracticeDesc')}</p>
+                    </div>
                 </div>
+                <button
+                    onClick={handleQuickStart}
+                    disabled={isLoading || !selectedStudyId}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+                >
+                    {isLoading ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                    ) : (
+                        <>
+                            {t('startNow')} <ChevronRight className="h-4 w-4" />
+                        </>
+                    )}
+                </button>
             </div>
 
-            {/* Question count */}
-            <div className="space-y-3">
-                <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <BookOpen className="h-3.5 w-3.5" /> {t('questions')}
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                    {QUESTION_COUNTS.map((n) => {
-                        const locked = isFree && n > maxQuestionsPerExam;
-                        const countButton = (
-                            <button
-                                key={n}
-                                onClick={() => !locked && setQuestionCount(n)}
-                                disabled={locked}
-                                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${questionCount === n
-                                    ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                                    : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
-                                    }`}
-                            >
-                                {n}
-                            </button>
-                        );
-                        return locked ? (
-                            <FeatureLock key={n} feature="exam_question_limit" showLabel={false}>
-                                {countButton}
-                            </FeatureLock>
-                        ) : (
-                            countButton
-                        );
-                    })}
-                </div>
-            </div>
+            {/* Advanced Options — Collapsed accordion */}
+            <div className="space-y-4">
+                <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="flex w-full items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    <Settings2 className="h-4 w-4" />
+                    {t('customize')}
+                    <ChevronDown className={`h-4 w-4 ml-auto transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} />
+                </button>
 
-            {/* Time limit */}
-            <div className="space-y-3">
-                <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Clock className="h-3.5 w-3.5" /> {t('timeLimit')}
-                </h2>
-                <div className="flex items-center gap-4">
-                    <input
-                        type="range"
-                        min={10}
-                        max={180}
-                        step={5}
-                        value={timeLimitMinutes}
-                        onChange={(e) => setTimeLimitMinutes(Number.parseInt(e.target.value, 10))}
-                        className="flex-1 accent-primary"
-                        aria-label={t('timeLimitLabel')}
-                    />
-                    <span className="min-w-[4rem] text-right font-mono text-sm font-semibold text-foreground">
-                        {timeLimitMinutes} {t('min')}
-                    </span>
-                </div>
-            </div>
+                {showAdvanced && (
+                    <div className="space-y-8 animate-fade-in">
+                        {/* Mode tiles */}
+                        <div className="space-y-3">
+                            <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <div className="h-px w-3 bg-primary/50" />
+                                {t('mode')}
+                            </h2>
+                            <div className="grid gap-2">
+                                {ADVANCED_MODES.map((tile) => {
+                                    const locked = !isModeAllowed(tile.engineMode);
+                                    const modeButton = (
+                                        <button
+                                            key={tile.engineMode}
+                                            onClick={() => !locked && setMode(tile.engineMode)}
+                                            disabled={locked}
+                                            className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all duration-200 ${mode === tile.engineMode
+                                                ? 'border-primary/30 bg-primary/5 text-foreground'
+                                                : 'border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                                }`}
+                                        >
+                                            <div>
+                                                <span className="text-sm font-medium">{t(tile.label)}</span>
+                                                <p className="text-xs text-muted-foreground">{t(tile.desc)}</p>
+                                            </div>
+                                            {mode === tile.engineMode && (
+                                                <div className="h-2 w-2 rounded-full bg-primary" />
+                                            )}
+                                        </button>
+                                    );
+                                    return locked ? (
+                                        <FeatureLock key={tile.engineMode} feature="advanced_exam_modes">
+                                            {modeButton}
+                                        </FeatureLock>
+                                    ) : (
+                                        modeButton
+                                    );
+                                })}
+                            </div>
+                        </div>
 
-            {/* Difficulty */}
-            <div className="space-y-3">
-                <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Target className="h-3.5 w-3.5" /> {t('difficulty')}
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                    {(['all', 'easy', 'medium', 'hard'] as const).map((d) => (
+                        {/* Question count */}
+                        <div className="space-y-3">
+                            <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <BookOpen className="h-3.5 w-3.5" /> {t('questions')}
+                            </h2>
+                            <div className="flex flex-wrap gap-2">
+                                {QUESTION_COUNTS.map((n) => {
+                                    const locked = isFree && n > maxQuestionsPerExam;
+                                    const countButton = (
+                                        <button
+                                            key={n}
+                                            onClick={() => !locked && setQuestionCount(n)}
+                                            disabled={locked}
+                                            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${questionCount === n
+                                                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                                                : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                                }`}
+                                        >
+                                            {n}
+                                        </button>
+                                    );
+                                    return locked ? (
+                                        <FeatureLock key={n} feature="exam_question_limit" showLabel={false}>
+                                            {countButton}
+                                        </FeatureLock>
+                                    ) : (
+                                        countButton
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Time limit — 3 buttons */}
+                        <div className="space-y-3">
+                            <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <Clock className="h-3.5 w-3.5" /> {t('timeLimit')}
+                            </h2>
+                            <div className="flex flex-wrap gap-2">
+                                {TIME_LIMITS.map((mins) => (
+                                    <button
+                                        key={mins}
+                                        onClick={() => setTimeLimitMinutes(mins)}
+                                        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-200 ${timeLimitMinutes === mins
+                                            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                                            : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                            }`}
+                                    >
+                                        {mins} {t('min')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Difficulty */}
+                        <div className="space-y-3">
+                            <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                <Target className="h-3.5 w-3.5" /> {t('difficulty')}
+                            </h2>
+                            <div className="flex flex-wrap gap-2">
+                                {(['all', 'easy', 'medium', 'hard'] as const).map((d) => (
+                                    <button
+                                        key={d}
+                                        onClick={() => setDifficulty(d)}
+                                        className={`rounded-lg px-4 py-2 text-sm font-semibold capitalize transition-all duration-200 ${difficulty === d
+                                            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                                            : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                            }`}
+                                    >
+                                        {d === 'all' ? tc('all') : tc(d)}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Domains */}
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <Zap className="h-3.5 w-3.5" /> {t('domains')}
+                                </h2>
+                                <span className="text-xs text-muted-foreground">
+                                    {selectedDomainIds.length === 0 ? t('allDomains') : t('selectedCount', { count: selectedDomainIds.length })}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {domains.map((d) => (
+                                    <button
+                                        key={d.id}
+                                        onClick={() => toggleDomain(d.id)}
+                                        className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${selectedDomainIds.includes(d.id)
+                                            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
+                                            : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
+                                            }`}
+                                    >
+                                        {d.abbreviation}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Start Custom Exam button */}
                         <button
-                            key={d}
-                            onClick={() => setDifficulty(d)}
-                            className={`rounded-lg px-4 py-2 text-sm font-semibold capitalize transition-all duration-200 ${difficulty === d
-                                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
-                                }`}
+                            onClick={handleAdvancedStart}
+                            disabled={isLoading || !selectedStudyId}
+                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-6 py-3.5 text-sm font-bold text-foreground transition-all duration-200 hover:bg-primary/10 hover:shadow-md disabled:opacity-50"
                         >
-                            {d === 'all' ? tc('all') : tc(d)}
+                            {isLoading ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                            ) : (
+                                <>
+                                    {t('startExam')} <ChevronRight className="h-4 w-4" />
+                                </>
+                            )}
                         </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Domains */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h2 className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        <Zap className="h-3.5 w-3.5" /> {t('domains')}
-                    </h2>
-                    <span className="text-xs text-muted-foreground">
-                        {selectedDomainIds.length === 0 ? t('allDomains') : t('selectedCount', { count: selectedDomainIds.length })}
-                    </span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {domains.map((d) => (
-                        <button
-                            key={d.id}
-                            onClick={() => toggleDomain(d.id)}
-                            className={`rounded-lg px-3.5 py-2 text-sm font-semibold transition-all duration-200 ${selectedDomainIds.includes(d.id)
-                                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent/30'
-                                }`}
-                        >
-                            {d.abbreviation}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Start button */}
-            <button
-                onClick={() =>
-                    onStart({
-                        studyId: selectedStudyId,
-                        questionCount,
-                        timeLimitMinutes,
-                        difficulty,
-                        domainIds: selectedDomainIds,
-                        mode,
-                    })
-                }
-                disabled={isLoading || !selectedStudyId}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/80 px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
-            >
-                {isLoading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-                ) : (
-                    <>
-                        {t('startExam')} <ChevronRight className="h-4 w-4" />
-                    </>
+                    </div>
                 )}
-            </button>
+            </div>
         </div>
     );
 }
