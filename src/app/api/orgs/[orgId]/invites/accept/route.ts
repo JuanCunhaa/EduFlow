@@ -8,80 +8,93 @@ import { FieldValue } from 'firebase-admin/firestore';
  * Body: { token }
  */
 export const POST = withAuth(async (request, { user, log, params }) => {
-    const { orgId } = params;
-    const db = getAdminDb();
-    const body = await request.json();
-    const { token } = body;
+  const { orgId } = params;
+  const db = getAdminDb();
+  const body = await request.json();
+  const { token } = body;
 
-    if (!token) {
-        return NextResponse.json({ error: 'Invite token required' }, { status: 400 });
-    }
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Invite token required' },
+      { status: 400 }
+    );
+  }
 
-    // Find invite
-    const inviteSnap = await db
-        .collection('org_invites')
-        .where('orgId', '==', orgId)
-        .where('token', '==', token)
-        .where('status', '==', 'pending')
-        .limit(1)
-        .get();
+  // Find invite
+  const inviteSnap = await db
+    .collection('org_invites')
+    .where('orgId', '==', orgId)
+    .where('token', '==', token)
+    .where('status', '==', 'pending')
+    .limit(1)
+    .get();
 
-    if (inviteSnap.empty) {
-        return NextResponse.json({ error: 'Invalid or expired invite' }, { status: 404 });
-    }
+  if (inviteSnap.empty) {
+    return NextResponse.json(
+      { error: 'Invalid or expired invite' },
+      { status: 404 }
+    );
+  }
 
-    const inviteDoc = inviteSnap.docs[0];
-    const invite = inviteDoc.data();
+  const inviteDoc = inviteSnap.docs[0];
+  const invite = inviteDoc.data();
 
-    // Check expiry
-    const expiresAt = invite.expiresAt?.toDate?.() || invite.expiresAt;
-    if (expiresAt && new Date() > new Date(expiresAt)) {
-        await inviteDoc.ref.update({ status: 'expired' });
-        return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
-    }
+  // Check expiry
+  const expiresAt = invite.expiresAt?.toDate?.() || invite.expiresAt;
+  if (expiresAt && new Date() > new Date(expiresAt)) {
+    await inviteDoc.ref.update({ status: 'expired' });
+    return NextResponse.json({ error: 'Invite has expired' }, { status: 410 });
+  }
 
-    // Verify email matches
-    if (invite.email !== user.email?.toLowerCase()) {
-        return NextResponse.json({ error: 'This invite was sent to a different email' }, { status: 403 });
-    }
+  // Verify email matches
+  if (invite.email !== user.email?.toLowerCase()) {
+    return NextResponse.json(
+      { error: 'This invite was sent to a different email' },
+      { status: 403 }
+    );
+  }
 
-    // Check if already a member
-    const existingMember = await db
-        .collection('orgs')
-        .doc(orgId)
-        .collection('members')
-        .doc(user.uid)
-        .get();
+  // Check if already a member
+  const existingMember = await db
+    .collection('orgs')
+    .doc(orgId)
+    .collection('members')
+    .doc(user.uid)
+    .get();
 
-    if (existingMember.exists) {
-        return NextResponse.json({ error: 'Already a member' }, { status: 409 });
-    }
+  if (existingMember.exists) {
+    return NextResponse.json({ error: 'Already a member' }, { status: 409 });
+  }
 
-    const batch = db.batch();
+  const batch = db.batch();
 
-    // Add membership
-    const memberRef = db.collection('orgs').doc(orgId).collection('members').doc(user.uid);
-    batch.set(memberRef, {
-        uid: user.uid,
-        orgId,
-        role: invite.role || 'member',
-        displayName: user.email || 'Member',
-        email: user.email || '',
-        joinedAt: FieldValue.serverTimestamp(),
-    });
+  // Add membership
+  const memberRef = db
+    .collection('orgs')
+    .doc(orgId)
+    .collection('members')
+    .doc(user.uid);
+  batch.set(memberRef, {
+    uid: user.uid,
+    orgId,
+    role: invite.role || 'member',
+    displayName: user.email || 'Member',
+    email: user.email || '',
+    joinedAt: FieldValue.serverTimestamp(),
+  });
 
-    // Update invite status
-    batch.update(inviteDoc.ref, { status: 'accepted' });
+  // Update invite status
+  batch.update(inviteDoc.ref, { status: 'accepted' });
 
-    // Increment seat count
-    const orgRef = db.collection('orgs').doc(orgId);
-    batch.update(orgRef, {
-        seatCount: FieldValue.increment(1),
-        updatedAt: FieldValue.serverTimestamp(),
-    });
+  // Increment seat count
+  const orgRef = db.collection('orgs').doc(orgId);
+  batch.update(orgRef, {
+    seatCount: FieldValue.increment(1),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
 
-    await batch.commit();
+  await batch.commit();
 
-    log.done(200);
-    return { ok: true, orgId, role: invite.role || 'member' };
+  log.done(200);
+  return { ok: true, orgId, role: invite.role || 'member' };
 });

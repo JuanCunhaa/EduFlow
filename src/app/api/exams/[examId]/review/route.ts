@@ -10,20 +10,20 @@ import { checkScrapingSignals } from '@/lib/scraping-guard';
  * Protected by scraping guard — tighter limits since this reveals correct answers.
  */
 export const GET = withAuth(async (request, { user, params }) => {
-    // ── Scraping guard (strict: reveals correct answers) ──
-    const guard = await checkScrapingSignals(request, user.uid, {
-        category: 'exam-review',
-        maxRequestsPerMinute: 10,
-        maxRequestsPerHour: 60,
-        blockThreshold: 60,  // lower threshold — answers are high-value content
-    });
-    if (guard.blocked) {
-        return NextResponse.json(
-            { error: 'Too many requests. Please slow down.' },
-            { status: 429 }
-        );
-    }
+  // ── Scraping guard (strict: reveals correct answers) ──
+  const guard = await checkScrapingSignals(request, user.uid, {
+    category: 'exam-review',
+    maxRequestsPerMinute: 10,
+    maxRequestsPerHour: 60,
+    blockThreshold: 60, // lower threshold — answers are high-value content
+  });
+  if (guard.blocked) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429 }
+    );
+  }
 
-    const review = await getExamReview(user.uid, params.examId);
-    return { data: review };
+  const review = await getExamReview(user.uid, params.examId);
+  return { data: review };
 });

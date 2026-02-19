@@ -63,6 +63,7 @@ Priorizamos a **simplicidade sênior**. Uma arquitetura serverless robusta, esca
 - **Qualidade**: [Vitest](https://vitest.dev/) para testes unitários e ESLint para padronização.
 
 **Fluxo de Dados**:
+
 1.  **Cliente**: Next.js renderiza a UI e gerencia estado com `swr`.
 2.  **API**: Route Handlers em `src/app/api` processam lógica sensível (pagamentos, validações complexas).
 3.  **Dados**: Firestore armazena usuários, estudos, questões e histórico de exames com estrutura NoSQL otimizada para leitura.
@@ -110,12 +111,12 @@ src/
 
 O projeto utiliza **Next.js Route Handlers** para expor uma API segura. Principais módulos:
 
-| Endpoint | Descrição |
-|----------|-----------|
-| `/api/auth/*` | Gerencia criação de usuários e sincronização com Firebase Auth. |
-| `/api/billing/webhook` | Recebe eventos do Stripe (renovações, cancelamentos) para atualizar status do usuário. |
-| `/api/exams/submit` | Processa respostas de exames, calcula pontuação e atualiza estatísticas de domínio. |
-| `/api/content/generate` | (Admin) Gera novas questões via IA baseado em parâmetros de estudo. |
+| Endpoint                | Descrição                                                                              |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `/api/auth/*`           | Gerencia criação de usuários e sincronização com Firebase Auth.                        |
+| `/api/billing/webhook`  | Recebe eventos do Stripe (renovações, cancelamentos) para atualizar status do usuário. |
+| `/api/exams/submit`     | Processa respostas de exames, calcula pontuação e atualiza estatísticas de domínio.    |
+| `/api/content/generate` | (Admin) Gera novas questões via IA baseado em parâmetros de estudo.                    |
 
 ---
 
@@ -128,6 +129,7 @@ A pasta `scripts/` contém utilitários essenciais para manutenção da platafor
 - **`migrate-billing.ts`**: Script de migração para atualizar estruturas de dados de assinatura.
 
 Para executar um script:
+
 ```bash
 npx tsx scripts/validate-questions.ts
 ```
@@ -137,6 +139,7 @@ npx tsx scripts/validate-questions.ts
 ## 🚀 Instalação e Uso
 
 ### Pré-requisitos
+
 - Node.js 18+
 - Projeto Firebase configurado
 - Conta Stripe (para funcionalidades de pagamento)
@@ -144,21 +147,25 @@ npx tsx scripts/validate-questions.ts
 ### Passo a Passo
 
 1.  **Clone o repositório:**
+
     ```bash
     git clone https://github.com/seu-usuario/examflow.git
     cd examflow
     ```
 
 2.  **Instale as dependências:**
+
     ```bash
     npm install
     # ou pnpm install
     ```
 
 3.  **Configuração de Ambiente:**
+
     ```bash
     cp .env.example .env.local
     ```
+
     Preencha as chaves do Firebase, Stripe e OpenAI no arquivo `.env.local`.
 
 4.  **Rodar Servidor de Desenvolvimento:**
@@ -185,14 +192,14 @@ Certifique-se de configurar as variáveis de ambiente no painel da Vercel após 
 
 ## 🔐 Variáveis de Ambiente
 
-| Variável | Descrição |
-|----------|------------|
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Chave de API do Firebase (Web) |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | ID do Projeto Firebase |
-| `STRIPE_SECRET_KEY` | Chave Secreta do Stripe (Server-side) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Chave Pública do Stripe (Client-side) |
-| `OPENAI_API_KEY` | Chave da OpenAI (para gerador de conteúdo) |
-| `NEXT_PUBLIC_APP_URL` | URL base da aplicação (ex: http://localhost:3000) |
+| Variável                             | Descrição                                         |
+| ------------------------------------ | ------------------------------------------------- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`       | Chave de API do Firebase (Web)                    |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`    | ID do Projeto Firebase                            |
+| `STRIPE_SECRET_KEY`                  | Chave Secreta do Stripe (Server-side)             |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Chave Pública do Stripe (Client-side)             |
+| `OPENAI_API_KEY`                     | Chave da OpenAI (para gerador de conteúdo)        |
+| `NEXT_PUBLIC_APP_URL`                | URL base da aplicação (ex: http://localhost:3000) |
 
 ---
 

@@ -1,9 +1,9 @@
 import {
-    GoogleAuthProvider,
-    onAuthStateChanged,
-    signInWithPopup,
-    signOut as firebaseSignOut,
-    type User,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  type User,
 } from 'firebase/auth';
 import { getClientAuth } from './config';
 
@@ -26,8 +26,8 @@ const googleProvider = new GoogleAuthProvider();
  * - Race conditions between onAuthStateChanged and cookie creation
  */
 export async function signInWithGoogle(): Promise<User> {
-    const result = await signInWithPopup(getClientAuth(), googleProvider);
-    return result.user;
+  const result = await signInWithPopup(getClientAuth(), googleProvider);
+  return result.user;
 }
 
 /**
@@ -42,29 +42,31 @@ export async function signInWithGoogle(): Promise<User> {
  * cookie was created.
  */
 export async function ensureSessionCookie(user: User): Promise<void> {
-    const idToken = await user.getIdToken(true);
-    const res = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-    });
-    if (!res.ok) {
-        throw new Error('Failed to create session cookie');
-    }
+  const idToken = await user.getIdToken(true);
+  const res = await fetch('/api/auth/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  if (!res.ok) {
+    throw new Error('Failed to create session cookie');
+  }
 }
 
 export async function signOut(): Promise<void> {
-    await firebaseSignOut(getClientAuth());
-    // Clear auth cookie
-    await fetch('/api/auth/verify', { method: 'DELETE' });
+  await firebaseSignOut(getClientAuth());
+  // Clear auth cookie
+  await fetch('/api/auth/verify', { method: 'DELETE' });
 }
 
-export function onAuthChange(callback: (user: User | null) => void): () => void {
-    return onAuthStateChanged(getClientAuth(), callback);
+export function onAuthChange(
+  callback: (user: User | null) => void
+): () => void {
+  return onAuthStateChanged(getClientAuth(), callback);
 }
 
 export async function getIdToken(): Promise<string | null> {
-    const user = getClientAuth().currentUser;
-    if (!user) return null;
-    return user.getIdToken();
+  const user = getClientAuth().currentUser;
+  if (!user) return null;
+  return user.getIdToken();
 }

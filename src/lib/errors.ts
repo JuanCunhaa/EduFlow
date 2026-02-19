@@ -4,225 +4,240 @@
  */
 
 export class AppError extends Error {
-    public readonly statusCode: number;
-    public readonly code: string;
-    public readonly details?: unknown;
+  public readonly statusCode: number;
+  public readonly code: string;
+  public readonly details?: unknown;
 
-    constructor(message: string, statusCode: number, code: string, details?: unknown) {
-        super(message);
-        this.name = 'AppError';
-        this.statusCode = statusCode;
-        this.code = code;
-        this.details = details;
-        // Maintains proper stack trace in V8
-        if ('captureStackTrace' in Error) {
-            (Error as { captureStackTrace: (t: object, c: Function) => void })
-                .captureStackTrace(this, this.constructor);
-        }
+  constructor(
+    message: string,
+    statusCode: number,
+    code: string,
+    details?: unknown
+  ) {
+    super(message);
+    this.name = 'AppError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+    // Maintains proper stack trace in V8
+    if ('captureStackTrace' in Error) {
+      (
+        Error as { captureStackTrace: (t: object, c: Function) => void }
+      ).captureStackTrace(this, this.constructor);
     }
+  }
 }
 
 // ── 400 Bad Request ──────────────────────────────
 export class ValidationError extends AppError {
-    constructor(message = 'Validation failed', details?: unknown) {
-        super(message, 400, 'VALIDATION_ERROR', details);
-        this.name = 'ValidationError';
-    }
+  constructor(message = 'Validation failed', details?: unknown) {
+    super(message, 400, 'VALIDATION_ERROR', details);
+    this.name = 'ValidationError';
+  }
 }
 
 /** Client-side error carrying per-field validation messages from the API */
 export class FieldValidationError extends Error {
-    public readonly fieldErrors: Record<string, string[]>;
+  public readonly fieldErrors: Record<string, string[]>;
 
-    constructor(fieldErrors: Record<string, string[]>) {
-        super('Validation failed');
-        this.name = 'FieldValidationError';
-        this.fieldErrors = fieldErrors;
-    }
+  constructor(fieldErrors: Record<string, string[]>) {
+    super('Validation failed');
+    this.name = 'FieldValidationError';
+    this.fieldErrors = fieldErrors;
+  }
 }
 
 export class BadRequestError extends AppError {
-    constructor(message = 'Bad request', details?: unknown) {
-        super(message, 400, 'BAD_REQUEST', details);
-        this.name = 'BadRequestError';
-    }
+  constructor(message = 'Bad request', details?: unknown) {
+    super(message, 400, 'BAD_REQUEST', details);
+    this.name = 'BadRequestError';
+  }
 }
 
 // ── 401 Unauthorized ─────────────────────────────
 export class UnauthorizedError extends AppError {
-    constructor(message = 'Unauthorized') {
-        super(message, 401, 'UNAUTHORIZED');
-        this.name = 'UnauthorizedError';
-    }
+  constructor(message = 'Unauthorized') {
+    super(message, 401, 'UNAUTHORIZED');
+    this.name = 'UnauthorizedError';
+  }
 }
 
 // ── 403 Forbidden ────────────────────────────────
 export class ForbiddenError extends AppError {
-    constructor(message = 'Forbidden') {
-        super(message, 403, 'FORBIDDEN');
-        this.name = 'ForbiddenError';
-    }
+  constructor(message = 'Forbidden') {
+    super(message, 403, 'FORBIDDEN');
+    this.name = 'ForbiddenError';
+  }
 }
 
 export class PaywallError extends AppError {
-    constructor(
-        requiredPlan: string,
-        details?: { feature?: string; currentUsage?: number; limit?: number }
-    ) {
-        super(`Upgrade to ${requiredPlan} to access this feature`, 403, 'PAYWALL_REQUIRED', {
-            requiredPlan,
-            feature: details?.feature,
-            currentUsage: details?.currentUsage,
-            limit: details?.limit,
-            upgradeUrl: '/pricing',
-        });
-        this.name = 'PaywallError';
-    }
+  constructor(
+    requiredPlan: string,
+    details?: { feature?: string; currentUsage?: number; limit?: number }
+  ) {
+    super(
+      `Upgrade to ${requiredPlan} to access this feature`,
+      403,
+      'PAYWALL_REQUIRED',
+      {
+        requiredPlan,
+        feature: details?.feature,
+        currentUsage: details?.currentUsage,
+        limit: details?.limit,
+        upgradeUrl: '/pricing',
+      }
+    );
+    this.name = 'PaywallError';
+  }
 }
 
 // ── 404 Not Found ────────────────────────────────
 export class NotFoundError extends AppError {
-    constructor(resource = 'Resource') {
-        super(`${resource} not found`, 404, 'NOT_FOUND');
-        this.name = 'NotFoundError';
-    }
+  constructor(resource = 'Resource') {
+    super(`${resource} not found`, 404, 'NOT_FOUND');
+    this.name = 'NotFoundError';
+  }
 }
 
 // ── 409 Conflict ─────────────────────────────────
 export class ConflictError extends AppError {
-    constructor(message = 'Resource conflict') {
-        super(message, 409, 'CONFLICT');
-        this.name = 'ConflictError';
-    }
+  constructor(message = 'Resource conflict') {
+    super(message, 409, 'CONFLICT');
+    this.name = 'ConflictError';
+  }
 }
 
 // ── 429 Too Many Requests ────────────────────────
 export class RateLimitError extends AppError {
-    constructor(message = 'Too many requests') {
-        super(message, 429, 'RATE_LIMITED');
-        this.name = 'RateLimitError';
-    }
+  constructor(message = 'Too many requests') {
+    super(message, 429, 'RATE_LIMITED');
+    this.name = 'RateLimitError';
+  }
 }
 
 // ── 500 Internal ─────────────────────────────────
 export class InternalError extends AppError {
-    constructor(message = 'Internal server error') {
-        super(message, 500, 'INTERNAL_ERROR');
-        this.name = 'InternalError';
-    }
+  constructor(message = 'Internal server error') {
+    super(message, 500, 'INTERNAL_ERROR');
+    this.name = 'InternalError';
+  }
 }
 
 // ── Domain-specific errors ───────────────────────
 export class ExamNotFoundError extends NotFoundError {
-    constructor() {
-        super('Exam');
-        this.name = 'ExamNotFoundError';
-    }
+  constructor() {
+    super('Exam');
+    this.name = 'ExamNotFoundError';
+  }
 }
 
 export class ExamAlreadyCompletedError extends ConflictError {
-    constructor() {
-        super('Exam already completed');
-        this.name = 'ExamAlreadyCompletedError';
-    }
+  constructor() {
+    super('Exam already completed');
+    this.name = 'ExamAlreadyCompletedError';
+  }
 }
 
 export class ExamTimeLimitExceededError extends BadRequestError {
-    constructor() {
-        super('Exam time limit exceeded');
-        this.name = 'ExamTimeLimitExceededError';
-    }
+  constructor() {
+    super('Exam time limit exceeded');
+    this.name = 'ExamTimeLimitExceededError';
+  }
 }
 
 export class QuestionNotFoundError extends NotFoundError {
-    constructor() {
-        super('Question');
-        this.name = 'QuestionNotFoundError';
-    }
+  constructor() {
+    super('Question');
+    this.name = 'QuestionNotFoundError';
+  }
 }
 
 export class StudyNotFoundError extends NotFoundError {
-    constructor() {
-        super('Study');
-        this.name = 'StudyNotFoundError';
-    }
+  constructor() {
+    super('Study');
+    this.name = 'StudyNotFoundError';
+  }
 }
 
 export class QuestionNotInExamError extends BadRequestError {
-    constructor() {
-        super('Question not in this exam');
-        this.name = 'QuestionNotInExamError';
-    }
+  constructor() {
+    super('Question not in this exam');
+    this.name = 'QuestionNotInExamError';
+  }
 }
 
 export class NoQuestionsAvailableError extends BadRequestError {
-    constructor(message = 'No questions available for this configuration') {
-        super(message);
-        this.name = 'NoQuestionsAvailableError';
-    }
+  constructor(message = 'No questions available for this configuration') {
+    super(message);
+    this.name = 'NoQuestionsAvailableError';
+  }
 }
 
 // ── Marketplace errors ───────────────────────────
 export class MarketplaceStudyNotFoundError extends NotFoundError {
-    constructor() {
-        super('Marketplace study');
-        this.name = 'MarketplaceStudyNotFoundError';
-    }
+  constructor() {
+    super('Marketplace study');
+    this.name = 'MarketplaceStudyNotFoundError';
+  }
 }
 
 export class MarketplaceQuestionNotFoundError extends NotFoundError {
-    constructor() {
-        super('Marketplace question');
-        this.name = 'MarketplaceQuestionNotFoundError';
-    }
+  constructor() {
+    super('Marketplace question');
+    this.name = 'MarketplaceQuestionNotFoundError';
+  }
 }
 
 export class MarketplaceImportConflictError extends ConflictError {
-    constructor(overlappingDomainIds: string[]) {
-        super(
-            `Already imported domains: ${overlappingDomainIds.join(', ')}. ` +
-            'Delete your existing study to reimport, or select different domains.'
-        );
-        this.name = 'MarketplaceImportConflictError';
-    }
+  constructor(overlappingDomainIds: string[]) {
+    super(
+      `Already imported domains: ${overlappingDomainIds.join(', ')}. ` +
+        'Delete your existing study to reimport, or select different domains.'
+    );
+    this.name = 'MarketplaceImportConflictError';
+  }
 }
 
 // ── Content Pipeline errors ──────────────────────
 export class QuestionReportNotFoundError extends NotFoundError {
-    constructor() {
-        super('Question report');
-        this.name = 'QuestionReportNotFoundError';
-    }
+  constructor() {
+    super('Question report');
+    this.name = 'QuestionReportNotFoundError';
+  }
 }
 
 export class DuplicateReportError extends ConflictError {
-    constructor() {
-        super('You have already reported this question');
-        this.name = 'DuplicateReportError';
-    }
+  constructor() {
+    super('You have already reported this question');
+    this.name = 'DuplicateReportError';
+  }
 }
 
 export class ContentBatchValidationError extends ValidationError {
-    constructor(
-        errors: Array<{ questionIndex: number; errors: string[]; warnings: string[] }>
-    ) {
-        super('Content batch validation failed', { validationResults: errors });
-        this.name = 'ContentBatchValidationError';
-    }
+  constructor(
+    errors: Array<{
+      questionIndex: number;
+      errors: string[];
+      warnings: string[];
+    }>
+  ) {
+    super('Content batch validation failed', { validationResults: errors });
+    this.name = 'ContentBatchValidationError';
+  }
 }
 
 export class DuplicateQuestionError extends ConflictError {
-    constructor(
-        duplicates: Array<{ newIndex: number; existingId: string; score: number }>
-    ) {
-        super(`${duplicates.length} duplicate(s) detected`);
-        this.name = 'DuplicateQuestionError';
-    }
+  constructor(
+    duplicates: Array<{ newIndex: number; existingId: string; score: number }>
+  ) {
+    super(`${duplicates.length} duplicate(s) detected`);
+    this.name = 'DuplicateQuestionError';
+  }
 }
 
 export class ContentContributorNotFoundError extends NotFoundError {
-    constructor() {
-        super('Content contributor');
-        this.name = 'ContentContributorNotFoundError';
-    }
+  constructor() {
+    super('Content contributor');
+    this.name = 'ContentContributorNotFoundError';
+  }
 }

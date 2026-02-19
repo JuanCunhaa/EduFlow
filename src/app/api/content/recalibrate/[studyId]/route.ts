@@ -8,13 +8,13 @@ import { recalibrateStudyDifficulty } from '@/services/content-quality-service';
  * Returns summary of recalibrated questions.
  */
 export const POST = withAdmin(async (_request, { params }) => {
-    const results = await recalibrateStudyDifficulty(params.studyId);
+  const results = await recalibrateStudyDifficulty(params.studyId);
 
-    return {
-        data: {
-            recalibrated: results.filter(r => r.changed).length,
-            total: results.length,
-            details: results,
-        },
-    };
+  return {
+    data: {
+      recalibrated: results.filter((r) => r.changed).length,
+      total: results.length,
+      details: results,
+    },
+  };
 });

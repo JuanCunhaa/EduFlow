@@ -9,22 +9,22 @@ import { updateQuestionLifecycle } from '@/services/content-quality-service';
  * Valid transitions enforced by the service layer.
  */
 export const PATCH = withAdmin(async (request, { user, params }) => {
-    const body = await request.json();
-    const parsed = updateQuestionLifecycleSchema.safeParse(body);
+  const body = await request.json();
+  const parsed = updateQuestionLifecycleSchema.safeParse(body);
 
-    if (!parsed.success) {
-        return NextResponse.json(
-            { error: 'Validation failed', details: parsed.error.flatten() },
-            { status: 400 }
-        );
-    }
-
-    await updateQuestionLifecycle(
-        params.questionId,
-        parsed.data.lifecycle,
-        user.uid,
-        parsed.data.reason
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
     );
+  }
 
-    return { data: { success: true, lifecycle: parsed.data.lifecycle } };
+  await updateQuestionLifecycle(
+    params.questionId,
+    parsed.data.lifecycle,
+    user.uid,
+    parsed.data.reason
+  );
+
+  return { data: { success: true, lifecycle: parsed.data.lifecycle } };
 });

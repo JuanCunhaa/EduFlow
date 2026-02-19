@@ -18,7 +18,11 @@ export const WEAK_DOMAIN_RATIO = 0.7;
 export const WEAK_DOMAIN_THRESHOLD = 0.7;
 
 /** Target difficulty distribution for real_mix mode */
-export const REAL_MIX_DIFFICULTY: Record<string, number> = { easy: 0.2, medium: 0.5, hard: 0.3 };
+export const REAL_MIX_DIFFICULTY: Record<string, number> = {
+  easy: 0.2,
+  medium: 0.5,
+  hard: 0.3,
+};
 
 /** Default number of recent exams to avoid repeats from */
 export const RECENT_EXAM_WINDOW = 3;
@@ -100,13 +104,24 @@ export const FREE_MAX_MARKETPLACE_QUESTION_PREVIEWS = 5;
 export const FREE_HEATMAP_DAYS = 30;
 
 /** Exam modes available to free users */
-export const FREE_EXAM_MODES: readonly string[] = ['practice', 'domain_focus'] as const;
+export const FREE_EXAM_MODES: readonly string[] = [
+  'practice',
+  'domain_focus',
+] as const;
 
 /** Exam modes that require Pro */
-export const PRO_EXAM_MODES: readonly string[] = ['real_mix', 'weak_domains', 'recent_misses', 'spaced_review'] as const;
+export const PRO_EXAM_MODES: readonly string[] = [
+  'real_mix',
+  'weak_domains',
+  'recent_misses',
+  'spaced_review',
+] as const;
 
 /** All exam modes */
-export const ALL_EXAM_MODES: readonly string[] = [...FREE_EXAM_MODES, ...PRO_EXAM_MODES] as const;
+export const ALL_EXAM_MODES: readonly string[] = [
+  ...FREE_EXAM_MODES,
+  ...PRO_EXAM_MODES,
+] as const;
 
 /** Trial period in days */
 export const TRIAL_PERIOD_DAYS = 7;
@@ -138,15 +153,15 @@ export const CONCEPT_FINGERPRINT_THRESHOLD = 0.45;
 export const RECALIBRATION_MIN_ATTEMPTS = 50;
 
 /** Correct rate thresholds for calibrated difficulty */
-export const CALIBRATED_DIFFICULTY_EASY_THRESHOLD = 0.80;
-export const CALIBRATED_DIFFICULTY_HARD_THRESHOLD = 0.40;
+export const CALIBRATED_DIFFICULTY_EASY_THRESHOLD = 0.8;
+export const CALIBRATED_DIFFICULTY_HARD_THRESHOLD = 0.4;
 
 /** Difficulty distribution targets */
 export const DIFFICULTY_DISTRIBUTION: Record<string, Record<string, number>> = {
-    default: { easy: 0.20, medium: 0.50, hard: 0.30 },
-    cc:      { easy: 0.30, medium: 0.50, hard: 0.20 },
-    cissp:   { easy: 0.15, medium: 0.45, hard: 0.40 },
-    'security-plus': { easy: 0.25, medium: 0.50, hard: 0.25 },
+  default: { easy: 0.2, medium: 0.5, hard: 0.3 },
+  cc: { easy: 0.3, medium: 0.5, hard: 0.2 },
+  cissp: { easy: 0.15, medium: 0.45, hard: 0.4 },
+  'security-plus': { easy: 0.25, medium: 0.5, hard: 0.25 },
 };
 
 /** Distribution tolerance (±%) */
@@ -154,23 +169,23 @@ export const DIFFICULTY_DISTRIBUTION_TOLERANCE = 0.05;
 
 /** Minimum questions per domain before cert goes live */
 export const MIN_QUESTIONS_PER_DOMAIN: Record<string, number> = {
-    cissp: 80,
-    cc: 60,
-    'security-plus': 60,
-    default: 25,
+  cissp: 80,
+  cc: 60,
+  'security-plus': 60,
+  default: 25,
 };
 
 /** Coverage badge thresholds */
-export const COVERAGE_FULL_THRESHOLD = 1.0;    // 100%+
-export const COVERAGE_GOOD_THRESHOLD = 0.7;    // 70-99%
+export const COVERAGE_FULL_THRESHOLD = 1.0; // 100%+
+export const COVERAGE_GOOD_THRESHOLD = 0.7; // 70-99%
 
 /** Post-publish monitoring thresholds */
-export const MONITORING_TOO_EASY_THRESHOLD = 0.95;   // >95% correct rate
-export const MONITORING_TOO_HARD_THRESHOLD = 0.15;   // <15% correct rate
-export const MONITORING_HIGH_SKIP_THRESHOLD = 0.30;   // >30% skip rate
+export const MONITORING_TOO_EASY_THRESHOLD = 0.95; // >95% correct rate
+export const MONITORING_TOO_HARD_THRESHOLD = 0.15; // <15% correct rate
+export const MONITORING_HIGH_SKIP_THRESHOLD = 0.3; // >30% skip rate
 
 /** Question report rate limit per user */
-export const REPORT_RATE_LIMIT = 10;           // per hour
+export const REPORT_RATE_LIMIT = 10; // per hour
 export const REPORT_RATE_WINDOW = 3_600_000;
 
 /** Content batch max size */
@@ -184,15 +199,21 @@ export const QUALITY_SCORE_REJECT_THRESHOLD = 3.0;
 
 /** Terms to flag for potential bias */
 export const BIAS_FLAG_TERMS = [
-    'always', 'never', 'obviously', 'clearly', 'everyone knows',
-    'simple', 'trivially', 'of course',
+  'always',
+  'never',
+  'obviously',
+  'clearly',
+  'everyone knows',
+  'simple',
+  'trivially',
+  'of course',
 ];
 
 /** Allowed Stripe price IDs (loaded from env vars) */
 export function getAllowedPriceIds(): string[] {
-    return [
-        process.env.STRIPE_PRICE_PRO_MONTHLY,
-        process.env.STRIPE_PRICE_PRO_ANNUAL,
-        process.env.STRIPE_PRICE_TEAM_MONTHLY,
-    ].filter((id): id is string => Boolean(id));
+  return [
+    process.env.STRIPE_PRICE_PRO_MONTHLY,
+    process.env.STRIPE_PRICE_PRO_ANNUAL,
+    process.env.STRIPE_PRICE_TEAM_MONTHLY,
+  ].filter((id): id is string => Boolean(id));
 }

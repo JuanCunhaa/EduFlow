@@ -9,11 +9,14 @@ import { enforcePlanLimit } from '@/lib/plan-limits';
  * List all studies for the authenticated user.
  */
 export const GET = withAuth(async (_request, { user }) => {
-    const studies = await listStudies(user.uid);
+  const studies = await listStudies(user.uid);
 
-    const res = NextResponse.json({ data: studies });
-    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
-    return res;
+  const res = NextResponse.json({ data: studies });
+  res.headers.set(
+    'Cache-Control',
+    'private, max-age=30, stale-while-revalidate=120'
+  );
+  return res;
 });
 
 /**
@@ -22,19 +25,19 @@ export const GET = withAuth(async (_request, { user }) => {
  * Enforces: study creation limit (free tier).
  */
 export const POST = withPlan(async (request, { user, plan }) => {
-    const body = await request.json();
-    const parsed = createStudySchema.safeParse(body);
+  const body = await request.json();
+  const parsed = createStudySchema.safeParse(body);
 
-    if (!parsed.success) {
-        return NextResponse.json(
-            { error: 'Validation failed', details: parsed.error.flatten() },
-            { status: 400 }
-        );
-    }
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
 
-    // ── Plan enforcement ──
-    await enforcePlanLimit(user.uid, plan, 'study_creation_limit');
+  // ── Plan enforcement ──
+  await enforcePlanLimit(user.uid, plan, 'study_creation_limit');
 
-    const id = await createStudy(user.uid, parsed.data);
-    return { data: { id } };
+  const id = await createStudy(user.uid, parsed.data);
+  return { data: { id } };
 });

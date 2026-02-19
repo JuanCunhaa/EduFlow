@@ -8,12 +8,15 @@ import { monitorStudyQuestions } from '@/services/content-quality-service';
  * Returns alerts for questions that are too easy, too hard, high skip rate, or heavily reported.
  */
 export const GET = withAdmin(async (_request, { params }) => {
-    const alerts = await monitorStudyQuestions(params.studyId);
+  const alerts = await monitorStudyQuestions(params.studyId);
 
-    const res = NextResponse.json({
-        data: alerts,
-        meta: { count: alerts.length, studyId: params.studyId },
-    });
-    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
-    return res;
+  const res = NextResponse.json({
+    data: alerts,
+    meta: { count: alerts.length, studyId: params.studyId },
+  });
+  res.headers.set(
+    'Cache-Control',
+    'private, max-age=30, stale-while-revalidate=120'
+  );
+  return res;
 });

@@ -8,12 +8,15 @@ import { analyzeDistractors } from '@/services/content-quality-service';
  * Returns per-question distractor distribution and effectiveness data.
  */
 export const GET = withAdmin(async (_request, { params }) => {
-    const analysis = await analyzeDistractors(params.studyId);
+  const analysis = await analyzeDistractors(params.studyId);
 
-    const res = NextResponse.json({
-        data: analysis,
-        meta: { count: analysis.length, studyId: params.studyId },
-    });
-    res.headers.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');
-    return res;
+  const res = NextResponse.json({
+    data: analysis,
+    meta: { count: analysis.length, studyId: params.studyId },
+  });
+  res.headers.set(
+    'Cache-Control',
+    'private, max-age=60, stale-while-revalidate=300'
+  );
+  return res;
 });

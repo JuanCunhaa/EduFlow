@@ -5,18 +5,18 @@
 
 /** Standard success response wrapper */
 export interface ApiResponse<T = unknown> {
-    data: T;
+  data: T;
 }
 
 /** Standard error response */
 export interface ApiError {
-    error: string;
-    code?: string;
-    details?: unknown;
+  error: string;
+  code?: string;
+  details?: unknown;
 }
 
 /** Paginated response with cursor-based pagination */
 export interface PaginatedResponse<T> {
-    data: T[];
-    nextCursor: string | null;
+  data: T[];
+  nextCursor: string | null;
 }

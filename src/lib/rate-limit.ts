@@ -20,52 +20,52 @@ import { logger } from '@/lib/logger';
  * @returns `true` if allowed, `false` if rate-limited.
  */
 export async function rateLimit(
-    key: string,
-    maxHits: number,
-    windowMs: number,
-    failOpen = true
+  key: string,
+  maxHits: number,
+  windowMs: number,
+  failOpen = true
 ): Promise<boolean> {
-    const db = getAdminDb();
-    const ref = db.collection('_rateLimits').doc(key);
+  const db = getAdminDb();
+  const ref = db.collection('_rateLimits').doc(key);
 
-    try {
-        const result = await db.runTransaction(async (tx) => {
-            const snap = await tx.get(ref);
-            const now = Date.now();
+  try {
+    const result = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const now = Date.now();
 
-            // TTL expiry date for Firestore TTL policy auto-cleanup
-            const expireAt = new Date(now + windowMs + 86_400_000); // window + 24h buffer
+      // TTL expiry date for Firestore TTL policy auto-cleanup
+      const expireAt = new Date(now + windowMs + 86_400_000); // window + 24h buffer
 
-            if (!snap.exists) {
-                tx.set(ref, { count: 1, resetAt: now + windowMs, expireAt });
-                return true;
-            }
+      if (!snap.exists) {
+        tx.set(ref, { count: 1, resetAt: now + windowMs, expireAt });
+        return true;
+      }
 
-            const data = snap.data()!;
-            const resetAt = data.resetAt as number;
+      const data = snap.data()!;
+      const resetAt = data.resetAt as number;
 
-            // Window expired — reset
-            if (now > resetAt) {
-                tx.set(ref, { count: 1, resetAt: now + windowMs, expireAt });
-                return true;
-            }
+      // Window expired — reset
+      if (now > resetAt) {
+        tx.set(ref, { count: 1, resetAt: now + windowMs, expireAt });
+        return true;
+      }
 
-            // Within window — check limit
-            if ((data.count as number) >= maxHits) {
-                return false;
-            }
+      // Within window — check limit
+      if ((data.count as number) >= maxHits) {
+        return false;
+      }
 
-            tx.update(ref, { count: FieldValue.increment(1) });
-            return true;
-        });
+      tx.update(ref, { count: FieldValue.increment(1) });
+      return true;
+    });
 
-        return result;
-    } catch (error) {
-        logger.error('Rate limit check failed', { error });
+    return result;
+  } catch (error) {
+    logger.error('Rate limit check failed', { error });
 
-        // Configurable fail behavior:
-        // - failOpen=true: allow (avoid blocking legitimate users on infra issues)
-        // - failOpen=false: deny (for sensitive operations like exam creation)
-        return failOpen;
-    }
+    // Configurable fail behavior:
+    // - failOpen=true: allow (avoid blocking legitimate users on infra issues)
+    // - failOpen=false: deny (for sensitive operations like exam creation)
+    return failOpen;
+  }
 }

@@ -59,7 +59,9 @@
   text-decoration: none;
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 
 .seo-nav__link:hover {
@@ -282,7 +284,9 @@
   border-radius: 10px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .seo-domain-item:hover {
@@ -356,7 +360,11 @@
   flex-wrap: wrap;
   padding: 2rem;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.12));
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.12),
+    rgba(139, 92, 246, 0.12)
+  );
   border: 1px solid rgba(139, 92, 246, 0.2);
   margin: 3rem 0;
   text-align: center;
@@ -466,7 +474,9 @@
   color: #a1a1aa;
   background: transparent;
   text-align: left;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .seo-quiz__option:hover:not([disabled]) {

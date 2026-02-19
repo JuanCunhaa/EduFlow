@@ -22,9 +22,10 @@ PRIORITIES (ordered):
 2️⃣ Code clarity  
 3️⃣ Developer Experience  
 4️⃣ Performance  
-5️⃣ Visual quality  
+5️⃣ Visual quality
 
 NOT priorities:
+
 - Fancy patterns
 - Academic architecture
 - Unnecessary abstractions

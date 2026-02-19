@@ -5,6 +5,7 @@ Este repositório contém a automação para gerar e importar questões para a p
 ## 🚀 Como Usar (Passo a Passo)
 
 ### 1. Gerar Questões
+
 Use o comando abaixo para gerar um lote de questões usando Inteligência Artificial (OpenAI).
 O sistema salva automaticamente o ID do estudo (studyId) para não criar duplicatas.
 
@@ -17,16 +18,20 @@ npx tsx content/generator/generate.ts --cert cissp --domain 1 --count 5 --lang p
 ```
 
 **O que acontece:**
+
 - As questões são geradas e salvas na pasta `content/{cert}/domain-{N}/`.
 - O arquivo gerado terá o nome `batch-NNN.json`.
 - O `studyId` é salvo ou reutilizado automaticamente do arquivo `*-study.json`.
 
 ### 2. Revisar (Opcional)
+
 O script pausa após a geração para você revisar os arquivos criados.
+
 - Se estiver tudo certo, digite **Y** para importar imediatamente.
 - Se quiser editar algo, digite **n**, edite o arquivo JSON manualmente e importe depois.
 
 ### 3. Importar Manualmente (Se necessário)
+
 Se você pulou a importação automática ou quer reimportar um arquivo editado:
 
 ```bash
@@ -53,6 +58,7 @@ content/
 ```
 
 ## ⚠️ Dicas Importantes
+
 - **Evite Duplicatas:** O importador verifica automaticamente se a questão já existe no banco.
 - **Validação:** O sistema bloqueia questões inválidas (sem resposta correta, opções erradas, etc.).
 - **Study ID:** O ID do estudo fica salvo no arquivo `*-study.json` dentro da pasta do exame. Não remova este arquivo para garantir que as novas questões vão para o mesmo simulado.

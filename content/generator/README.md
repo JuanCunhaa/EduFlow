@@ -35,27 +35,27 @@ npx tsx content/generator/generate.ts --cert cissp --count 5 --dry-run
 
 ### 🤖 Recommended Models
 
-| Model | Speed | Cost | Best For |
-| :--- | :--- | :--- | :--- |
-| **`gpt-4o-mini`** | ⚡⚡⚡ | 💲 | **Speed & Budget** (Default, bulk gen) |
-| **`gpt-4o`** | ⚡⚡ | 💲💲 | **Quality** (Final polish, complex topics) |
-| **`o1`** / **`o3-mini`** | 🐢 | 💲💲 | **Deep Logic** (Math, coding, complex scenarios) |
+| Model                    | Speed  | Cost | Best For                                         |
+| :----------------------- | :----- | :--- | :----------------------------------------------- |
+| **`gpt-4o-mini`**        | ⚡⚡⚡ | 💲   | **Speed & Budget** (Default, bulk gen)           |
+| **`gpt-4o`**             | ⚡⚡   | 💲💲 | **Quality** (Final polish, complex topics)       |
+| **`o1`** / **`o3-mini`** | 🐢     | 💲💲 | **Deep Logic** (Math, coding, complex scenarios) |
 
 > **Note**: Reasoning models (`o1`, `o3`) take 1-2 minutes to "think" before responding. Use `gpt-4o-mini` if you want instant results.
 
 ### 🛠️ Usage
 
-| Flag | O que faz | Padrão |
-|------|-----------|--------|
-| `--cert` | Nome do certificado (qualquer um) | Obrigatório |
-| `--domain` | ID ou número do domínio (omitir = todos) | todos |
-| `--count` | Questões por domínio (1-30) | 10 |
-| `--lang` | Idioma das questões (en, pt-BR, es, fr, de, ja...) | en |
-| `--model` | Modelo OpenAI | gpt-4o-mini |
-| `--temperature` | Temperatura do LLM | 0.7 |
-| `--dry-run` | Mostra prompt sem chamar API | false |
-| `--no-import` | Pula a importação automática | false |
-| `--auto-approve` | Pula a confirmação antes do import | false |
+| Flag             | O que faz                                          | Padrão      |
+| ---------------- | -------------------------------------------------- | ----------- |
+| `--cert`         | Nome do certificado (qualquer um)                  | Obrigatório |
+| `--domain`       | ID ou número do domínio (omitir = todos)           | todos       |
+| `--count`        | Questões por domínio (1-30)                        | 10          |
+| `--lang`         | Idioma das questões (en, pt-BR, es, fr, de, ja...) | en          |
+| `--model`        | Modelo OpenAI                                      | gpt-4o-mini |
+| `--temperature`  | Temperatura do LLM                                 | 0.7         |
+| `--dry-run`      | Mostra prompt sem chamar API                       | false       |
+| `--no-import`    | Pula a importação automática                       | false       |
+| `--auto-approve` | Pula a confirmação antes do import                 | false       |
 
 ### Importar no marketplace
 
@@ -75,6 +75,7 @@ Requer `FIREBASE_ADMIN_PROJECT_ID`, `FIREBASE_ADMIN_CLIENT_EMAIL`, `FIREBASE_ADM
 ## Metadata do estudo
 
 Ao gerar questões, é criado automaticamente um arquivo JSON com os metadados do estudo (ex: cissp-study.json, enem-study.json), contendo:
+
 - Certificação
 - Domínios/temas
 - Idioma

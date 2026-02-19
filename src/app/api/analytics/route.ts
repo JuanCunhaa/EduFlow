@@ -9,12 +9,15 @@ import { getAnalytics } from '@/services/exam-analytics-service';
  * Optional ?studyId= to scope to a single study.
  */
 export const GET = withPlan(async (request, { user }) => {
-    const { searchParams } = new URL(request.url);
-    const studyId = searchParams.get('studyId') || undefined;
+  const { searchParams } = new URL(request.url);
+  const studyId = searchParams.get('studyId') || undefined;
 
-    const analytics = await getAnalytics(user.uid, studyId);
+  const analytics = await getAnalytics(user.uid, studyId);
 
-    const res = NextResponse.json({ data: analytics });
-    res.headers.set('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
-    return res;
+  const res = NextResponse.json({ data: analytics });
+  res.headers.set(
+    'Cache-Control',
+    'private, max-age=30, stale-while-revalidate=120'
+  );
+  return res;
 }, 'pro');

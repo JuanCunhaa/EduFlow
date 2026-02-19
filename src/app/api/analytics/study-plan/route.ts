@@ -8,18 +8,18 @@ import { generateStudyPlan } from '@/services/study-plan-service';
  * Body: { studyId, targetReadiness?, daysPerWeek?, minutesPerDay? }
  */
 export const POST = withPlan(async (request, { user }) => {
-    const body = await request.json();
-    const studyId = body.studyId;
-    if (!studyId) {
-        return NextResponse.json({ error: 'studyId required' }, { status: 400 });
-    }
+  const body = await request.json();
+  const studyId = body.studyId;
+  if (!studyId) {
+    return NextResponse.json({ error: 'studyId required' }, { status: 400 });
+  }
 
-    const plan = await generateStudyPlan(user.uid, {
-        studyId,
-        targetReadiness: body.targetReadiness,
-        daysPerWeek: body.daysPerWeek,
-        minutesPerDay: body.minutesPerDay,
-    });
+  const plan = await generateStudyPlan(user.uid, {
+    studyId,
+    targetReadiness: body.targetReadiness,
+    daysPerWeek: body.daysPerWeek,
+    minutesPerDay: body.minutesPerDay,
+  });
 
-    return NextResponse.json({ data: plan });
+  return NextResponse.json({ data: plan });
 }, 'pro');

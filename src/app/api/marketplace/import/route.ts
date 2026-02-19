@@ -5,8 +5,8 @@ import { importFromMarketplace } from '@/services/marketplace-service';
 import { rateLimit } from '@/lib/rate-limit';
 import { enforcePlanLimit } from '@/lib/plan-limits';
 import {
-    MARKETPLACE_IMPORT_RATE_LIMIT,
-    MARKETPLACE_IMPORT_RATE_WINDOW,
+  MARKETPLACE_IMPORT_RATE_LIMIT,
+  MARKETPLACE_IMPORT_RATE_WINDOW,
 } from '@/lib/constants';
 
 /**
@@ -21,38 +21,40 @@ import {
  * - Rate limited: max 5 imports per hour per user
  */
 export const POST = withPlan(async (request, { user, plan }) => {
-    // ── Plan enforcement ──
-    await enforcePlanLimit(user.uid, plan, 'marketplace_import_limit');
+  // ── Plan enforcement ──
+  await enforcePlanLimit(user.uid, plan, 'marketplace_import_limit');
 
-    // Rate limit: max imports per hour per user
-    const allowed = await rateLimit(
-        `mkt-import:${user.uid}`,
-        MARKETPLACE_IMPORT_RATE_LIMIT,
-        MARKETPLACE_IMPORT_RATE_WINDOW,
-        false
+  // Rate limit: max imports per hour per user
+  const allowed = await rateLimit(
+    `mkt-import:${user.uid}`,
+    MARKETPLACE_IMPORT_RATE_LIMIT,
+    MARKETPLACE_IMPORT_RATE_WINDOW,
+    false
+  );
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error: `Too many import requests. Max ${MARKETPLACE_IMPORT_RATE_LIMIT} per hour.`,
+      },
+      { status: 429 }
     );
-    if (!allowed) {
-        return NextResponse.json(
-            { error: `Too many import requests. Max ${MARKETPLACE_IMPORT_RATE_LIMIT} per hour.` },
-            { status: 429 }
-        );
-    }
+  }
 
-    const body = await request.json();
-    const parsed = marketplaceImportSchema.safeParse(body);
+  const body = await request.json();
+  const parsed = marketplaceImportSchema.safeParse(body);
 
-    if (!parsed.success) {
-        return NextResponse.json(
-            { error: 'Validation failed', details: parsed.error.flatten() },
-            { status: 400 }
-        );
-    }
-
-    const result = await importFromMarketplace(
-        user.uid,
-        parsed.data.studyId,
-        parsed.data.domainIds
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed', details: parsed.error.flatten() },
+      { status: 400 }
     );
+  }
 
-    return { data: result };
+  const result = await importFromMarketplace(
+    user.uid,
+    parsed.data.studyId,
+    parsed.data.domainIds
+  );
+
+  return { data: result };
 });

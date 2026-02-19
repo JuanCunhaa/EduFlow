@@ -9,18 +9,20 @@ import { unsubscribeEmail } from '@/services/email-drip-service';
 
 // GET /api/email/unsubscribe?email=... — one-click unsubscribe from drip sequences
 export const GET = withPublicRoute(async (req) => {
-    const url = new URL(req.url);
-    const email = url.searchParams.get('email');
+  const url = new URL(req.url);
+  const email = url.searchParams.get('email');
 
-    if (!email) {
-        throw Object.assign(new Error('email query parameter required'), { status: 400 });
-    }
+  if (!email) {
+    throw Object.assign(new Error('email query parameter required'), {
+      status: 400,
+    });
+  }
 
-    const count = await unsubscribeEmail(email);
+  const count = await unsubscribeEmail(email);
 
-    // Return a simple HTML page for the user
-    return new NextResponse(
-        `<!DOCTYPE html>
+  // Return a simple HTML page for the user
+  return new NextResponse(
+    `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><title>Unsubscribed</title></head>
 <body style="font-family: -apple-system, sans-serif; background: #0a0a14; color: #e0e0e0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;">
@@ -32,6 +34,6 @@ export const GET = withPublicRoute(async (req) => {
     </div>
 </body>
 </html>`,
-        { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-    );
+    { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+  );
 });

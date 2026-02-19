@@ -9,21 +9,24 @@ import type { ContentAction } from '@/types';
  * Query params: action, actor, studyId, batchId, limit, cursor
  */
 export const GET = withAdmin(async (request) => {
-    const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
 
-    const result = await listContentAudit({
-        action: (searchParams.get('action') as ContentAction) || undefined,
-        actor: searchParams.get('actor') || undefined,
-        studyId: searchParams.get('studyId') || undefined,
-        batchId: searchParams.get('batchId') || undefined,
-        limit: Number.parseInt(searchParams.get('limit') || '50', 10) || 50,
-        cursor: searchParams.get('cursor') || undefined,
-    });
+  const result = await listContentAudit({
+    action: (searchParams.get('action') as ContentAction) || undefined,
+    actor: searchParams.get('actor') || undefined,
+    studyId: searchParams.get('studyId') || undefined,
+    batchId: searchParams.get('batchId') || undefined,
+    limit: Number.parseInt(searchParams.get('limit') || '50', 10) || 50,
+    cursor: searchParams.get('cursor') || undefined,
+  });
 
-    const res = NextResponse.json({
-        data: result.entries,
-        nextCursor: result.nextCursor,
-    });
-    res.headers.set('Cache-Control', 'private, max-age=10, stale-while-revalidate=30');
-    return res;
+  const res = NextResponse.json({
+    data: result.entries,
+    nextCursor: result.nextCursor,
+  });
+  res.headers.set(
+    'Cache-Control',
+    'private, max-age=10, stale-while-revalidate=30'
+  );
+  return res;
 });
