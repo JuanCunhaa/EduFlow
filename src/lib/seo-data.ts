@@ -407,11 +407,136 @@ const CGRC: CertSeoData = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  CompTIA Security+ (SY0-701)                                        */
+/* ------------------------------------------------------------------ */
+
+const SECURITY_PLUS: CertSeoData = {
+    slug: 'security-plus',
+    name: 'CompTIA Security+',
+    abbreviation: 'Security+',
+    metaTitle: 'CompTIA Security+ Practice Questions & Study Guide 2026',
+    metaDescription:
+        'Free CompTIA Security+ SY0-701 practice exam questions covering all 5 domains. Performance-based and multiple-choice questions to pass on your first attempt.',
+    examDetails: {
+        duration: '90 minutes',
+        questions: '90 (max)',
+        format: 'Linear (multiple-choice + performance-based)',
+        passingScore: '750 / 900',
+        cost: '$404 USD',
+        prerequisites: 'None required (CompTIA recommends 2 years IT experience)',
+    },
+    domains: [
+        {
+            slug: 'domain-1-general-security-concepts',
+            name: 'General Security Concepts',
+            domainNumber: 1,
+            examWeight: '12%',
+            metaTitle: 'Security+ Domain 1: General Security Concepts',
+            metaDescription:
+                'Study guide for Security+ SY0-701 Domain 1 – General Security Concepts. Security controls, threat actors, and fundamental concepts.',
+            keyTopics: [
+                'Security controls',
+                'Fundamental security concepts (CIA, AAA)',
+                'Change management impact on security',
+                'Cryptographic solutions overview',
+            ],
+        },
+        {
+            slug: 'domain-2-threats-vulnerabilities-mitigations',
+            name: 'Threats, Vulnerabilities, and Mitigations',
+            domainNumber: 2,
+            examWeight: '22%',
+            metaTitle: 'Security+ Domain 2: Threats, Vulnerabilities, and Mitigations',
+            metaDescription:
+                'Study guide for Security+ SY0-701 Domain 2 – Threats, Vulnerabilities, and Mitigations. Threat actors, attack types, and mitigation techniques.',
+            keyTopics: [
+                'Threat actors and motivations',
+                'Common threat vectors and attack surfaces',
+                'Vulnerability types',
+                'Indicators of malicious activity',
+                'Mitigation techniques',
+            ],
+        },
+        {
+            slug: 'domain-3-security-architecture',
+            name: 'Security Architecture',
+            domainNumber: 3,
+            examWeight: '18%',
+            metaTitle: 'Security+ Domain 3: Security Architecture',
+            metaDescription:
+                'Study guide for Security+ SY0-701 Domain 3 – Security Architecture. Network architecture, secure infrastructure, and resilience.',
+            keyTopics: [
+                'Security architecture models',
+                'Secure infrastructure design',
+                'Data protection strategies',
+                'Resilience and recovery concepts',
+                'Cloud and virtualization security',
+            ],
+        },
+        {
+            slug: 'domain-4-security-operations',
+            name: 'Security Operations',
+            domainNumber: 4,
+            examWeight: '28%',
+            metaTitle: 'Security+ Domain 4: Security Operations',
+            metaDescription:
+                'Study guide for Security+ SY0-701 Domain 4 – Security Operations. Monitoring, incident response, automation, and vulnerability management.',
+            keyTopics: [
+                'Security monitoring and alerting',
+                'Vulnerability management',
+                'Security automation and orchestration',
+                'Incident response process',
+                'Digital forensics activities',
+                'Log management and SIEM',
+            ],
+        },
+        {
+            slug: 'domain-5-security-program-management',
+            name: 'Security Program Management and Oversight',
+            domainNumber: 5,
+            examWeight: '20%',
+            metaTitle: 'Security+ Domain 5: Security Program Management',
+            metaDescription:
+                'Study guide for Security+ SY0-701 Domain 5 – Security Program Management and Oversight. Governance, risk, compliance, and security awareness.',
+            keyTopics: [
+                'Governance and compliance',
+                'Risk management process',
+                'Third-party risk assessment',
+                'Security awareness practices',
+                'Audits and assessments',
+            ],
+        },
+    ],
+    faqItems: [
+        {
+            question: 'What is CompTIA Security+?',
+            answer: 'CompTIA Security+ (SY0-701) is a globally recognized cybersecurity certification that validates baseline security skills. It is vendor-neutral and covers both technical and management security concepts.',
+        },
+        {
+            question: 'How hard is Security+?',
+            answer: 'Security+ is considered an entry-to-mid level certification. With structured study over 4-8 weeks, most candidates with basic IT knowledge can pass. The pass rate is estimated around 70-80%.',
+        },
+        {
+            question: 'Do I need experience for Security+?',
+            answer: 'No experience is required, though CompTIA recommends at least 2 years of IT experience with a security focus. Many candidates pass without prior security experience.',
+        },
+        {
+            question: 'What is the Security+ SY0-701 exam format?',
+            answer: 'The SY0-701 exam has up to 90 questions (multiple-choice and performance-based), a 90-minute time limit, and requires a score of 750/900 to pass. The exam costs $404 USD.',
+        },
+        {
+            question: 'Is Security+ or CISSP better?',
+            answer: 'They serve different career stages. Security+ is entry-level and requires no experience, making it ideal for starting your cybersecurity career. CISSP requires 5 years experience and targets senior/management roles. Many professionals get Security+ first, then CISSP later.',
+        },
+    ],
+};
+
+/* ------------------------------------------------------------------ */
 /*  Exports                                                            */
 /* ------------------------------------------------------------------ */
 
 /** All certifications in display order. */
-export const CERTS: CertSeoData[] = [CISSP, CC, SSCP, CCSP, CGRC];
+export const CERTS: CertSeoData[] = [CISSP, CC, SSCP, CCSP, CGRC, SECURITY_PLUS];
 
 /** Look up a cert by its URL slug. Returns undefined if not found. */
 export function getCertBySlug(slug: string): CertSeoData | undefined {

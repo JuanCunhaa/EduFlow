@@ -118,6 +118,8 @@ export interface Exam {
     startedAt: Timestamp;
     completedAt: Timestamp | null;
     timeSpentSeconds: number;
+    /** Per-question time tracking in milliseconds (questionId → ms) */
+    perQuestionTimeMs?: Record<string, number>;
 }
 
 // === Billing ===
@@ -178,6 +180,12 @@ export interface UserProfile {
     planPeriodEnd: number | null;          // epoch ms
     trialEndsAt: number | null;            // epoch ms
     cancelAtPeriodEnd?: boolean;
+
+    // ── Analytics & Beta ──
+    /** User opted out of cross-user analytics */
+    analyticsOptOut?: boolean;
+    /** Active beta feature flags for this user */
+    betaFlags?: string[];
 }
 
 export interface ExamAttemptSummary {
@@ -586,6 +594,225 @@ export interface EmailLead {
     capturedAt: Date;
     lastEmailedAt: Date | null;
     convertedAt: Date | null;
+}
+
+// === Creator Marketplace ===
+
+export type PackStatus =
+    | 'draft'
+    | 'submitted'
+    | 'in_review'
+    | 'revision_needed'
+    | 'approved'
+    | 'published'
+    | 'suspended'
+    | 'archived';
+
+export type CreatorVerificationStatus = 'pending' | 'approved' | 'rejected' | 'needs_revision';
+
+export interface CreatorProfile {
+    uid: string;
+    slug: string;
+    displayName: string;
+    bio: string;
+    linkedinUrl: string;
+    certificationsHeld: string[];
+    yearsExperience: '1-3' | '3-5' | '5-10' | '10+';
+    badges: string[];
+    verificationStatus: CreatorVerificationStatus;
+    packCount: number;
+    totalSales: number;
+    averageRating: number;
+    payoutMethod: 'stripe_connect' | 'paypal';
+    stripeConnectId: string | null;
+    isActive: boolean;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+export interface CreatorApplication {
+    id: string;
+    uid: string;
+    fullName: string;
+    email: string;
+    linkedinUrl: string;
+    certificationsHeld: string[];
+    certProofUrl: string;
+    yearsExperience: '1-3' | '3-5' | '5-10' | '10+';
+    writingSample: string;
+    bio: string;
+    payoutMethod: 'stripe_connect' | 'paypal';
+    agreedToTos: boolean;
+    status: CreatorVerificationStatus;
+    reviewNotes: string | null;
+    reviewedBy: string | null;
+    reviewedAt: Timestamp | null;
+    createdAt: Timestamp;
+}
+
+export interface QuestionPack {
+    id: string;
+    slug: string;
+    certId: string;
+    title: string;
+    description: string;
+    domains: MarketplaceDomain[];
+    questionCount: number;
+    domainQuestionCounts: Record<string, number>;
+    sampleQuestionIds: string[];
+    difficultyDistribution: { easy: number; medium: number; hard: number };
+    tags: string[];
+    creatorId: string;
+    creatorSlug: string;
+    creatorName: string;
+    creatorBadges: string[];
+    pricing: 'free' | 'paid';
+    priceUsd: number;
+    stripePriceId: string | null;
+    stripeProductId: string | null;
+    salesCount: number;
+    totalRevenue: number;
+    averageRating: number | null;
+    reviewCount: number;
+    status: PackStatus;
+    submittedAt: Timestamp | null;
+    publishedAt: Timestamp | null;
+    rejectedAt: Timestamp | null;
+    rejectionReason: string | null;
+    isActive: boolean;
+    version: number;
+    accentColor?: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+export interface PackReview {
+    id: string;
+    packId: string;
+    reviewerUid: string;
+    reviewerName: string;
+    rating: number;
+    text: string | null;
+    isVerifiedPurchase: boolean;
+    creatorResponse: string | null;
+    creatorRespondedAt: Timestamp | null;
+    reportCount: number;
+    isHidden: boolean;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+export interface PackPurchase {
+    id: string;
+    packId: string;
+    buyerUid: string;
+    creatorId: string;
+    priceAtPurchase: number;
+    currency: string;
+    stripePaymentIntentId: string | null;
+    status: 'completed' | 'refunded' | 'disputed';
+    refundedAt: Timestamp | null;
+    purchasedAt: Timestamp;
+}
+
+// === Team / Organization ===
+
+export type OrgRole = 'admin' | 'member';
+
+export interface Organization {
+    id: string;
+    name: string;
+    slug: string;
+    ownerId: string;
+    logo: string | null;
+    accentColor: string | null;
+    seatLimit: number;
+    seatCount: number;
+    certFocus: string[];
+    isActive: boolean;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+}
+
+export interface OrgMember {
+    uid: string;
+    orgId: string;
+    role: OrgRole;
+    displayName: string;
+    email: string;
+    joinedAt: Timestamp;
+}
+
+export interface OrgInvite {
+    id: string;
+    orgId: string;
+    email: string;
+    role: OrgRole;
+    invitedBy: string;
+    token: string;
+    status: 'pending' | 'accepted' | 'expired';
+    expiresAt: Timestamp;
+    createdAt: Timestamp;
+}
+
+// === Feedback ===
+
+export type FeedbackCategory = 'bug' | 'feature_request' | 'content_issue' | 'general';
+
+export interface FeedbackEntry {
+    id: string;
+    uid: string;
+    category: FeedbackCategory;
+    rating: number;           // 1-5
+    text: string;
+    page?: string;            // URL path where feedback was submitted
+    userAgent?: string;
+    status: 'new' | 'reviewed' | 'resolved';
+    adminNotes?: string;
+    createdAt: Timestamp;
+}
+
+// === Pass-Rate Self-Reporting ===
+
+export interface PassRateReport {
+    id: string;
+    uid: string;
+    certId: string;
+    passed: boolean;
+    examDate?: string;        // ISO date
+    readinessAtTime?: number; // readiness score when they took the real exam
+    notes?: string;
+    createdAt: Timestamp;
+}
+
+// === Email Drip ===
+
+export type DripSequenceId = 'welcome' | 're_engagement' | 'cert_tips' | 'upgrade_nudge';
+
+export interface DripStep {
+    delayDays: number;
+    templateId: string;
+    subject: string;
+    condition?: 'not_signed_up' | 'not_active_7d' | 'free_plan';
+}
+
+export interface DripSequence {
+    id: DripSequenceId;
+    name: string;
+    trigger: 'email_capture' | 'signup' | 'inactivity' | 'manual';
+    steps: DripStep[];
+}
+
+export interface DripEnrollment {
+    id: string;
+    email: string;
+    uid: string | null;
+    sequenceId: DripSequenceId;
+    currentStep: number;
+    status: 'active' | 'completed' | 'unsubscribed';
+    nextSendAt: number;       // epoch ms
+    startedAt: Timestamp;
+    completedAt: Timestamp | null;
 }
 
 // === API ===
