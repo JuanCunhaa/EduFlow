@@ -206,6 +206,9 @@ export default function BulkGeneratorPage() {
                 while ((forceBatchIndex !== undefined ? true : currentIndex < numBatches) && !hasCatastrophicError) {
                     const batchIndex = forceBatchIndex !== undefined ? forceBatchIndex : currentIndex++;
 
+                    // Immediately mark as generating so UI reflects parallel work
+                    setBatches((prev) => prev.map((b) => b.index === batchIndex ? { ...b, status: 'generating' as any } : b));
+
                     try {
                         const payload = studySource === 'catalog'
                             ? {
