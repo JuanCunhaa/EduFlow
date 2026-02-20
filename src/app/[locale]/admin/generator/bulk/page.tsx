@@ -185,7 +185,8 @@ export default function BulkGeneratorPage() {
         setTotalBatches(0);
         setIsImporting(false);
 
-        const numBatches = Math.ceil(totalCount / 25); // Hardcoded batchSize to 25 for ease of UI
+        const batchSizeLimit = 10;
+        const numBatches = Math.ceil(totalCount / batchSizeLimit);
         setTotalBatches(numBatches);
         setBatches(Array.from({ length: numBatches }, (_, i) => ({ index: i, status: 'pending' })));
 
@@ -216,13 +217,13 @@ export default function BulkGeneratorPage() {
                                 studyId: resolvedStudyId || undefined,
                                 certSlug: !resolvedStudyId ? certSlug : undefined,
                                 domainId: domainId || undefined,
-                                batchSize: 25,
+                                batchSize: batchSizeLimit,
                                 model,
                                 lang,
                                 autoImport,
                                 existingStems: globalStems
                             }
-                            : { studyId, domainId: domainId || undefined, batchSize: 25, model, lang, autoImport, existingStems: globalStems };
+                            : { studyId, domainId: domainId || undefined, batchSize: batchSizeLimit, model, lang, autoImport, existingStems: globalStems };
 
                         const res = await fetch('/api/admin/generate/bulk', {
                             method: 'POST',
