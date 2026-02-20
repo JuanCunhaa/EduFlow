@@ -36,6 +36,18 @@ service cloud.firestore {
         allow read: if request.auth != null && request.auth.uid == uid;
         allow write: if false;
       }
+
+      // Question notes — user reads their own
+      match /notes/{questionId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+
+      // Performance summaries per study — user reads their own
+      match /performanceSummary/{studyId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
     }
 
     // Metadata: read-only for authenticated users
@@ -61,6 +73,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Internal config (feature flag overrides, etc.): no client access
+    match /_config/{doc} {
+      allow read, write: if false;
+    }
+
     // Question reports: users can read their own reports, all writes via Admin SDK
     match /question_reports/{reportId} {
       allow read: if request.auth != null && resource.data.reportedBy == request.auth.uid;
@@ -75,6 +92,74 @@ service cloud.firestore {
     // Content contributors: no client access
     match /content_contributors/{contributorId} {
       allow read, write: if false;
+    }
+
+    // Organizations: members can read their own org
+    match /organizations/{orgId} {
+      allow read: if request.auth != null && exists(/databases/$(database)/documents/org_members/$(orgId + '_' + request.auth.uid));
+      allow write: if false;
+    }
+
+    // Org members: members can read their own membership record
+    match /org_members/{memberId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // Org invites: invitee can read their own invite (matched by email)
+    match /org_invites/{inviteId} {
+      allow read: if request.auth != null && resource.data.email == request.auth.token.email;
+      allow write: if false;
+    }
+
+    // Email leads: no client access — written server-side only
+    match /email_leads/{leadId} {
+      allow read, write: if false;
+    }
+
+    // Drip enrollments: no client access — managed by email service
+    match /drip_enrollments/{uid} {
+      allow read, write: if false;
+    }
+
+    // Creator question packs: authenticated users can read active packs
+    match /question_packs/{packId} {
+      allow read: if request.auth != null && resource.data.isActive == true;
+      allow write: if false;
+    }
+
+    // Pack reviews: authenticated users can read all reviews, write via Admin SDK
+    match /pack_reviews/{reviewId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Pack purchases: users can read their own purchase records
+    match /pack_purchases/{purchaseId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
+
+    // User feedback: write-only (users can submit, not read back)
+    match /feedback/{feedbackId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Stripe events log: no client access — written by webhook handler via Admin SDK
+    match /stripeEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Analytics: users can read their own analytics documents
+    match /analytics/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+
+      match /{subDoc} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
     }
   }
 }

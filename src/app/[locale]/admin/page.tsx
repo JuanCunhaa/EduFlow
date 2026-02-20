@@ -15,6 +15,10 @@ import {
   AlertTriangle,
   BookOpen,
   Loader2,
+  Zap,
+  FileText,
+  Package,
+  Upload,
 } from 'lucide-react';
 
 interface PlatformStats {
@@ -116,10 +120,34 @@ export default function AdminDashboardPage() {
       desc: t('questionGeneratorDesc'),
     },
     {
+      href: '/admin/generator/bulk',
+      label: 'Bulk Generator',
+      icon: Package,
+      desc: 'Generate 100–2000 questions at once for any certification',
+    },
+    {
       href: '/marketplace/admin',
       label: t('marketplaceAdmin'),
       icon: Store,
       desc: t('marketplaceAdminDesc'),
+    },
+    {
+      href: '/admin/flags',
+      label: 'Feature Flags',
+      icon: Zap,
+      desc: 'Enable or disable beta features globally',
+    },
+    {
+      href: '/admin/reports',
+      label: 'Question Reports',
+      icon: FileText,
+      desc: 'Review and moderate reported questions',
+    },
+    {
+      href: '/admin/import',
+      label: 'Import Questions',
+      icon: Upload,
+      desc: 'Bulk-import questions from CSV or JSON files',
     },
   ];
 

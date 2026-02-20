@@ -16,6 +16,7 @@ import {
   Download,
   GraduationCap,
   Lock,
+  Star,
   Tag,
 } from 'lucide-react';
 
@@ -36,6 +37,22 @@ async function questionsFetcher(
   return res.json();
 }
 
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  authorName: string;
+  createdAt: string | null;
+}
+
+async function reviewsFetcher(
+  url: string
+): Promise<{ data: { reviews: Review[]; avgRating: number | null; totalReviews: number } }> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch reviews');
+  return res.json();
+}
+
 const DIFFICULTY_COLORS: Record<string, string> = {
   easy: 'text-emerald-400 bg-emerald-500/10',
   medium: 'text-amber-400 bg-amber-500/10',
@@ -49,6 +66,9 @@ export default function MarketplaceStudyDetailPage() {
   const { studyId } = useParams<{ studyId: string }>();
   const { study, isLoading: studyLoading } = useMarketplaceStudy(studyId);
   const [showImport, setShowImport] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const { data: questionsData, isLoading: questionsLoading } = useSWR(
     studyId ? `/api/marketplace/studies/${studyId}/questions?limit=20` : null,
@@ -56,7 +76,39 @@ export default function MarketplaceStudyDetailPage() {
     { revalidateOnFocus: false, dedupingInterval: 300_000 }
   );
 
+  const { data: reviewsData, mutate: mutateReviews } = useSWR(
+    studyId ? `/api/marketplace/studies/${studyId}/reviews` : null,
+    reviewsFetcher,
+    { revalidateOnFocus: false }
+  );
+
   const questions = questionsData?.data ?? [];
+  const reviews = reviewsData?.data?.reviews ?? [];
+  const avgRating = reviewsData?.data?.avgRating ?? null;
+  const totalReviews = reviewsData?.data?.totalReviews ?? 0;
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reviewRating === 0) return;
+    setSubmittingReview(true);
+    try {
+      const res = await fetch(`/api/marketplace/studies/${studyId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment || undefined }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert((data as { error?: string }).error ?? 'Failed to submit review');
+      } else {
+        setReviewRating(0);
+        setReviewComment('');
+        await mutateReviews();
+      }
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
 
   if (studyLoading) {
     return (
@@ -271,6 +323,93 @@ export default function MarketplaceStudyDetailPage() {
                     <Lock className="h-3 w-3" />
                     {td('questionHidden')}
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Reviews Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-foreground flex items-center gap-2 text-lg font-bold">
+              <Star className="text-amber-400 h-5 w-5" />
+              Reviews
+              {totalReviews > 0 && (
+                <span className="text-muted-foreground text-sm font-normal">
+                  · {avgRating}/5 ({totalReviews})
+                </span>
+              )}
+            </h2>
+          </div>
+
+          {/* Submit review form */}
+          <form
+            onSubmit={handleSubmitReview}
+            className="border-border bg-card space-y-3 rounded-xl border p-4"
+          >
+            <p className="text-foreground text-sm font-medium">Leave a review</p>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setReviewRating(star)}
+                  className="transition-transform hover:scale-110"
+                >
+                  <Star
+                    className={`h-6 w-6 ${star <= reviewRating
+                        ? 'fill-amber-400 text-amber-400'
+                        : 'text-muted-foreground/30'
+                      }`}
+                  />
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              placeholder="Optional comment…"
+              maxLength={500}
+              rows={2}
+              className="border-border bg-input text-foreground placeholder:text-muted-foreground w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={reviewRating === 0 || submittingReview}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {submittingReview ? 'Submitting…' : 'Submit'}
+            </button>
+          </form>
+
+          {/* Reviews list */}
+          {reviews.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No reviews yet. Be the first!</p>
+          ) : (
+            <div className="space-y-3">
+              {reviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="border-border bg-card rounded-xl border p-4"
+                >
+                  <div className="mb-1 flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${i < review.rating
+                              ? 'fill-amber-400 text-amber-400'
+                              : 'text-muted-foreground/20'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-muted-foreground text-xs">{review.authorName}</span>
+                  </div>
+                  {review.comment && (
+                    <p className="text-muted-foreground text-sm">{review.comment}</p>
+                  )}
                 </div>
               ))}
             </div>

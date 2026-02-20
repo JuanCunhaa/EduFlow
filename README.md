@@ -203,14 +203,19 @@ Certifique-se de configurar as variáveis de ambiente no painel da Vercel após 
 
 ---
 
-## � Roadmap
+## 🗺 Roadmap
 
 - [x] Motor de Exames e Pontuação
 - [x] Dashboard de Aluno e Analytics
 - [x] Marketplace de Conteúdo Comunitário
 - [x] Internacionalização (PT-BR / EN)
+- [x] **Bulk Question Generator** — geração de até 2000 questões em paralelo via IA
+- [x] **Gerador com 50+ certificações** — ISC2, CompTIA, AWS, Azure, GCP, ISACA e mais
+- [x] **Login com GitHub** — OAuth via Firebase Auth
+- [ ] **Login com Microsoft** *(código pronto, aguardando ativação)*
+- [ ] **Import CSV/JSON** — importação de questões em lote via painel admin
 - [ ] **App Mobile** (React Native / PWA)
-- [ ] **Modo Offline** (Sincronização posterior)
+- [ ] **SAML 2.0 Enterprise SSO** — autenticação corporativa via provedor de identidade
 
 ---
 

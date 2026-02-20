@@ -217,16 +217,28 @@ async function checkQuestionCreationLimit(
 ): Promise<PlanLimitCheck> {
   const db = getAdminDb();
 
-  // Count all user questions across all studies
-  const studiesSnap = await db.collection(`users/${uid}/studies`).get();
-  let totalQuestions = 0;
+  // Use denormalized counter on user document (O(1) read instead of N+1).
+  // Counter is incremented/decremented by question creation/deletion API routes.
+  const userSnap = await db.collection('users').doc(uid).get();
+  const userData = userSnap.data();
 
-  for (const studyDoc of studiesSnap.docs) {
-    const questionsSnap = await db
-      .collection(`users/${uid}/studies/${studyDoc.id}/questions`)
-      .count()
-      .get();
-    totalQuestions += questionsSnap.data().count;
+  let totalQuestions: number;
+
+  if (typeof userData?.totalQuestions === 'number') {
+    // Fast path: denormalized counter exists
+    totalQuestions = userData.totalQuestions;
+  } else {
+    // Fallback for existing users without the counter yet.
+    // Runs at most once per user until the field is written on next question creation.
+    const studiesSnap = await db.collection(`users/${uid}/studies`).get();
+    totalQuestions = 0;
+    for (const studyDoc of studiesSnap.docs) {
+      const questionsSnap = await db
+        .collection(`users/${uid}/studies/${studyDoc.id}/questions`)
+        .count()
+        .get();
+      totalQuestions += questionsSnap.data().count;
+    }
   }
 
   return {

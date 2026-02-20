@@ -14,6 +14,8 @@ import type { User } from 'firebase/auth';
 import {
   onAuthChange,
   signInWithGoogle,
+  signInWithGitHub,
+  signInWithMicrosoft,
   signOut,
   ensureSessionCookie,
 } from '@/lib/firebase/auth';
@@ -22,12 +24,14 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   signIn: () => Promise<void>;
+  signInGitHub: () => Promise<void>;
+  signInMicrosoft: () => Promise<void>;
   logOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const sessionSyncedRef = useRef(false);
@@ -60,12 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const handleSignIn = useCallback(async () => {
-    try {
-      await signInWithGoogle();
-    } catch (err) {
-      console.error('Sign-in failed:', err);
-      throw err;
-    }
+    try { await signInWithGoogle(); } catch (err) { console.error('Google sign-in failed:', err); throw err; }
+  }, []);
+
+  const handleSignInGitHub = useCallback(async () => {
+    try { await signInWithGitHub(); } catch (err) { console.error('GitHub sign-in failed:', err); throw err; }
+  }, []);
+
+  const handleSignInMicrosoft = useCallback(async () => {
+    try { await signInWithMicrosoft(); } catch (err) { console.error('Microsoft sign-in failed:', err); throw err; }
   }, []);
 
   const handleLogOut = useCallback(async () => {
@@ -83,9 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       signIn: handleSignIn,
+      signInGitHub: handleSignInGitHub,
+      signInMicrosoft: handleSignInMicrosoft,
       logOut: handleLogOut,
     }),
-    [user, loading, handleSignIn, handleLogOut]
+    [user, loading, handleSignIn, handleSignInGitHub, handleSignInMicrosoft, handleLogOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

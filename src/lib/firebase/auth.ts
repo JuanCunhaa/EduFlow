@@ -1,5 +1,7 @@
 import {
   GoogleAuthProvider,
+  GithubAuthProvider,
+  OAuthProvider,
   onAuthStateChanged,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -8,6 +10,8 @@ import {
 import { getClientAuth } from './config';
 
 const googleProvider = new GoogleAuthProvider();
+const githubProvider = new GithubAuthProvider();
+const microsoftProvider = new OAuthProvider('microsoft.com');
 
 /**
  * Sign in with Google using popup flow.
@@ -27,6 +31,24 @@ const googleProvider = new GoogleAuthProvider();
  */
 export async function signInWithGoogle(): Promise<User> {
   const result = await signInWithPopup(getClientAuth(), googleProvider);
+  return result.user;
+}
+
+/**
+ * Sign in with GitHub using popup flow.
+ * Requires GitHub OAuth enabled in Firebase Console → Authentication → Sign-in method.
+ */
+export async function signInWithGitHub(): Promise<User> {
+  const result = await signInWithPopup(getClientAuth(), githubProvider);
+  return result.user;
+}
+
+/**
+ * Sign in with Microsoft (Azure AD / personal accounts) using popup flow.
+ * Requires Microsoft enabled in Firebase Console → Authentication → Sign-in method.
+ */
+export async function signInWithMicrosoft(): Promise<User> {
+  const result = await signInWithPopup(getClientAuth(), microsoftProvider);
   return result.user;
 }
 
