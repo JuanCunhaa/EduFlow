@@ -244,7 +244,7 @@ export default function BulkGeneratorPage() {
                         }
 
                         setBatches((prev) => {
-                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'success', generated: data.generated } : b);
+                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'success' as const, generated: data.generated } : b);
                             const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
                             setProgress(`Generated ${completed}/${next.length} batches`);
                             return next;
@@ -252,7 +252,7 @@ export default function BulkGeneratorPage() {
                     } catch (err: any) {
                         failedBatches++;
                         setBatches((prev) => {
-                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'error', error: err.message } : b);
+                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'error' as const, error: err.message } : b);
                             const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
                             setProgress(`Generated ${completed}/${next.length} batches`);
                             return next;
