@@ -152,13 +152,15 @@ export default function BulkGeneratorPage() {
 
     interface BatchStatus {
         index: number;
-        status: 'pending' | 'success' | 'error';
+        status: 'pending' | 'generating' | 'success' | 'error';
         generated?: number;
         error?: string;
+        rawError?: string;
     }
     const [batches, setBatches] = useState<BatchStatus[]>([]);
     const [totalBatches, setTotalBatches] = useState(0);
     const [isImporting, setIsImporting] = useState(false);
+    const [selectedBatch, setSelectedBatch] = useState<BatchStatus | null>(null);
 
     // Fetch existing studies
     useEffect(() => {
@@ -210,53 +212,68 @@ export default function BulkGeneratorPage() {
                     // Immediately mark as generating so UI reflects parallel work
                     setBatches((prev) => prev.map((b) => b.index === batchIndex ? { ...b, status: 'generating' as any } : b));
 
-                    try {
-                        const payload = studySource === 'catalog'
-                            ? {
-                                // Once we have a resolvedStudyId from the first batch, we use it to avoid duplicate study creation
-                                studyId: resolvedStudyId || undefined,
-                                certSlug: !resolvedStudyId ? certSlug : undefined,
-                                domainId: domainId || undefined,
-                                batchSize: batchSizeLimit,
-                                model,
-                                lang,
-                                autoImport,
-                                existingStems: globalStems
+                    let attempts = 0;
+                    const maxAttempts = 3;
+                    let success = false;
+                    let lastError: any = null;
+
+                    while (attempts < maxAttempts && !success) {
+                        attempts++;
+                        try {
+                            const payload = studySource === 'catalog'
+                                ? {
+                                    studyId: resolvedStudyId || undefined,
+                                    certSlug: !resolvedStudyId ? certSlug : undefined,
+                                    domainId: domainId || undefined,
+                                    batchSize: batchSizeLimit,
+                                    model,
+                                    lang,
+                                    autoImport,
+                                    existingStems: globalStems
+                                }
+                                : { studyId, domainId: domainId || undefined, batchSize: batchSizeLimit, model, lang, autoImport, existingStems: globalStems };
+
+                            const res = await fetch('/api/admin/generate/bulk', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload),
+                            });
+
+                            if (!res.ok) {
+                                const err = await res.json().catch(() => ({})) as { error?: string };
+                                throw new Error(err.error ?? `HTTP ${res.status}`);
                             }
-                            : { studyId, domainId: domainId || undefined, batchSize: batchSizeLimit, model, lang, autoImport, existingStems: globalStems };
 
-                        const res = await fetch('/api/admin/generate/bulk', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload),
-                        });
+                            const { data } = await res.json() as { data: any };
 
-                        if (!res.ok) {
-                            const err = await res.json().catch(() => ({})) as { error?: string };
-                            throw new Error(err.error ?? `HTTP ${res.status}`);
+                            totalGenerated += data.generated;
+                            totalImported += data.imported;
+                            if (data.stems) globalStems.push(...data.stems);
+
+                            if (studySource === 'catalog' && !resolvedStudyId && data.studyId) {
+                                resolvedStudyId = data.studyId;
+                            }
+
+                            setBatches((prev) => {
+                                const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'success' as const, generated: data.generated } : b);
+                                const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
+                                setProgress(`Generated ${completed}/${next.length} batches`);
+                                return next;
+                            });
+
+                            success = true;
+                        } catch (err: any) {
+                            lastError = err;
+                            if (attempts < maxAttempts) {
+                                await new Promise(resolve => setTimeout(resolve, 3000 * attempts)); // Backoff
+                            }
                         }
+                    }
 
-                        const { data } = await res.json() as { data: any };
-
-                        totalGenerated += data.generated;
-                        totalImported += data.imported;
-                        if (data.stems) globalStems.push(...data.stems);
-
-                        // If it's the first successful batch and we auto-create studies, grab the assigned studyId
-                        if (studySource === 'catalog' && !resolvedStudyId && data.studyId) {
-                            resolvedStudyId = data.studyId;
-                        }
-
-                        setBatches((prev) => {
-                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'success' as const, generated: data.generated } : b);
-                            const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
-                            setProgress(`Generated ${completed}/${next.length} batches`);
-                            return next;
-                        });
-                    } catch (err: any) {
+                    if (!success) {
                         failedBatches++;
                         setBatches((prev) => {
-                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'error' as const, error: err.message } : b);
+                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'error' as const, error: lastError?.message || 'Unknown error', rawError: String(lastError) } : b);
                             const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
                             setProgress(`Generated ${completed}/${next.length} batches`);
                             return next;
@@ -646,16 +663,57 @@ export default function BulkGeneratorPage() {
 
                         <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 mt-4">
                             {batches.map(b => (
-                                <div
+                                <button
+                                    type="button"
                                     key={b.index}
+                                    onClick={() => setSelectedBatch(b)}
                                     title={b.status === 'error' ? b.error : `Batch ${b.index + 1}`}
-                                    className={`h-8 rounded border transition-colors ${b.status === 'success' ? 'bg-emerald-500/20 border-emerald-500/50' :
-                                        b.status === 'error' ? 'bg-destructive/20 border-destructive/50' :
-                                            'bg-muted/50 border-border animate-pulse'
+                                    className={`h-8 rounded border transition-colors cursor-pointer hover:ring-2 hover:ring-primary/50 focus:outline-none ${selectedBatch?.index === b.index ? 'ring-2 ring-primary/80 ' : ''
+                                        }${b.status === 'success' ? 'bg-emerald-500/20 border-emerald-500/50' :
+                                            b.status === 'error' ? 'bg-destructive/20 border-destructive/50' :
+                                                b.status === 'generating' ? 'bg-amber-500/30 border-amber-500/50 animate-pulse' :
+                                                    'bg-muted/50 border-border'
                                         }`}
                                 />
                             ))}
                         </div>
+
+                        {selectedBatch && (
+                            <div className="mt-6 p-4 rounded-xl relative bg-card/50 border border-border text-sm overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-50 pointer-events-none" />
+                                <div className="relative flex justify-between items-start mb-3">
+                                    <span className="font-bold text-foreground">Batch {selectedBatch.index + 1} Details</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedBatch(null)}
+                                        className="text-muted-foreground hover:text-foreground text-xs font-semibold px-2 py-1 rounded bg-muted/50 transition-colors"
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+                                <div className="space-y-2 relative text-muted-foreground">
+                                    <div className="flex justify-between items-center py-1 border-b border-border/50">
+                                        <span>Status</span>
+                                        <span className={`font-semibold capitalize ${selectedBatch.status === 'success' ? 'text-emerald-400' :
+                                            selectedBatch.status === 'error' ? 'text-destructive' :
+                                                'text-amber-400'
+                                            }`}>{selectedBatch.status}</span>
+                                    </div>
+                                    {selectedBatch.status === 'success' && (
+                                        <div className="flex justify-between items-center py-1 border-b border-border/50">
+                                            <span>Questions Generated</span>
+                                            <span className="text-emerald-400 font-bold">{selectedBatch.generated}</span>
+                                        </div>
+                                    )}
+                                    {selectedBatch.status === 'error' && (
+                                        <div className="mt-3 text-destructive bg-destructive/10 border border-destructive/20 p-3 rounded-lg overflow-x-auto">
+                                            <p className="font-semibold mb-2 text-xs uppercase tracking-wider">Error Output:</p>
+                                            <pre className="font-mono text-xs whitespace-pre-wrap">{selectedBatch.error || selectedBatch.rawError}</pre>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         {isImporting && (
                             <div className="text-xs text-muted-foreground pt-2 flex items-center justify-center gap-2">
@@ -664,7 +722,6 @@ export default function BulkGeneratorPage() {
                         )}
                     </div>
                 )}
-
                 {/* Error state */}
                 {error && !loading && (
                     <div className="border-destructive/30 bg-destructive/10 flex items-start gap-3 rounded-xl border p-4">
@@ -727,6 +784,6 @@ export default function BulkGeneratorPage() {
                     </div>
                 )}
             </div>
-        </Shell>
+        </Shell >
     );
 }
