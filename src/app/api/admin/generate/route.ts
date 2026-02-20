@@ -24,6 +24,11 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
 
+export const maxDuration = 120; // 2 minutes max execution time for AI generation
+
+import { type GeneratedQuestion } from '@/lib/generator-utils';
+
+
 // ── Input schema ──
 
 const bodySchema = z
@@ -57,20 +62,6 @@ interface StudyContext {
   issuer: string;
   domains: DomainInfo[];
   isNewStudy: boolean;
-}
-
-interface GeneratedQuestion {
-  text: string;
-  options: Array<{ label: string; text: string }>;
-  correctOptionIndex: number;
-  explanation: {
-    short: string;
-    whyOthersWrong: Record<string, string>;
-    examTip?: string;
-  };
-  difficulty: string;
-  domainIds: string[];
-  tags: string[];
 }
 
 interface ValidationResult {

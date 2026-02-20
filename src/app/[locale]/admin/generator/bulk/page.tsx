@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shell } from '@/components/layout/Shell';
 import { usePlan } from '@/hooks/usePlan';
 import { useToast } from '@/components/ui/Toast';
@@ -133,6 +133,12 @@ export default function BulkGeneratorPage() {
     const { addToast } = useToast();
 
     const [certSlug, setCertSlug] = useState('');
+    const [studySource, setStudySource] = useState<'catalog' | 'existing'>('catalog');
+    const [studyId, setStudyId] = useState('');
+    const [domainId, setDomainId] = useState('');
+    const [existingStudies, setExistingStudies] = useState<any[]>([]);
+    const [studiesLoading, setStudiesLoading] = useState(false);
+
     const [totalCount, setTotalCount] = useState(100);
     const [model, setModel] = useState('gpt-4o-mini');
     const [lang, setLang] = useState('en');
@@ -144,7 +150,18 @@ export default function BulkGeneratorPage() {
     const [error, setError] = useState<string | null>(null);
     const [progress, setProgress] = useState<string>('');
 
-    const canSubmit = certSlug.length > 0 && !loading;
+    // Fetch existing studies
+    useEffect(() => {
+        if (!isAdmin) return;
+        setStudiesLoading(true);
+        fetch('/api/admin/studies/list')
+            .then((res) => res.json())
+            .then((res) => setExistingStudies(res.data || []))
+            .catch(() => { })
+            .finally(() => setStudiesLoading(false));
+    }, [isAdmin]);
+
+    const canSubmit = (studySource === 'catalog' ? certSlug.length > 0 : studyId.length > 0) && !loading;
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -164,10 +181,14 @@ export default function BulkGeneratorPage() {
         }, 1200);
 
         try {
+            const payload = studySource === 'catalog'
+                ? { certSlug, domainId: domainId || undefined, totalCount, model, lang, concurrency, autoImport }
+                : { studyId, domainId: domainId || undefined, totalCount, model, lang, concurrency, autoImport };
+
             const res = await fetch('/api/admin/generate/bulk', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ certSlug, totalCount, model, lang, concurrency, autoImport }),
+                body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
@@ -214,7 +235,21 @@ export default function BulkGeneratorPage() {
         );
     }
 
-    const certLabel = CERT_OPTIONS.find((c) => c.slug === certSlug)?.label ?? '';
+    const selectedCert = CERT_OPTIONS.find((c) => c.slug === certSlug);
+    const certLabel = studySource === 'catalog'
+        ? selectedCert?.label ?? ''
+        : existingStudies.find((s) => s.id === studyId)?.name ?? '';
+
+    // Calculate domains available for the current selection
+    let availableDomains: { id: string; name: string }[] = [];
+    if (studySource === 'catalog' && certSlug) {
+        // We need to import KNOWN_CERTS from route if possible, but as it's hardcoded there,
+        // let's just allow a general domain input or omit domain dropdown for catalog to keep it simple,
+        // unless we duplicate the KNOWN_CERTS. Actually, since KNOWN_CERTS is not exported here, we just use existing studies.
+    } else if (studySource === 'existing' && studyId) {
+        const study = existingStudies.find((s) => s.id === studyId);
+        availableDomains = study?.domains || [];
+    }
 
     return (
         <Shell>
@@ -242,28 +277,104 @@ export default function BulkGeneratorPage() {
                 {!result && (
                     <form onSubmit={handleSubmit} className="max-w-xl space-y-6">
 
-                        {/* Cert picker */}
-                        <div>
-                            <label htmlFor="cert-select" className="text-foreground mb-1.5 block text-sm font-medium">
-                                Certification / Exam
+                        {/* Source Toggle */}
+                        <div className="flex gap-4 mb-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="studySource"
+                                    value="catalog"
+                                    checked={studySource === 'catalog'}
+                                    onChange={() => {
+                                        setStudySource('catalog');
+                                        setDomainId('');
+                                    }}
+                                    className="text-primary focus:ring-primary/30"
+                                />
+                                <span className="text-sm font-medium text-foreground">Catalog Certification</span>
                             </label>
-                            <select
-                                id="cert-select"
-                                value={certSlug}
-                                onChange={(e) => setCertSlug(e.target.value)}
-                                required
-                                className="border-border bg-card text-foreground focus:border-primary/50 focus:ring-primary/30 w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
-                            >
-                                <option value="">Select a certification…</option>
-                                {Array.from(new Set(CERT_OPTIONS.map((c) => c.group))).map((group) => (
-                                    <optgroup key={group} label={group}>
-                                        {CERT_OPTIONS.filter((c) => c.group === group).map((c) => (
-                                            <option key={c.slug} value={c.slug}>{c.label}</option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="studySource"
+                                    value="existing"
+                                    checked={studySource === 'existing'}
+                                    onChange={() => {
+                                        setStudySource('existing');
+                                        setDomainId('');
+                                    }}
+                                    className="text-primary focus:ring-primary/30"
+                                />
+                                <span className="text-sm font-medium text-foreground">Existing Study</span>
+                            </label>
                         </div>
+
+                        {/* Picker */}
+                        {studySource === 'catalog' ? (
+                            <div>
+                                <label htmlFor="cert-select" className="text-foreground mb-1.5 block text-sm font-medium">
+                                    Certification / Exam
+                                </label>
+                                <select
+                                    id="cert-select"
+                                    value={certSlug}
+                                    onChange={(e) => setCertSlug(e.target.value)}
+                                    required
+                                    className="border-border bg-card text-foreground focus:border-primary/50 focus:ring-primary/30 w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
+                                >
+                                    <option value="">Select a certification…</option>
+                                    {Array.from(new Set(CERT_OPTIONS.map((c) => c.group))).map((group) => (
+                                        <optgroup key={group} label={group}>
+                                            {CERT_OPTIONS.filter((c) => c.group === group).map((c) => (
+                                                <option key={c.slug} value={c.slug}>{c.label}</option>
+                                            ))}
+                                        </optgroup>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div>
+                                <label htmlFor="study-select" className="text-foreground mb-1.5 block text-sm font-medium">
+                                    Select Existing Study {studiesLoading && <Loader2 className="inline ml-2 h-3 w-3 animate-spin" />}
+                                </label>
+                                <select
+                                    id="study-select"
+                                    value={studyId}
+                                    onChange={(e) => setStudyId(e.target.value)}
+                                    required
+                                    className="border-border bg-card text-foreground focus:border-primary/50 focus:ring-primary/30 w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
+                                >
+                                    <option value="">Select an existing study…</option>
+                                    {existingStudies.map((s) => (
+                                        <option key={s.id} value={s.id}>
+                                            {s.name} ({s.questionCount} questions)
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Domain Picker for Existing Studies */}
+                        {studySource === 'existing' && availableDomains.length > 0 && (
+                            <div>
+                                <label htmlFor="domain-select" className="text-foreground mb-1.5 block text-sm font-medium">
+                                    Target specific domain (optional)
+                                </label>
+                                <select
+                                    id="domain-select"
+                                    value={domainId}
+                                    onChange={(e) => setDomainId(e.target.value)}
+                                    className="border-border bg-card text-foreground focus:border-primary/50 focus:ring-primary/30 w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
+                                >
+                                    <option value="">All domains (balanced)</option>
+                                    {availableDomains.map((d) => (
+                                        <option key={d.id} value={d.id}>
+                                            {d.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         {/* Count */}
                         <div>

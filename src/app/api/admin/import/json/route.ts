@@ -18,6 +18,9 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
 
+export const maxDuration = 60; // 1 minute max execution time for JSON import
+
+
 const MAX_QUESTIONS = 500;
 const BATCH_SIZE = 400;
 
