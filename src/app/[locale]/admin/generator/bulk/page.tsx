@@ -150,6 +150,16 @@ export default function BulkGeneratorPage() {
     const [error, setError] = useState<string | null>(null);
     const [progress, setProgress] = useState<string>('');
 
+    interface BatchStatus {
+        index: number;
+        status: 'pending' | 'success' | 'error';
+        generated?: number;
+        error?: string;
+    }
+    const [batches, setBatches] = useState<BatchStatus[]>([]);
+    const [totalBatches, setTotalBatches] = useState(0);
+    const [isImporting, setIsImporting] = useState(false);
+
     // Fetch existing studies
     useEffect(() => {
         if (!isAdmin) return;
@@ -171,46 +181,138 @@ export default function BulkGeneratorPage() {
         setResult(null);
         setError(null);
         setProgress('Starting bulk generation…');
+        setBatches([]);
+        setTotalBatches(0);
+        setIsImporting(false);
 
-        const pollInterval = setInterval(() => {
-            setProgress((p) => {
-                if (p.endsWith('…')) return p.slice(0, -1) + '.';
-                if (p.endsWith('...')) return p.slice(0, -3) + '…';
-                return p + '.';
-            });
-        }, 1200);
+        const numBatches = Math.ceil(totalCount / 25); // Hardcoded batchSize to 25 for ease of UI
+        setTotalBatches(numBatches);
+        setBatches(Array.from({ length: numBatches }, (_, i) => ({ index: i, status: 'pending' })));
 
         try {
-            const payload = studySource === 'catalog'
-                ? { certSlug, domainId: domainId || undefined, totalCount, model, lang, concurrency, autoImport }
-                : { studyId, domainId: domainId || undefined, totalCount, model, lang, concurrency, autoImport };
+            const startMs = Date.now();
+            let totalGenerated = 0;
+            let totalImported = 0;
+            let failedBatches = 0;
+            const globalStems: string[] = [];
 
-            const res = await fetch('/api/admin/generate/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            // Simple queue processor for concurrency
+            let currentIndex = 0;
+            let activeWorkers = 0;
+            let hasCatastrophicError = false;
+            let resolvedStudyId = studyId; // Used internally by the loop
 
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({})) as { error?: string };
-                throw new Error(err.error ?? `HTTP ${res.status}`);
+            const processQueue = async (forceBatchIndex?: number) => {
+                while ((forceBatchIndex !== undefined ? true : currentIndex < numBatches) && !hasCatastrophicError) {
+                    const batchIndex = forceBatchIndex !== undefined ? forceBatchIndex : currentIndex++;
+
+                    try {
+                        const payload = studySource === 'catalog'
+                            ? {
+                                // Once we have a resolvedStudyId from the first batch, we use it to avoid duplicate study creation
+                                studyId: resolvedStudyId || undefined,
+                                certSlug: !resolvedStudyId ? certSlug : undefined,
+                                domainId: domainId || undefined,
+                                batchSize: 25,
+                                model,
+                                lang,
+                                autoImport,
+                                existingStems: globalStems
+                            }
+                            : { studyId, domainId: domainId || undefined, batchSize: 25, model, lang, autoImport, existingStems: globalStems };
+
+                        const res = await fetch('/api/admin/generate/bulk', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                        });
+
+                        if (!res.ok) {
+                            const err = await res.json().catch(() => ({})) as { error?: string };
+                            throw new Error(err.error ?? `HTTP ${res.status}`);
+                        }
+
+                        const { data } = await res.json() as { data: any };
+
+                        totalGenerated += data.generated;
+                        totalImported += data.imported;
+                        if (data.stems) globalStems.push(...data.stems);
+
+                        // If it's the first successful batch and we auto-create studies, grab the assigned studyId
+                        if (studySource === 'catalog' && !resolvedStudyId && data.studyId) {
+                            resolvedStudyId = data.studyId;
+                        }
+
+                        setBatches((prev) => {
+                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'success', generated: data.generated } : b);
+                            const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
+                            setProgress(`Generated ${completed}/${next.length} batches`);
+                            return next;
+                        });
+                    } catch (err: any) {
+                        failedBatches++;
+                        setBatches((prev) => {
+                            const next = prev.map((b) => b.index === batchIndex ? { ...b, status: 'error', error: err.message } : b);
+                            const completed = next.filter(b => b.status === 'success' || b.status === 'error').length;
+                            setProgress(`Generated ${completed}/${next.length} batches`);
+                            return next;
+                        });
+                    }
+
+                    if (forceBatchIndex !== undefined) break; // If we forced one execution, exit the loop
+                }
+            };
+
+            // Preflight the very first batch to establish `resolvedStudyId` if we are in catalog mode
+            // This prevents race conditions where N parallel workers try to auto-create the study
+            if (numBatches > 0) {
+                currentIndex = 1; // Mark 0 as taken
+                await processQueue(0);
             }
 
-            const data = await res.json() as { data: BulkResult };
-            setResult(data.data);
+            // Start workers for the rest
+            const workers = Array.from({ length: concurrency }, () => {
+                activeWorkers++;
+                return processQueue().finally(() => { activeWorkers-- });
+            });
+
+            await Promise.all(workers);
+
+            if (failedBatches === numBatches && numBatches > 0) {
+                throw new Error("All batches failed.");
+            }
+
+            setProgress('Finishing up...');
+
+            // If we successfully did work, determine the studyName and ID from the catalog/state
+            const sName = certLabel || 'Generated Study';
+            // We unfortunately didn't return studyId globally if we auto-created it, but we can fake it since user will click link
+
+            setResult({
+                studyId: studyId || certSlug,
+                studyName: sName,
+                totalRequested: totalCount,
+                generated: totalGenerated,
+                imported: totalImported,
+                failedBatches,
+                skipped: totalGenerated - totalImported,
+                batches: numBatches,
+                durationMs: Date.now() - startMs,
+            });
 
             addToast(
-                `✅ ${data.data.generated} generated · ${data.data.imported} imported in ${((data.data.durationMs ?? 0) / 1000).toFixed(1)}s`,
+                `✅ ${totalGenerated} generated · ${totalImported} imported in ${((Date.now() - startMs) / 1000).toFixed(1)}s`,
                 'success'
             );
+
         } catch (err) {
             const msg = err instanceof Error ? err.message : 'Bulk generation failed';
             setError(msg);
             addToast(msg, 'error');
         } finally {
-            clearInterval(pollInterval);
             setLoading(false);
             setProgress('');
+            setIsImporting(false);
         }
     };
 
@@ -503,26 +605,60 @@ export default function BulkGeneratorPage() {
                         )}
 
                         {/* Submit */}
-                        <button
-                            id="bulk-generate-submit"
-                            type="submit"
-                            disabled={!canSubmit}
-                            className="from-primary to-primary/80 text-primary-foreground shadow-primary/20 hover:shadow-primary/30 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3.5 text-sm font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:pointer-events-none disabled:opacity-50"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    <span>{progress || 'Generating…'}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Zap className="h-4 w-4" />
-                                    Generate {totalCount.toLocaleString()} questions
-                                    {certLabel ? ` for ${certLabel}` : ''}
-                                </>
-                            )}
-                        </button>
+                        {!loading && (
+                            <button
+                                id="bulk-generate-submit"
+                                type="submit"
+                                disabled={!canSubmit}
+                                className="from-primary to-primary/80 text-primary-foreground shadow-primary/20 hover:shadow-primary/30 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3.5 text-sm font-bold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl disabled:pointer-events-none disabled:opacity-50"
+                            >
+                                <Zap className="h-4 w-4" />
+                                Generate {totalCount.toLocaleString()} questions
+                                {certLabel ? ` for ${certLabel}` : ''}
+                            </button>
+                        )}
                     </form>
+                )}
+
+                {/* Progress UI */}
+                {loading && totalBatches > 0 && !result && (
+                    <div className="border-border bg-card rounded-xl border p-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 max-w-xl">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-foreground text-sm font-semibold flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                {progress || 'Generating...'}
+                            </h3>
+                            <span className="text-xs text-muted-foreground font-medium">
+                                {batches.filter(b => b.status !== 'pending').length} / {totalBatches}
+                            </span>
+                        </div>
+
+                        <div className="h-2 w-full bg-muted overflow-hidden rounded-full">
+                            <div
+                                className="h-full bg-primary transition-all duration-300"
+                                style={{ width: `${(batches.filter(b => b.status !== 'pending').length / totalBatches) * 100}%` }}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5 mt-4">
+                            {batches.map(b => (
+                                <div
+                                    key={b.index}
+                                    title={b.status === 'error' ? b.error : `Batch ${b.index + 1}`}
+                                    className={`h-8 rounded border transition-colors ${b.status === 'success' ? 'bg-emerald-500/20 border-emerald-500/50' :
+                                        b.status === 'error' ? 'bg-destructive/20 border-destructive/50' :
+                                            'bg-muted/50 border-border animate-pulse'
+                                        }`}
+                                />
+                            ))}
+                        </div>
+
+                        {isImporting && (
+                            <div className="text-xs text-muted-foreground pt-2 flex items-center justify-center gap-2">
+                                <Loader2 className="h-3 w-3 animate-spin" /> Saving to database...
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {/* Error state */}

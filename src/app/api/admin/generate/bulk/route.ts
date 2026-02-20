@@ -31,7 +31,6 @@ import { NextResponse } from 'next/server';
 
 export const maxDuration = 300; // 5 minutes max execution time for bulk generation
 
-
 // ── Schema ──
 
 const bodySchema = z.object({
@@ -721,7 +720,7 @@ async function importToFirestore(
     return imported;
 }
 
-// ── Main handler ──
+// ── Main handler (Single Batch) ──
 
 export const POST = withAdmin(
     async (request: Request, { user, log }: RouteContext) => {
@@ -731,9 +730,22 @@ export const POST = withAdmin(
         }
 
         const body = await request.json();
-        const parsed = bodySchema.parse(body);
-        const { totalCount, batchSize, lang, model, autoImport, domainId } = parsed;
-        const concurrency = Math.min(parsed.concurrency, 8);
+        // Since we refactored to single batch logic, schema changes slightly
+        const batchSchema = z.object({
+            certSlug: z.string().optional(),
+            studyId: z.string().optional(),
+            batchSize: z.number().int().min(5).max(30).default(25),
+            lang: z.string().default('en'),
+            model: z.string().default('gpt-4o-mini'),
+            autoImport: z.boolean().default(true),
+            domainId: z.string().optional(),
+            existingStems: z.array(z.string()).default([]), // For duplicate avoidance
+        }).refine((d) => d.certSlug || d.studyId, {
+            message: 'Either certSlug or studyId is required',
+        });
+
+        const parsed = batchSchema.parse(body);
+        const { batchSize, lang, model, autoImport, domainId, existingStems } = parsed;
 
         const db = getAdminDb();
         const startMs = Date.now();
@@ -751,30 +763,26 @@ export const POST = withAdmin(
             const data = snap.data()!;
             studyId = parsed.studyId;
 
-            // Build cert info from Firestore study data
             cert = {
                 name: data.name ?? 'Study',
                 issuer: data.issuer ?? 'Unknown',
                 domains: (data.domains ?? []) as CertDomain[],
             };
 
-            // Enrich with catalog if name matches
             const nameKey = data.name?.toLowerCase().replace(/\s+/g, '-') ?? '';
             const catalogMatch = CERT_CATALOG[nameKey] ?? CERT_CATALOG[parsed.certSlug ?? ''];
             if (catalogMatch) cert = catalogMatch;
 
         } else {
-            // certSlug mode — find or auto-create study
             const certSlug = parsed.certSlug!;
             cert = CERT_CATALOG[certSlug];
             if (!cert) {
                 return NextResponse.json(
-                    { error: `Unknown cert slug "${certSlug}". Use studyId instead or add to CERT_CATALOG.` },
+                    { error: `Unknown cert slug "${certSlug}".` },
                     { status: 400 }
                 );
             }
 
-            // Find existing study for this cert or create one
             const existingSnap = await db
                 .collection('marketplace_studies')
                 .where('abbreviation', '==', certSlug.toUpperCase().slice(0, 20))
@@ -785,7 +793,6 @@ export const POST = withAdmin(
             if (!existingSnap.empty) {
                 studyId = existingSnap.docs[0].id;
             } else {
-                // Auto-create
                 const ref = db.collection('marketplace_studies').doc();
                 await ref.set({
                     abbreviation: certSlug.toUpperCase().slice(0, 20),
@@ -803,94 +810,36 @@ export const POST = withAdmin(
                     createdBy: user.uid,
                 });
                 studyId = ref.id;
-                log.info('Bulk generator: auto-created study', { meta: { studyId, certSlug } });
             }
         }
 
-        // ── Load existing question stems for deduplication ──
+        // ── Generate one batch ──
 
-        const existingSnap = await db
-            .collection('marketplace_questions')
-            .where('studyId', '==', studyId)
-            .orderBy('createdAt', 'desc')
-            .limit(120)
-            .get();
-
-        const existingStems = existingSnap.docs.map((d) =>
-            ((d.data().text ?? '') as string).slice(0, 120)
-        );
-
-        // ── Calculate batches ──
-
-        const numBatches = Math.ceil(totalCount / batchSize);
-        const limit = pLimit(concurrency);
-
-        log.info('Bulk generate start', {
-            meta: { studyId, totalCount, numBatches, concurrency, model, autoImport },
-        });
-
-        // ── Run batches in parallel ──
-
-        const batchResults = await Promise.allSettled(
-            Array.from({ length: numBatches }, (_, i) => {
-                const thisBatchSize = i === numBatches - 1
-                    ? totalCount - i * batchSize  // last batch may be smaller
-                    : batchSize;
-                return limit(() =>
-                    generateBatch(apiKey, model, cert, thisBatchSize, lang, domainId, existingStems)
-                );
-            })
-        );
-
-        // ── Aggregate results ──
-
-        const allValid: GeneratedQuestion[] = [];
-        let failed = 0;
-
-        for (const result of batchResults) {
-            if (result.status === 'fulfilled') {
-                const cleaned = result.value.map(cleanQ).filter(isValidQuestion);
-                allValid.push(...cleaned);
-            } else {
-                failed++;
-                log.warn('Batch failed', { meta: { error: String(result.reason) } });
-            }
+        let generatedQuestions: GeneratedQuestion[] = [];
+        try {
+            const raw = await generateBatch(apiKey, model, cert, batchSize, lang, domainId, existingStems);
+            generatedQuestions = raw.filter(isValidQuestion).map((q) => cleanQ(q));
+        } catch (error: any) {
+            log.error('Batch generation failed', { error: error.message });
+            return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
-        // ── Import or return preview ──
+        // ── Import if requested ──
 
-        let imported = 0;
-        if (autoImport && allValid.length > 0) {
-            imported = await importToFirestore(db, studyId, allValid);
+        let importedCount = 0;
+        if (autoImport && generatedQuestions.length > 0) {
+            importedCount = await importToFirestore(db, studyId, generatedQuestions);
         }
 
-        const durationMs = Date.now() - startMs;
-
-        log.info('Bulk generate complete', {
-            meta: {
-                studyId,
-                totalCount,
-                generated: allValid.length,
-                imported,
-                failedBatches: failed,
-                durationMs,
-            },
-        });
-
-        return {
+        return NextResponse.json({
             data: {
                 studyId,
                 studyName: cert.name,
-                totalRequested: totalCount,
-                generated: allValid.length,
-                imported,
-                failedBatches: failed,
-                skipped: totalCount - allValid.length,
-                batches: numBatches,
-                durationMs,
-                // In preview mode, return the first 50 questions as sample
-                preview: autoImport ? [] : allValid.slice(0, 50),
-            },
-        };
+                generated: generatedQuestions.length,
+                imported: importedCount,
+                durationMs: Date.now() - startMs,
+                stems: generatedQuestions.map(q => q.text), // Return stems to avoid duplicates in next batch
+            }
+        });
     }
 );

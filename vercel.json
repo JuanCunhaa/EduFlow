@@ -4,5 +4,10 @@
       "path": "/api/billing/reconcile",
       "schedule": "0 3 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/admin/generate/bulk/route.ts": {
+      "maxDuration": 900
+    }
+  }
 }
