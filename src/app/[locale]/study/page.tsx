@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Shell } from '@/components/layout/Shell';
 import { useStudies } from '@/hooks/useStudies';
 import { useQuestions } from '@/hooks/useQuestions';
-import { Shuffle, ChevronLeft, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { Shuffle, ChevronLeft, ChevronRight, Eye, EyeOff, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 import { Spinner } from '@/components/ui/Spinner';
 import type { Difficulty } from '@/types';
 
@@ -99,11 +99,10 @@ function StudyPageInner() {
 
           <button
             onClick={handleShuffle}
-            className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-              shuffled
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border text-muted-foreground hover:text-foreground'
-            }`}
+            className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${shuffled
+              ? 'border-primary bg-primary/10 text-primary'
+              : 'border-border text-muted-foreground hover:text-foreground'
+              }`}
           >
             <Shuffle size={14} />
             {t('shuffle')}
@@ -138,31 +137,56 @@ function StudyPageInner() {
                   {t('hideAnswer')}
                 </button>
 
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {current.options.map((opt, i) => {
                     const isCorrect = i === current.correctOptionIndex;
                     return (
                       <li
                         key={i}
-                        className={`rounded-lg px-3 py-2 text-sm ${
-                          isCorrect
-                            ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/30'
-                            : 'text-muted-foreground'
-                        }`}
+                        className={`rounded-lg px-4 py-3 text-sm transition-colors ${isCorrect
+                            ? 'bg-emerald-500/10 border border-emerald-500/30'
+                            : 'bg-muted/30 border border-border/50'
+                          }`}
                       >
-                        <span className="mr-2 font-mono font-bold">
-                          {opt.label}
-                        </span>
-                        {opt.text}
+                        <div className="flex items-start">
+                          <span className={`mr-3 font-mono font-bold mt-0.5 shrink-0 ${isCorrect ? 'text-emerald-400' : 'text-muted-foreground'
+                            }`}>
+                            {opt.label}
+                          </span>
+                          <div className="space-y-1.5 w-full">
+                            <span className={`font-medium ${isCorrect ? 'text-emerald-50' : 'text-foreground'}`}>
+                              {opt.text}
+                            </span>
+
+                            {current.explanation && (
+                              <div className="text-xs pt-0.5">
+                                {isCorrect ? (
+                                  <span className="text-emerald-400/90 flex items-start gap-1.5 mt-1">
+                                    <CheckCircle2 className="w-4 h-4 inline shrink-0" />
+                                    <span>{current.explanation.short}</span>
+                                  </span>
+                                ) : current.explanation.whyOthersWrong?.[opt.label] ? (
+                                  <span className="text-red-400/80 flex items-start gap-1.5 mt-1">
+                                    <XCircle className="w-4 h-4 inline shrink-0" />
+                                    <span>{current.explanation.whyOthersWrong[opt.label]}</span>
+                                  </span>
+                                ) : null}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </li>
                     );
                   })}
                 </ul>
 
-                {current.explanation && (
-                  <p className="text-muted-foreground mt-3 text-xs">
-                    <strong>{t('correct')}</strong> {current.explanation.short}
-                  </p>
+                {current.explanation?.examTip && (
+                  <div className="mt-4 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs text-blue-200 flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 shrink-0 text-blue-400 mt-0.5" />
+                    <div>
+                      <strong className="text-blue-400">{t('examTip')}:</strong> {current.explanation.examTip}
+                    </div>
+                  </div>
                 )}
               </div>
             ) : (
