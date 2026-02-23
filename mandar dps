@@ -1,0 +1,1 @@
+e outra coisa, coloco para gerar 1000, vc faz 100 batchs de 10, mas como alguns n geram os 10, geram menos, ele nãop me retorna os 1000 pergutnas, tenta fazer algo que vai pegar o numero total de qustão, e ir criando novos batches até chegar em 1000 pergutnas criadas sabe?

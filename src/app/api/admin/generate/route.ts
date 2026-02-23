@@ -36,6 +36,8 @@ import {
     buildQualityScorePrompt,
     parseQualityScores,
     buildAntiPatternBlock,
+    safeParseJSON,
+    repairQuestion,
 } from '@/lib/generator-utils';
 import { KNOWN_CERTS, CERT_ALIASES } from '@/lib/cert-catalog';
 import { findSemanticDuplicates } from '@/lib/semantic-dedup';
@@ -236,8 +238,8 @@ export const POST = withAdmin(
             return NextResponse.json({ error: err.message }, { status: 500 });
         }
 
-        const rawParsed = JSON.parse(rawContent);
-        let rawQuestions: GeneratedQuestion[] = Array.isArray(rawParsed.questions) ? rawParsed.questions : [];
+        const rawParsed = safeParseJSON(rawContent);
+        let rawQuestions: GeneratedQuestion[] = Array.isArray(rawParsed.questions) ? rawParsed.questions.map(repairQuestion) : [];
 
         // ── Validate + clean ──
         const results = rawQuestions.map((q, i) => ({ q, v: validateQuestion(q, i) }));
@@ -256,7 +258,7 @@ export const POST = withAdmin(
                     lang: parsed.lang, domains: ctx.domains,
                 });
                 const retryContent = await callOpenAI(apiKey, parsed.model, retryPrompt.system, retryPrompt.user, 0.6);
-                const retryQs: GeneratedQuestion[] = (JSON.parse(retryContent).questions || [])
+                const retryQs: GeneratedQuestion[] = (safeParseJSON(retryContent).questions || []).map(repairQuestion)
                     .filter((q: GeneratedQuestion, i: number) => validateQuestion(q, i).valid).map(cleanQ);
                 validQs = [...validQs, ...retryQs];
             } catch { /* non-critical */ }

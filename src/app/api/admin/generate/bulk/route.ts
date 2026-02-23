@@ -92,7 +92,7 @@ async function importToFirestore(
                 domainIds: q.domainIds?.length ? q.domainIds : ['general'],
                 tags: q.tags ?? [],
                 bloomLevel: q.bloomLevel,
-                ...(q.qualityScore != null ? { qualityScore: q.qualityScore } : {}),
+                qualityScore: q.qualityScore,
                 isActive: true,
                 source: 'bulk-generator',
                 createdAt: FieldValue.serverTimestamp(),

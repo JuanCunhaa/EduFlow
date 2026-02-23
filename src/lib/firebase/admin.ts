@@ -33,6 +33,9 @@ export function getAdminAuth(): Auth {
 }
 
 export function getAdminDb(): Firestore {
-  if (!_db) _db = getFirestore(getApp());
+  if (!_db) {
+    _db = getFirestore(getApp());
+    _db.settings({ ignoreUndefinedProperties: true });
+  }
   return _db;
 }

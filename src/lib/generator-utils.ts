@@ -539,9 +539,128 @@ export function cleanQ(q: GeneratedQuestion): GeneratedQuestion {
             ...q.explanation,
             short: stripMarkdown(q.explanation.short ?? ''),
             whyOthersWrong,
-            examTip: q.explanation.examTip ? stripMarkdown(q.explanation.examTip) : undefined,
+            examTip: stripMarkdown(q.explanation?.examTip ?? ''),
         },
     };
+}
+
+// ── Robust JSON Parsing ──
+
+export function safeParseJSON(raw: string): { questions: GeneratedQuestion[] } {
+    const fallback = { questions: [] as GeneratedQuestion[] };
+    if (!raw || !raw.trim()) return fallback;
+
+    // Attempt 1: direct parse
+    try { return JSON.parse(raw); } catch { /* continue */ }
+
+    // Attempt 2: strip markdown code fences (```json ... ```)
+    const fenceStripped = raw.replace(/^```(?:json)?\s*\n?/im, '').replace(/\n?```\s*$/im, '').trim();
+    try { return JSON.parse(fenceStripped); } catch { /* continue */ }
+
+    // Attempt 3: extract first { ... } block via brace matching
+    const start = raw.indexOf('{');
+    if (start >= 0) {
+        let depth = 0;
+        let end = -1;
+        for (let i = start; i < raw.length; i++) {
+            if (raw[i] === '{') depth++;
+            else if (raw[i] === '}') { depth--; if (depth === 0) { end = i; break; } }
+        }
+        if (end > start) {
+            try { return JSON.parse(raw.slice(start, end + 1)); } catch { /* continue */ }
+        }
+    }
+
+    return fallback;
+}
+
+// ── Auto-Repair Common AI Mistakes ──
+
+const DIFFICULTY_ALIASES: Record<string, string> = {
+    'easy': 'easy', 'simple': 'easy', 'basic': 'easy', 'beginner': 'easy',
+    'medium': 'medium', 'moderate': 'medium', 'intermediate': 'medium',
+    'hard': 'hard', 'difficult': 'hard', 'challenging': 'hard', 'advanced': 'hard', 'expert': 'hard',
+};
+
+export function repairQuestion(q: any): GeneratedQuestion {
+    if (!q || typeof q !== 'object') return q;
+
+    const isMultiSelect = q.questionType === 'multi-select';
+    const LABELS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+    // Fix options: ensure label field exists
+    if (Array.isArray(q.options)) {
+        q.options = q.options.map((o: any, i: number) => ({
+            label: o?.label || LABELS[i] || String.fromCharCode(65 + i),
+            text: typeof o === 'string' ? o : (o?.text ?? ''),
+        }));
+    }
+
+    // Fix 5+ options -> 4 for single-select
+    if (!isMultiSelect && Array.isArray(q.options) && q.options.length > 4) {
+        const correctIdx = typeof q.correctOptionIndex === 'number' ? q.correctOptionIndex : 0;
+        const kept = q.options.slice(0, 4);
+        // If correct answer was at index >= 4, swap it in
+        if (correctIdx >= 4 && correctIdx < q.options.length) {
+            kept[3] = q.options[correctIdx];
+            q.correctOptionIndex = 3;
+        } else if (correctIdx >= 4) {
+            q.correctOptionIndex = 0;
+        }
+        q.options = kept;
+        // Re-label A-D
+        q.options.forEach((o: any, i: number) => { o.label = LABELS[i]; });
+    }
+
+    // Clamp correctOptionIndex
+    if (!isMultiSelect) {
+        const maxIdx = Math.max(0, (q.options?.length ?? 4) - 1);
+        if (typeof q.correctOptionIndex !== 'number' || q.correctOptionIndex < 0 || q.correctOptionIndex > maxIdx) {
+            q.correctOptionIndex = 0;
+        }
+    }
+
+    // Fix difficulty
+    if (typeof q.difficulty === 'string') {
+        q.difficulty = DIFFICULTY_ALIASES[q.difficulty.toLowerCase().trim()] ?? 'medium';
+    } else {
+        q.difficulty = 'medium';
+    }
+
+    // Fix domainIds
+    if (!Array.isArray(q.domainIds) || q.domainIds.length === 0) {
+        q.domainIds = ['general'];
+    }
+
+    // Fix tags
+    if (!Array.isArray(q.tags)) {
+        q.tags = [];
+    }
+
+    // Fix explanation object
+    if (!q.explanation || typeof q.explanation !== 'object') {
+        q.explanation = { short: '', whyOthersWrong: {}, examTip: '' };
+    }
+
+    // Fix examTip
+    if (!q.explanation.examTip || typeof q.explanation.examTip !== 'string') {
+        q.explanation.examTip = 'Review this topic carefully for the exam.';
+    }
+
+    // Fix whyOthersWrong — fill missing keys for single-select
+    if (!isMultiSelect && Array.isArray(q.options) && q.options.length === 4) {
+        if (!q.explanation.whyOthersWrong || typeof q.explanation.whyOthersWrong !== 'object') {
+            q.explanation.whyOthersWrong = {};
+        }
+        const correctLabel = LABELS[q.correctOptionIndex] || 'A';
+        for (const label of ['A', 'B', 'C', 'D']) {
+            if (label !== correctLabel && !q.explanation.whyOthersWrong[label]) {
+                q.explanation.whyOthersWrong[label] = 'This option is incorrect for this scenario.';
+            }
+        }
+    }
+
+    return q as GeneratedQuestion;
 }
 
 // ── Prompt Builder (unified, with all features) ──
@@ -663,21 +782,21 @@ OUTPUT FORMAT (STRICT — output ONLY this JSON, nothing else):
   }
 ]}
 
-RULES (ALL MANDATORY):
+RULES (ALL MANDATORY — questions failing these are REJECTED):
 1. Generate exactly ${batchSize} questions
-2. 4 options per question, labeled A–D (unless multi-select)
-3. Difficulty: ~${easyCount} easy, ~${mediumCount} medium, ~${hardCount} hard
+2. EXACTLY 4 options per question, labeled exactly A, B, C, D (unless multi-select)
+3. Difficulty: ~${easyCount} easy, ~${mediumCount} medium, ~${hardCount} hard (use ONLY these exact lowercase strings)
 4. explanation.short: 2+ sentences, cite a REAL source
-5. whyOthersWrong: one entry per incorrect option, 1–3 sentences each
-6. examTip: REQUIRED — practical, actionable
-7. PLAIN TEXT ONLY: No markdown, bold, italic
-8. tags: lowercase hyphenated (at least 1)
-9. domainIds: use IDs from the list above
-10. correctOptionIndex: distribute evenly across 0,1,2,3
+5. whyOthersWrong: MUST have an entry for ALL 3 incorrect option labels (e.g. if correctOptionIndex is 0, you MUST include B, C, and D)
+6. examTip: REQUIRED for every question — practical, actionable study advice
+7. PLAIN TEXT ONLY: No markdown (**bold**, *italic*), no HTML
+8. tags: lowercase hyphenated array (at least 1 tag)
+9. domainIds: use ONLY domain IDs from the list above (at least 1)
+10. correctOptionIndex: integer 0-3, distribute evenly across questions
 ${referencesSection}
 
 QUALITY REQUIREMENTS:
-- OPTION LENGTH: All options similar length (±20%). Correct NOT longer.
+- OPTION LENGTH: All options similar length. Correct option must NOT be the longest.
 - DISTRACTOR QUALITY: Wrong options must be plausible real concepts.
 - No "All/None of the above"
 - No questions answerable without reading options
@@ -687,7 +806,7 @@ ${multiAnswerBlock}
 ${feedbackBlock}
 ${dedupBlock}
 
-Output ONLY the JSON object. No markdown fences.`;
+Output ONLY the raw JSON object. Do NOT wrap in markdown code fences. Do NOT include any text before or after the JSON.`;
 
     const langNote = lang !== 'en' ? ` Write all content in ${LANG_NAMES[lang] ?? lang}.` : '';
     const user = `Generate ${batchSize} high-quality "${certName}" exam questions. Follow ALL rules.${langNote} Output valid JSON only.`;
