@@ -1,20 +1,19 @@
 /**
  * POST /api/admin/generate
- * AI question generator for the admin panel.
+ * AI question generator for the admin panel (single study / free-form topic).
  *
- * Two modes:
- *   1. Existing study → studyId + optional domainId
- *   2. Free-form topic → topic string → AI discovers domains → auto-creates study
+ * Advanced features:
+ *  - Certification-specific prompts with few-shot examples
+ *  - Auto-retry for failed validations
+ *  - Domain coverage analysis
+ *  - Bloom's taxonomy classification
+ *  - AI quality scoring
+ *  - Semantic deduplication
+ *  - Multi-answer support
+ *  - Feedback loop from user reports
+ *  - Adaptive temperature per difficulty
  *
  * Returns generated questions for PREVIEW — does NOT auto-import.
- * Use POST /api/admin/generate/import to import approved questions.
- *
- * Features:
- *   - Shared cert catalog with rich domain topics for all known exams
- *   - Certification-specific exam style prompts (ISC2, CompTIA, AWS, etc.)
- *   - Deduplication: loads existing questions and sends as context
- *   - Thorough validation with hallucination/bias detection
- *   - Auto markdown stripping
  *
  * Admin-only endpoint.
  */
@@ -25,409 +24,302 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { z } from 'zod';
 import { FieldValue } from 'firebase-admin/firestore';
 import {
-  type GeneratedQuestion,
-  type CertDomain,
-  LANG_NAMES,
-  validateQuestion,
-  cleanQ,
-  buildPrompt,
+    type GeneratedQuestion,
+    type CertDomain,
+    validateQuestion,
+    cleanQ,
+    buildPrompt,
+    buildRetryPrompt,
+    classifyBloomLevel,
+    isBloomBelowExpected,
+    analyzeDomainCoverage,
+    buildQualityScorePrompt,
+    parseQualityScores,
+    buildAntiPatternBlock,
 } from '@/lib/generator-utils';
 import { KNOWN_CERTS, CERT_ALIASES } from '@/lib/cert-catalog';
+import { findSemanticDuplicates } from '@/lib/semantic-dedup';
 
-export const maxDuration = 120; // 2 minutes max execution time for AI generation
+export const maxDuration = 120;
 
 // ── Input schema ──
 
 const bodySchema = z
-  .object({
-    studyId: z.string().min(1).optional(),
-    domainId: z.string().optional(),
-    topic: z.string().min(2).max(200).optional(),
-    count: z.number().int().min(1).max(30).default(5),
-    model: z.string().default('gpt-4o-mini'),
-    lang: z.string().default('en'),
-  })
-  .refine((d) => d.studyId || d.topic, {
-    message: 'Either studyId or topic is required',
-  });
+    .object({
+        studyId: z.string().min(1).optional(),
+        domainId: z.string().optional(),
+        topic: z.string().min(2).max(200).optional(),
+        count: z.number().int().min(1).max(30).default(5),
+        model: z.string().default('gpt-4o-mini'),
+        lang: z.string().default('en'),
+        enableMultiAnswer: z.boolean().default(false),
+        enableQualityScore: z.boolean().default(false),
+        enableSemanticDedup: z.boolean().default(false),
+        qualityThreshold: z.number().min(0).max(100).default(50),
+    })
+    .refine((d) => d.studyId || d.topic, { message: 'studyId or topic required' });
 
 // ── Types ──
 
 interface StudyContext {
-  studyId: string;
-  studyName: string;
-  issuer: string;
-  domains: CertDomain[];
-  isNewStudy: boolean;
+    studyId: string;
+    studyName: string;
+    issuer: string;
+    domains: CertDomain[];
+    isNewStudy: boolean;
 }
 
-// ── Deduplication: load existing question stems ──
+// ── OpenAI call helper ──
+
+async function callOpenAI(
+    apiKey: string, model: string, system: string, user: string, temperature: number,
+): Promise<string> {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+            model,
+            messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
+            temperature,
+            response_format: { type: 'json_object' },
+        }),
+    });
+    if (!res.ok) throw new Error(`OpenAI API error (${res.status}): ${await res.text()}`);
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || '';
+}
+
+// ── Load existing question stems for dedup ──
 
 async function loadExistingQuestions(
-  db: FirebaseFirestore.Firestore,
-  studyId: string,
-  domainId?: string
+    db: FirebaseFirestore.Firestore, studyId: string, domainId?: string,
 ): Promise<string[]> {
-  let query: FirebaseFirestore.Query = db
-    .collection('marketplace_questions')
-    .where('studyId', '==', studyId)
-    .where('isActive', '==', true);
-
-  if (domainId) {
-    query = query.where('domainIds', 'array-contains', domainId);
-  }
-
-  query = query.orderBy('createdAt', 'desc').limit(100);
-
-  const snap = await query.get();
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return (data.text || '').slice(0, 120);
-  });
+    let query: FirebaseFirestore.Query = db.collection('marketplace_questions')
+        .where('studyId', '==', studyId).where('isActive', '==', true);
+    if (domainId) query = query.where('domainIds', 'array-contains', domainId);
+    query = query.orderBy('createdAt', 'desc').limit(100);
+    const snap = await query.get();
+    return snap.docs.map((d) => (d.data().text || '').slice(0, 120));
 }
 
-// ── Enrich domains with hardcoded cert data ──
+// ── Load reports for feedback loop ──
 
-function enrichDomains(
-  studyName: string,
-  firestoreDomains: CertDomain[]
-): { domains: CertDomain[]; issuer: string } {
-  const normalized = studyName.toLowerCase().trim();
+async function loadReportPatterns(db: FirebaseFirestore.Firestore, studyId: string): Promise<string[]> {
+    try {
+        const snap = await db.collection('question_reports')
+            .where('studyId', '==', studyId).where('status', '==', 'open')
+            .orderBy('createdAt', 'desc').limit(30).get();
+        return snap.docs.map((d) => d.data().reason || d.data().type || '').filter(Boolean);
+    } catch { return []; }
+}
 
-  // Try alias match
-  const aliasKey = CERT_ALIASES[normalized];
-  const cert = aliasKey ? KNOWN_CERTS[aliasKey] : undefined;
+// ── Enrich domains with cert catalog data ──
 
-  // Try fuzzy match on cert name
-  if (!cert) {
-    for (const c of Object.values(KNOWN_CERTS)) {
-      if (
-        normalized.includes(c.slug) ||
-        c.name.toLowerCase().includes(normalized)
-      ) {
-        return { domains: c.domains, issuer: c.issuer };
-      }
+function enrichDomains(studyName: string, firestoreDomains: CertDomain[]): { domains: CertDomain[]; issuer: string } {
+    const normalized = studyName.toLowerCase().trim();
+    const aliasKey = CERT_ALIASES[normalized];
+    const cert = aliasKey ? KNOWN_CERTS[aliasKey] : undefined;
+    if (!cert) {
+        for (const c of Object.values(KNOWN_CERTS)) {
+            if (normalized.includes(c.slug) || c.name.toLowerCase().includes(normalized)) {
+                return { domains: c.domains, issuer: c.issuer };
+            }
+        }
     }
-  }
-
-  if (cert) {
-    return { domains: cert.domains, issuer: cert.issuer };
-  }
-
-  return { domains: firestoreDomains, issuer: 'Unknown' };
+    if (cert) return { domains: cert.domains, issuer: cert.issuer };
+    return { domains: firestoreDomains, issuer: 'Unknown' };
 }
 
 // ── AI domain discovery for free-form topics ──
 
-interface DiscoveredCert {
-  slug: string;
-  name: string;
-  issuer: string;
-  description: string;
-  domains: CertDomain[];
-}
-
-async function discoverDomains(
-  apiKey: string,
-  model: string,
-  topic: string
-): Promise<DiscoveredCert> {
-  // Try known certs first
-  const normalized = topic.toLowerCase().trim();
-  const aliasKey = CERT_ALIASES[normalized];
-  if (aliasKey && KNOWN_CERTS[aliasKey]) {
-    const cert = KNOWN_CERTS[aliasKey];
-    return {
-      ...cert,
-      description: `Official ${cert.name} certification exam by ${cert.issuer}`,
-    };
-  }
-
-  // Fuzzy match
-  for (const cert of Object.values(KNOWN_CERTS)) {
-    if (
-      normalized.includes(cert.slug) ||
-      cert.name.toLowerCase().includes(normalized)
-    ) {
-      return {
-        ...cert,
-        description: `Official ${cert.name} certification exam by ${cert.issuer}`,
-      };
+async function discoverDomains(apiKey: string, model: string, topic: string): Promise<{
+    slug: string; name: string; issuer: string; description: string; domains: CertDomain[];
+}> {
+    const normalized = topic.toLowerCase().trim();
+    const aliasKey = CERT_ALIASES[normalized];
+    if (aliasKey && KNOWN_CERTS[aliasKey]) {
+        const cert = KNOWN_CERTS[aliasKey];
+        return { ...cert, description: `Official ${cert.name} certification exam by ${cert.issuer}` };
     }
-  }
-
-  // Unknown — ask AI
-  const prompt = `You are an expert on professional certifications and exams.
-
-I need the FULL domain structure for the following certification/exam/topic:
-"${topic}"
-
-Return a JSON object with this EXACT schema:
-{
-  "slug": "lowercase-hyphenated-short-id",
-  "name": "Full Official Name of the Certification or Exam",
-  "issuer": "Issuing Organization",
-  "description": "A 1-2 sentence description",
-  "domains": [
-    {
-      "id": "short-id",
-      "name": "Domain Full Name",
-      "weight": "XX%",
-      "topics": ["topic 1", "topic 2", "topic 3"]
+    for (const cert of Object.values(KNOWN_CERTS)) {
+        if (normalized.includes(cert.slug) || cert.name.toLowerCase().includes(normalized)) {
+            return { ...cert, description: `Official ${cert.name} certification exam by ${cert.issuer}` };
+        }
     }
-  ]
+    const prompt = `You are an expert on professional certifications. I need the FULL domain structure for: "${topic}"
+Return JSON: {"slug":"...","name":"...","issuer":"...","description":"...","domains":[{"id":"xx","name":"...","weight":"XX%","topics":["..."]}]}
+Rules: Use REAL official domains if it's a known cert. slug=lowercase-hyphenated, domain id=2-4 letter abbreviation. Output ONLY JSON.`;
+    const content = await callOpenAI(apiKey, model, prompt, 'Discover domains. Output JSON only.', 0.3);
+    const cert = JSON.parse(content);
+    if (!cert.slug || !cert.name || !Array.isArray(cert.domains) || cert.domains.length === 0) {
+        throw new Error('AI returned invalid structure. Try a more specific name.');
+    }
+    return cert;
 }
 
-Rules:
-- Use the REAL, OFFICIAL exam domains from the latest version
-- If not a real certification, create logical domains/areas
-- Each domain must have 3-8 key topics
-- slug must be lowercase, letters and hyphens only
-- domain id must be a short 2-4 letter lowercase abbreviation
-
-Output ONLY the JSON. No markdown, no explanation.`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenAI error during domain discovery (${response.status}): ${err}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty response from OpenAI during domain discovery');
-
-  const cert = JSON.parse(content) as DiscoveredCert;
-  if (!cert.slug || !cert.name || !Array.isArray(cert.domains) || cert.domains.length === 0) {
-    throw new Error('AI returned invalid structure. Try a more specific name.');
-  }
-
-  return cert;
-}
-
-// ── OpenAI question generation (using shared prompt builder) ──
-
-async function generateWithOpenAI(
-  apiKey: string,
-  model: string,
-  studyName: string,
-  issuer: string,
-  domains: CertDomain[],
-  targetDomainId: string | undefined,
-  count: number,
-  lang: string,
-  existingQuestions: string[]
-): Promise<GeneratedQuestion[]> {
-  const { system, user } = buildPrompt({
-    certName: studyName,
-    issuer,
-    domains,
-    targetDomainId,
-    batchSize: count,
-    lang,
-    existingStems: existingQuestions,
-  });
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-      temperature: 0.7,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`OpenAI API error (${response.status}): ${err}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('Empty response from OpenAI');
-
-  const parsed = JSON.parse(content);
-  return parsed.questions || [];
-}
-
-// ── Auto-create marketplace study from discovered cert ──
+// ── Auto-create study from discovered cert ──
 
 async function autoCreateStudy(
-  db: FirebaseFirestore.Firestore,
-  cert: DiscoveredCert,
-  adminUid: string
+    db: FirebaseFirestore.Firestore, cert: { slug: string; name: string; description: string; domains: CertDomain[] }, adminUid: string,
 ): Promise<string> {
-  const now = FieldValue.serverTimestamp();
-  const docRef = db.collection('marketplace_studies').doc();
-
-  await docRef.set({
-    abbreviation: cert.slug.toUpperCase().slice(0, 20),
-    name: cert.name,
-    description: cert.description || `Auto-generated study for ${cert.name}`,
-    domains: cert.domains.map((d, i) => ({
-      id: d.id,
-      name: d.name,
-      order: i,
-    })),
-    questionCount: 0,
-    domainQuestionCounts: {},
-    importCount: 0,
-    tags: [],
-    isActive: true,
-    createdAt: now,
-    updatedAt: now,
-    createdBy: adminUid,
-  });
-
-  return docRef.id;
+    const ref = db.collection('marketplace_studies').doc();
+    await ref.set({
+        abbreviation: cert.slug.toUpperCase().slice(0, 20),
+        name: cert.name,
+        description: cert.description || `Auto-generated study for ${cert.name}`,
+        domains: cert.domains.map((d, i) => ({ id: d.id, name: d.name, order: i })),
+        questionCount: 0, domainQuestionCounts: {}, importCount: 0,
+        tags: [], isActive: true,
+        createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp(), createdBy: adminUid,
+    });
+    return ref.id;
 }
 
-// ── Handler: Generate (preview only — does NOT import) ──
+// ── Handler ──
 
 export const POST = withAdmin(
-  async (request: Request, { user, log }: RouteContext) => {
-    const body = await request.json();
-    const parsed = bodySchema.parse(body);
+    async (request: Request, { user, log }: RouteContext) => {
+        const body = await request.json();
+        const parsed = bodySchema.parse(body);
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) return NextResponse.json({ error: 'OPENAI_API_KEY not configured' }, { status: 500 });
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'OPENAI_API_KEY not configured on server' },
-        { status: 500 }
-      );
+        const db = getAdminDb();
+        let ctx: StudyContext;
+
+        // ── Resolve study context ──
+        if (parsed.studyId) {
+            const snap = await db.collection('marketplace_studies').doc(parsed.studyId).get();
+            if (!snap.exists) return NextResponse.json({ error: 'Study not found' }, { status: 404 });
+            const study = snap.data()!;
+            const enriched = enrichDomains(study.name || '', study.domains || []);
+            ctx = {
+                studyId: parsed.studyId,
+                studyName: study.name || 'Unknown Study',
+                issuer: enriched.issuer !== 'Unknown' ? enriched.issuer : study.issuer || 'Unknown',
+                domains: enriched.domains.length > 0 ? enriched.domains : study.domains || [],
+                isNewStudy: false,
+            };
+            if (parsed.domainId && !ctx.domains.some((d) => d.id === parsed.domainId)) {
+                return NextResponse.json({ error: `Domain "${parsed.domainId}" not found` }, { status: 400 });
+            }
+        } else {
+            const cert = await discoverDomains(apiKey, parsed.model, parsed.topic!);
+            const studyId = await autoCreateStudy(db, cert, user.uid);
+            ctx = { studyId, studyName: cert.name, issuer: cert.issuer, domains: cert.domains, isNewStudy: true };
+        }
+
+        // ── Load context for dedup + feedback ──
+        const existingQuestions = await loadExistingQuestions(db, ctx.studyId, parsed.domainId);
+        const reportReasons = await loadReportPatterns(db, ctx.studyId);
+        const antiPatterns = buildAntiPatternBlock(reportReasons);
+
+        log.info('Generate start', { meta: { studyId: ctx.studyId, count: parsed.count, model: parsed.model } });
+
+        // ── Generate (with adaptive temperature, few-shot, multi-answer, feedback) ──
+        const { system, user: userPrompt, temperature } = buildPrompt({
+            certName: ctx.studyName,
+            issuer: ctx.issuer,
+            domains: ctx.domains,
+            targetDomainId: parsed.domainId,
+            batchSize: parsed.count,
+            lang: parsed.lang,
+            existingStems: existingQuestions,
+            enableMultiAnswer: parsed.enableMultiAnswer,
+            reportedPatterns: antiPatterns,
+        });
+
+        let rawContent: string;
+        try {
+            rawContent = await callOpenAI(apiKey, parsed.model, system, userPrompt, temperature);
+        } catch (err: any) {
+            return NextResponse.json({ error: err.message }, { status: 500 });
+        }
+
+        const rawParsed = JSON.parse(rawContent);
+        let rawQuestions: GeneratedQuestion[] = Array.isArray(rawParsed.questions) ? rawParsed.questions : [];
+
+        // ── Validate + clean ──
+        const results = rawQuestions.map((q, i) => ({ q, v: validateQuestion(q, i) }));
+        let validQs = results.filter((r) => r.v.valid).map((r) => cleanQ(r.q));
+        const invalidCount = rawQuestions.length - validQs.length;
+        const allErrors = results.flatMap((r) => r.v.errors);
+        const allWarnings = results.flatMap((r) => r.v.warnings);
+
+        // ── Feature 2: Auto-retry ──
+        if (invalidCount > 0 && invalidCount <= parsed.count) {
+            try {
+                const retryPrompt = buildRetryPrompt({
+                    certName: ctx.studyName, issuer: ctx.issuer,
+                    failedReasons: allErrors.slice(0, 15),
+                    retryCount: Math.min(invalidCount, 10),
+                    lang: parsed.lang, domains: ctx.domains,
+                });
+                const retryContent = await callOpenAI(apiKey, parsed.model, retryPrompt.system, retryPrompt.user, 0.6);
+                const retryQs: GeneratedQuestion[] = (JSON.parse(retryContent).questions || [])
+                    .filter((q: GeneratedQuestion, i: number) => validateQuestion(q, i).valid).map(cleanQ);
+                validQs = [...validQs, ...retryQs];
+            } catch { /* non-critical */ }
+        }
+
+        // ── Feature 5: Bloom's taxonomy ──
+        for (const q of validQs) q.bloomLevel = classifyBloomLevel(q);
+        const bloomWarnings = validQs
+            .filter((q) => q.bloomLevel && isBloomBelowExpected(q.bloomLevel, ctx.issuer))
+            .map((q) => `"${q.text.slice(0, 60)}..." is ${q.bloomLevel}, expected higher for ${ctx.issuer}`);
+
+        // ── Feature 7: Semantic dedup ──
+        let semanticDupsRemoved = 0;
+        if (parsed.enableSemanticDedup && existingQuestions.length > 0) {
+            try {
+                const dups = await findSemanticDuplicates(validQs.map(q => q.text), existingQuestions, apiKey);
+                const dupIndices = new Set(dups.map(d => d.newIndex));
+                if (dupIndices.size > 0) {
+                    semanticDupsRemoved = dupIndices.size;
+                    validQs = validQs.filter((_, i) => !dupIndices.has(i));
+                }
+            } catch { /* non-critical */ }
+        }
+
+        // ── Feature 6: Quality scoring ──
+        if (parsed.enableQualityScore && validQs.length > 0) {
+            try {
+                const scorePrompt = buildQualityScorePrompt(validQs, ctx.studyName, ctx.issuer);
+                const scoreContent = await callOpenAI(apiKey, 'gpt-4o-mini', scorePrompt, 'Rate. JSON only.', 0.3);
+                const scores = parseQualityScores(scoreContent);
+                for (const s of scores) {
+                    if (s.index >= 0 && s.index < validQs.length) validQs[s.index].qualityScore = s.score;
+                }
+                validQs = validQs.filter((q) => (q.qualityScore ?? 100) >= parsed.qualityThreshold);
+            } catch { /* non-critical */ }
+        }
+
+        // ── Feature 3: Domain coverage ──
+        const domainCoverage = analyzeDomainCoverage(validQs, ctx.domains);
+
+        return {
+            questions: validQs,
+            generated: rawQuestions.length,
+            valid: validQs.length,
+            invalid: invalidCount,
+            retryRecovered: validQs.length - (rawQuestions.length - invalidCount),
+            semanticDuplicatesRemoved: semanticDupsRemoved,
+            model: parsed.model,
+            studyId: ctx.studyId,
+            studyName: ctx.studyName,
+            isNewStudy: ctx.isNewStudy,
+            domainCoverage,
+            bloomDistribution: {
+                remember: validQs.filter(q => q.bloomLevel === 'remember').length,
+                understand: validQs.filter(q => q.bloomLevel === 'understand').length,
+                apply: validQs.filter(q => q.bloomLevel === 'apply').length,
+                analyze: validQs.filter(q => q.bloomLevel === 'analyze').length,
+                evaluate: validQs.filter(q => q.bloomLevel === 'evaluate').length,
+                create: validQs.filter(q => q.bloomLevel === 'create').length,
+            },
+            bloomWarnings,
+            warnings: [...allWarnings, ...bloomWarnings],
+            errors: allErrors,
+        };
     }
-
-    const db = getAdminDb();
-    let ctx: StudyContext;
-
-    // ── Resolve study context ──
-
-    if (parsed.studyId) {
-      const studySnap = await db
-        .collection('marketplace_studies')
-        .doc(parsed.studyId)
-        .get();
-      if (!studySnap.exists) {
-        return NextResponse.json({ error: 'Study not found' }, { status: 404 });
-      }
-      const study = studySnap.data()!;
-      const firestoreDomains: CertDomain[] = study.domains || [];
-
-      const enriched = enrichDomains(study.name || '', firestoreDomains);
-
-      ctx = {
-        studyId: parsed.studyId,
-        studyName: study.name || 'Unknown Study',
-        issuer:
-          enriched.issuer !== 'Unknown'
-            ? enriched.issuer
-            : study.issuer || study.createdBy || 'Unknown',
-        domains:
-          enriched.domains.length > 0 ? enriched.domains : firestoreDomains,
-        isNewStudy: false,
-      };
-
-      if (parsed.domainId && !ctx.domains.some((d) => d.id === parsed.domainId)) {
-        return NextResponse.json(
-          { error: `Domain "${parsed.domainId}" not found in study` },
-          { status: 400 }
-        );
-      }
-    } else {
-      log.info('Discovering domains for topic', { meta: { topic: parsed.topic } });
-      const cert = await discoverDomains(apiKey, parsed.model, parsed.topic!);
-      const studyId = await autoCreateStudy(db, cert, user.uid);
-
-      ctx = {
-        studyId,
-        studyName: cert.name,
-        issuer: cert.issuer,
-        domains: cert.domains,
-        isNewStudy: true,
-      };
-    }
-
-    // ── Load existing questions for deduplication ──
-    const existingQuestions = await loadExistingQuestions(db, ctx.studyId, parsed.domainId);
-
-    log.info('Admin generate start', {
-      meta: {
-        studyId: ctx.studyId,
-        studyName: ctx.studyName,
-        count: parsed.count,
-        model: parsed.model,
-        mode: parsed.studyId ? 'existing' : 'freeform',
-        existingQuestionsCount: existingQuestions.length,
-      },
-    });
-
-    // ── Generate questions ──
-    const rawQuestions = await generateWithOpenAI(
-      apiKey,
-      parsed.model,
-      ctx.studyName,
-      ctx.issuer,
-      ctx.domains,
-      parsed.domainId,
-      parsed.count,
-      parsed.lang,
-      existingQuestions
-    );
-
-    // ── Clean + validate ──
-    const cleanedQuestions = rawQuestions.map(cleanQ);
-
-    const validationResults = cleanedQuestions.map((q, i) => ({
-      question: q,
-      validation: validateQuestion(q, i),
-    }));
-
-    const validQuestions = validationResults
-      .filter((r) => r.validation.valid)
-      .map((r) => r.question);
-    const allWarnings = validationResults.flatMap((r) => r.validation.warnings);
-    const allErrors = validationResults.flatMap((r) => r.validation.errors);
-
-    log.info('Admin generate complete (preview)', {
-      meta: {
-        generated: rawQuestions.length,
-        valid: validQuestions.length,
-        invalid: cleanedQuestions.length - validQuestions.length,
-      },
-    });
-
-    return {
-      questions: validQuestions,
-      generated: rawQuestions.length,
-      valid: validQuestions.length,
-      invalid: cleanedQuestions.length - validQuestions.length,
-      model: parsed.model,
-      studyId: ctx.studyId,
-      studyName: ctx.studyName,
-      isNewStudy: ctx.isNewStudy,
-      warnings: allWarnings,
-      errors: allErrors,
-    };
-  }
 );
